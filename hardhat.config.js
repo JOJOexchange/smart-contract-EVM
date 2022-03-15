@@ -2,11 +2,11 @@
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.12",
+  solidity: "0.8.9",
   settings: {
     optimizer: {
       enabled: true,
-      runs: 200,
+      runs: 10000,
     },
   },
 };

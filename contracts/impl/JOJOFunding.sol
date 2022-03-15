@@ -1,4 +1,4 @@
-pragma solidity 0.8.12;
+pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -18,6 +18,15 @@ contract JOJOFunding is JOJOBase {
     mapping(address => address[]) public openPositions; // all user's open positions
     mapping(address => mapping(address => bool)) public hasPosition; // user => perp => hasPosition
 
+    uint256 withdrawTimeLock;
+    mapping(address => uint256) pendingWithdraw;
+    mapping(address => uint256) requestWithdrawTimestamp;
+
+    // Events
+    event Deposit(address indexed to, address indexed payer, uint256 amount);
+
+    event Withdraw(address indexed to, address indexed payer, uint256 amount);
+
     function setVirtualCredit(address trader, uint256 amount)
         external
         onlyOwner
@@ -32,6 +41,7 @@ contract JOJOFunding is JOJOBase {
             amount
         );
         trueCredit[to] += int256(amount);
+        emit Deposit(to, msg.sender, amount);
     }
 
     function withdraw(uint256 amount, address to) external nonReentrant {
@@ -39,31 +49,26 @@ contract JOJOFunding is JOJOBase {
             trueCredit[msg.sender] >= int256(amount),
             Errors.CREDIT_NOT_ENOUGH
         );
-        trueCredit[msg.sender] -= int256(amount);
-        IERC20(underlyingAsset).safeTransfer(to, amount);
-        require(isSafe(msg.sender), Errors.ACCOUNT_NOT_SAFE);
-        // todo timelock
+        if (withdrawTimeLock == 0) {
+            _withdraw(msg.sender, to, amount);
+        } else {
+            pendingWithdraw[msg.sender] = amount;
+            requestWithdrawTimestamp[msg.sender] = block.timestamp;
+        }
     }
 
-    function getSingleExposure(address perp, address trader)
-        public
-        perpRegistered(perp)
-        returns (
-            int256 netValue,
-            uint256 exposure,
-            uint256 liquidationThreshold
-        )
-    {
-        (int256 paperAmount, int256 credit) = IPerpetual(perp).balanceOf(
-            trader
-        );
-        riskParams memory params = perpRiskParams[perp];
-        liquidationThreshold = params.liquidationThreshold;
-        (uint256 price, , ) = IMarkPriceSource(params.markPriceSource)
-            .getMarkPrice();
-        int256 signedExposure = paperAmount.decimalMul(int256(price));
-        netValue = signedExposure + credit;
-        exposure = signedExposure.abs();
+    function withdrawPendingFund(address to) external nonReentrant {
+        require(requestWithdrawTimestamp[msg.sender]+withdrawTimeLock <= block.timestamp, "TN");
+        uint256 amount = requestWithdrawTimestamp[msg.sender];
+        _withdraw(msg.sender, to, amount);
+        pendingWithdraw[msg.sender] = 0;
+    } 
+
+    function _withdraw(address payer, address to, uint256 amount) internal {
+        trueCredit[payer] -= int256(amount);
+            IERC20(underlyingAsset).safeTransfer(to, amount);
+            require(isSafe(payer), Errors.ACCOUNT_NOT_SAFE);
+            emit Withdraw(to, payer, amount);
     }
 
     function getTotalExposure(address trader)
@@ -74,26 +79,37 @@ contract JOJOFunding is JOJOBase {
             uint256 liquidationThreshold
         )
     {
-        int256 netValueDelta = 0;
-        uint256 exposureDelta = 0;
+        int256 netValueDelta;
+        uint256 exposureDelta;
         uint256 threshold;
         for (uint256 i = 0; i < openPositions[trader].length; i++) {
-            (netValueDelta, exposureDelta, threshold) = getSingleExposure(
-                openPositions[trader][i],
-                trader
-            );
+            (int256 paperAmount, int256 credit) = IPerpetual(
+                openPositions[trader][i]
+            ).balanceOf(trader);
+            riskParams memory params = perpRiskParams[openPositions[trader][i]];
+            (uint256 price, , ) = IMarkPriceSource(params.markPriceSource)
+                .getMarkPrice();
+            int256 signedExposure = paperAmount.decimalMul(int256(price));
+
+            netValueDelta = signedExposure + credit;
+            exposureDelta = signedExposure.abs();
+            threshold = params.liquidationThreshold;
+
+            // no position in this case
             if (exposureDelta == 0) {
-                // no position in this case
-                removePosition(trader, i);
+                _removePosition(trader, i);
                 // clear remaining credit if needed
+                // if netValueDelta < 0, deposit credit to perp
+                // if netValueDelta > 0, withdraw credit from perp
                 if (netValueDelta != 0) {
-                    accuCredit(
-                        openPositions[trader][i],
+                    IPerpetual(openPositions[trader][i]).changeCredit(
                         trader,
                         -1 * netValueDelta
                     );
+                    trueCredit[trader] += netValueDelta;
                 }
             }
+
             netValue += netValueDelta;
             exposure += exposureDelta;
             if (threshold > liquidationThreshold) {
@@ -186,28 +202,17 @@ contract JOJOFunding is JOJOBase {
         virtualCredit[brokenTrader] = 0;
     }
 
-    function addPosition(address perp, address trader) internal {
+    function _addPosition(address perp, address trader) internal {
         if (!hasPosition[trader][perp]) {
             hasPosition[trader][perp] = true;
             openPositions[trader].push(perp);
         }
     }
 
-    function removePosition(address trader, uint256 index) internal {
+    function _removePosition(address trader, uint256 index) internal {
         address[] storage positionList = openPositions[trader];
         hasPosition[trader][positionList[index]] = false;
         positionList[index] = positionList[positionList.length - 1];
         positionList.pop();
-    }
-
-    // if amount > 0, deposit credit to perp
-    // if amount < 0, withdraw credit from perp
-    function accuCredit(
-        address perp,
-        address trader,
-        int256 amount
-    ) internal {
-        IPerpetual(perp).changeCredit(trader, amount);
-        trueCredit[trader] -= amount;
     }
 }

@@ -1,4 +1,4 @@
-pragma solidity 0.8.12;
+pragma solidity 0.8.9;
 
 // Dealer
 // 1. trade - approveTrade

@@ -1,4 +1,4 @@
-pragma solidity 0.8.12;
+pragma solidity 0.8.9;
 
 library Errors {
     string constant PERP_MISMATCH = "JOJO_PERP_MISMATCH";

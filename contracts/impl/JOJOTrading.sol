@@ -1,4 +1,4 @@
-pragma solidity 0.8.12;
+pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -15,6 +15,8 @@ contract JOJOTrading is JOJOFunding {
 
     mapping(bytes32 => uint256) public filledPaperAmount;
     address public orderValidator;
+
+    event OrderFilled(bytes32 orderHash, int256 filledPaperAmount, int256 filledCreditAmount, int256 fee);
 
     // charge fee from all makers and taker, then transfer the fee to orderSender
     // if the taker open long and maker open short, tradePaperAmount > 0
@@ -85,7 +87,7 @@ contract JOJOTrading is JOJOFunding {
                     : -1 * int256(matchPaperAmount[i]);
 
                 // welcome new maker
-                addPosition(msg.sender, orderList[i].signer);
+                _addPosition(msg.sender, orderList[i].signer);
                 if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
                     currentMakerIndex += 1;
                 }
@@ -119,7 +121,7 @@ contract JOJOTrading is JOJOFunding {
                 Errors.ORDER_FILLED_OVERFLOW
             );
             filledPaperAmount[takerOrderHash] += matchPaperAmount[0];
-            addPosition(msg.sender, taker);
+            _addPosition(msg.sender, taker);
         }
 
         // trading fee related

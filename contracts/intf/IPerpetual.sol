@@ -1,4 +1,4 @@
-pragma solidity 0.8.12;
+pragma solidity 0.8.9;
 
 // Perpetual
 // 1. report - balanceOf

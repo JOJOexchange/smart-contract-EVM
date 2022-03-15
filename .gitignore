@@ -3,12 +3,10 @@
 .env.local
 .idea
 
-build/
-dist/
+artifacts/
+cache/
 node_modules/
 coverage/
-lint/
-script/
 
 # VIM
 *.swo

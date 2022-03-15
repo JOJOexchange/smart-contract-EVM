@@ -1,13 +1,12 @@
 pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./JOJOBase.sol";
-import "../intf/IDealer.sol";
 import "../intf/IPerpetual.sol";
 import "../intf/IMarkPriceSource.sol";
+import "./JOJOBase.sol";
 import "../utils/SignedDecimalMath.sol";
+import "../utils/Errors.sol";
 
 contract JOJOFunding is JOJOBase {
     using SafeERC20 for IERC20;
@@ -38,11 +37,11 @@ contract JOJOFunding is JOJOBase {
     function withdraw(uint256 amount, address to) external nonReentrant {
         require(
             trueCredit[msg.sender] >= int256(amount),
-            "CREDIT NOT ENOUGH FOR WITHDRAW"
+            Errors.CREDIT_NOT_ENOUGH
         );
         trueCredit[msg.sender] -= int256(amount);
         IERC20(underlyingAsset).safeTransfer(to, amount);
-        require(isSafe(msg.sender), "NOT SAFE WITHDRAW");
+        require(isSafe(msg.sender), Errors.ACCOUNT_NOT_SAFE);
         // todo timelock
     }
 
@@ -137,7 +136,7 @@ contract JOJOFunding is JOJOBase {
         perpRegistered(msg.sender)
         returns (int256 paperAmount, int256 creditAmount)
     {
-        require(!isSafe(brokenTrader), "TRADER IS SAFE");
+        require(!isSafe(brokenTrader), Errors.ACCOUNT_IS_SAFE);
 
         // get price
         riskParams memory params = perpRiskParams[msg.sender];
@@ -149,7 +148,7 @@ contract JOJOFunding is JOJOBase {
         (int256 brokenPaperAmount, ) = IPerpetual(msg.sender).balanceOf(
             brokenTrader
         );
-        require(brokenPaperAmount != 0, "TRADER HAS NO POSITION");
+        require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);
 
         if (brokenPaperAmount > 0) {
             // close long
@@ -177,10 +176,10 @@ contract JOJOFunding is JOJOBase {
     }
 
     function handleBadDebt(address brokenTrader) external onlyOwner {
-        require(!isSafe(brokenTrader), "TRADER IS SAFE");
+        require(!isSafe(brokenTrader), Errors.ACCOUNT_IS_SAFE);
         require(
             openPositions[brokenTrader].length == 0,
-            "TRADER IN LIQUIDATION"
+            Errors.TRADER_STILL_IN_LIQUIDATION
         );
         trueCredit[insurance] += trueCredit[brokenTrader];
         trueCredit[brokenTrader] = 0;

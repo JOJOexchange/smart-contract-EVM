@@ -3,12 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../intf/IDealer.sol";
-import "../intf/IPerpetual.sol";
-import "../intf/IMarkPriceSource.sol";
-import "../utils/SignedDecimalMath.sol";
+import "../utils/Errors.sol";
 
 contract JOJOBase is Ownable, ReentrancyGuard {
     address underlyingAsset; // IERC20
@@ -20,7 +15,6 @@ contract JOJOBase is Ownable, ReentrancyGuard {
         uint256 liquidationThreshold;
         uint256 liquidationPriceOff;
         uint256 insuranceFeeRate;
-        uint256 maxPaperSupply;
         int256 fundingRatio;
         address markPriceSource;
     }
@@ -28,12 +22,12 @@ contract JOJOBase is Ownable, ReentrancyGuard {
     mapping(address => riskParams) public perpRiskParams;
 
     modifier perpRegistered(address perp) {
-        require(perpRegister[perp], "PERP NOT REGISTERED");
+        require(perpRegister[perp], Errors.PERP_NOT_REGISTERED);
         _;
     }
 
     modifier perpNotRegistered(address perp) {
-        require(!perpRegister[perp], "PERP REGISTERED");
+        require(!perpRegister[perp], Errors.PERP_ALREADY_REGISTERED);
         _;
     }
 
@@ -56,8 +50,11 @@ contract JOJOBase is Ownable, ReentrancyGuard {
         }
     }
 
-    function registerNewPerp(address perp, riskParams calldata param) external onlyOwner perpNotRegistered(perp){
+    function registerNewPerp(address perp, riskParams calldata param)
+        external
+        onlyOwner
+        perpNotRegistered(perp)
+    {
         perpRiskParams[perp] = param;
     }
-
 }

@@ -1,48 +1,25 @@
 pragma solidity 0.8.12;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import "./JOJOBase.sol";
+import "@openzeppelin/contracts/utils/math/SignedMath.sol";
 import "./JOJOFunding.sol";
-import "../intf/IDealer.sol";
 import "../intf/IPerpetual.sol";
-import "../intf/IMarkPriceSource.sol";
-import "../intf/ITradingProxy.sol";
 import "../utils/SignedDecimalMath.sol";
+import "../utils/JOJOOrder.sol";
+import "../utils/Errors.sol";
 
-contract JOJOTrading is JOJOFunding, EIP712("JOJO Order", "1") {
+contract JOJOTrading is JOJOFunding {
     using SignedMath for int256;
     using Math for uint256;
 
     mapping(bytes32 => uint256) public filledPaperAmount;
+    address public orderValidator;
 
-    // if you want to open long positon, set paperAmount > 0 and creditAmount < 0
-    // if the sender want to charge fee, set feeRate < 0; if the sender want to rebate, set feeRate > 0;
-    struct Order {
-        address perp;
-        int256 paperAmount;
-        int256 creditAmount;
-        int128 makerFeeRate;
-        int128 takerFeeRate;
-        address signer;
-        address sender;
-        uint256 expiration;
-        uint256 salt;
-    }
-
-    bytes32 public constant ORDER_TYPEHASH =
-        keccak256(
-            "Order(address perp, int256 paperAmount, int256 creditAmount, int128 makerFeeRate, int128 takerFeeRate, address signer, address sender, uint256 expiration, uint256 salt)"
-        );
-
-    // charge fee from all makers and taker, then transfer the fee to sender
+    // charge fee from all makers and taker, then transfer the fee to orderSender
     // if the taker open long and maker open short, tradePaperAmount > 0
     // Pay attention to sorting when submitting, then de-duplicate here to save gas
-    function approveTrade(address sender, bytes calldata tradeData)
+    function approveTrade(address orderSender, bytes calldata tradeData)
         external
         nonReentrant
         perpRegistered(msg.sender)
@@ -53,99 +30,106 @@ contract JOJOTrading is JOJOFunding, EIP712("JOJO Order", "1") {
             int256[] memory tradeCreditAmountList
         )
     {
+        // first taker and following multiple makers
+        // orderList >= 2
+        // matchPaperAmount.length = orderList.length
+        // matchPaperAmount[0] = summary of the following
         (
-            Order memory takerOrder,
-            bytes memory takerSignature,
-            Order[] memory makerOrderList,
-            bytes[] memory makerSignatureList,
+            JOJOOrder.Order[] memory orderList,
+            bytes[] memory signatureList,
             uint256[] memory matchPaperAmount
-        ) = abi.decode(tradeData, (Order, bytes, Order[], bytes[], uint256[]));
-
-        bytes32 takerOrderHash = _checkOrder(takerOrder, takerSignature);
-        require(
-            takerOrder.sender == sender || takerOrder.sender == address(0),
-            "INVALID SENDER"
-        );
-        require(takerOrder.perp == msg.sender, "INVALID PERP");
-
-        bytes32[] memory makerOrderHashList = new bytes32[](
-            makerOrderList.length
-        );
-        for (uint256 i = 0; i < makerOrderList.length; i++) {
-            makerOrderHashList[i] = _checkOrder(
-                makerOrderList[i],
-                makerSignatureList[i]
-            );
-            require(
-                makerOrderList[i].sender == sender ||
-                    makerOrderList[i].sender == address(0),
-                "INVALID SENDER"
-            );
-        }
+        ) = abi.decode(tradeData, (JOJOOrder.Order[], bytes[], uint256[]));
 
         // de-duplicate maker to save gas
-        uint256 uniqueMakerNum = 1;
-        for (uint256 i = 1; i < makerOrderList.length; i++) {
-            if (makerOrderList[i].signer != makerOrderList[i - 1].signer) {
-                uniqueMakerNum += 1;
-            }
-        }
-
-        makerList = new address[](uniqueMakerNum);
-        tradePaperAmountList = new int256[](uniqueMakerNum);
-        tradeCreditAmountList = new int256[](uniqueMakerNum);
-        int256[] memory makerFeeList = new int256[](uniqueMakerNum);
-
-        uint256 totalFilledPaper;
-        uint256 currentMakerIndex;
-
-        for (uint256 i = 0; i < makerOrderList.length; i++) {
-            Order memory makerOrder = makerOrderList[i];
-            bytes32 makerOrderHash = makerOrderHashList[i];
-            require(
-                filledPaperAmount[makerOrderHash] + matchPaperAmount[i] <=
-                    makerOrder.paperAmount.abs(),
-                "FILLED EXCEED"
-            );
-            require(matchPaperAmount[i] > 0, "CAN NOT FILL ZERO");
-            _matchCheck(takerOrder, makerOrder);
-            int256 paper = takerOrder.paperAmount > 0
-                ? int256(matchPaperAmount[i])
-                : -1 * int256(matchPaperAmount[i]);
-
-            // welcome new maker
-            if (i > 0) {
-                if (makerOrder.signer != makerOrderList[i - 1].signer) {
-                    currentMakerIndex += 1;
-                    addPosition(msg.sender, makerOrder.signer);
+        {
+            uint256 uniqueMakerNum = 1;
+            uint256 totalMakerFilledPaper = matchPaperAmount[1];
+            for (uint256 i = 2; i < orderList.length; i++) {
+                if (orderList[i].signer != orderList[i - 1].signer) {
+                    uniqueMakerNum += 1;
                 }
+                totalMakerFilledPaper += matchPaperAmount[i];
             }
-
-            tradePaperAmountList[currentMakerIndex] += paper;
-            tradeCreditAmountList[currentMakerIndex] +=
-                (paper * makerOrder.creditAmount) /
-                makerOrder.paperAmount;
-            makerFeeList[currentMakerIndex] +=
-                int256(matchPaperAmount[i]) *
-                makerOrder.makerFeeRate;
-
-            totalFilledPaper += matchPaperAmount[i];
-            filledPaperAmount[makerOrderHash] += matchPaperAmount[i];
+            require(
+                matchPaperAmount[0] == totalMakerFilledPaper,
+                Errors.TAKER_TRADE_AMOUNT_WRONG
+            );
+            makerList = new address[](uniqueMakerNum);
         }
-        require(
-            filledPaperAmount[takerOrderHash] + totalFilledPaper <=
-                takerOrder.paperAmount.abs()
-        );
-        filledPaperAmount[takerOrderHash] += totalFilledPaper;
-        addPosition(msg.sender, taker);
+
+        // validate maker order & merge paper amount
+        tradePaperAmountList = new int256[](makerList.length);
+        tradeCreditAmountList = new int256[](makerList.length);
+        int256[] memory makerFeeList = new int256[](makerList.length);
+        {
+            uint256 currentMakerIndex;
+            for (uint256 i = 1; i < orderList.length; i++) {
+                bytes32 makerOrderHash = JOJOOrder(orderValidator)
+                    .validateOrder(orderList[i], signatureList[i]);
+                require(orderList[i].perp == msg.sender, Errors.PERP_MISMATCH);
+                require(
+                    orderList[i].orderSender == orderSender ||
+                        orderList[i].orderSender == address(0),
+                    Errors.INVALID_ORDER_SENDER
+                );
+                require(
+                    filledPaperAmount[makerOrderHash] + matchPaperAmount[i] <=
+                        orderList[i].paperAmount.abs(),
+                    Errors.ORDER_FILLED_OVERFLOW
+                );
+                filledPaperAmount[makerOrderHash] += matchPaperAmount[i];
+
+                _priceMatchCheck(orderList[0], orderList[i]);
+                int256 paper = orderList[0].paperAmount > 0
+                    ? int256(matchPaperAmount[i])
+                    : -1 * int256(matchPaperAmount[i]);
+
+                // welcome new maker
+                addPosition(msg.sender, orderList[i].signer);
+                if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
+                    currentMakerIndex += 1;
+                }
+
+                tradePaperAmountList[currentMakerIndex] += paper;
+                tradeCreditAmountList[currentMakerIndex] +=
+                    (paper * orderList[i].creditAmount) /
+                    orderList[i].paperAmount;
+                makerFeeList[currentMakerIndex] +=
+                    int256(matchPaperAmount[i]) *
+                    orderList[i].makerFeeRate;
+            }
+        }
+
+        // modify taker order status
+        {
+            taker = orderList[0].signer;
+            bytes32 takerOrderHash = JOJOOrder(orderValidator).validateOrder(
+                orderList[0],
+                signatureList[0]
+            );
+            require(orderList[0].perp == msg.sender, Errors.PERP_MISMATCH);
+            require(
+                orderList[0].orderSender == orderSender ||
+                    orderList[0].orderSender == address(0),
+                Errors.INVALID_ORDER_SENDER
+            );
+            require(
+                filledPaperAmount[takerOrderHash] + matchPaperAmount[0] <=
+                    orderList[0].paperAmount.abs(),
+                Errors.ORDER_FILLED_OVERFLOW
+            );
+            filledPaperAmount[takerOrderHash] += matchPaperAmount[0];
+            addPosition(msg.sender, taker);
+        }
 
         // trading fee related
-        int256 senderFee;
-        int256 takerFee = int256(totalFilledPaper) *
-            int256(takerOrder.takerFeeRate);
+
+        int256 orderSenderFee;
+        int256 takerFee = int256(matchPaperAmount[0]) *
+            int256(orderList[0].takerFeeRate);
         if (takerFee != 0) {
             IPerpetual(msg.sender).changeCredit(taker, takerFee);
-            senderFee -= takerFee;
+            orderSenderFee -= takerFee;
         }
 
         for (uint256 i = 0; i < makerList.length; i++) {
@@ -154,23 +138,23 @@ contract JOJOTrading is JOJOFunding, EIP712("JOJO Order", "1") {
                     makerList[i],
                     makerFeeList[i]
                 );
-                senderFee -= makerFeeList[i];
+                orderSenderFee -= makerFeeList[i];
             }
         }
 
-        if (senderFee != 0) {
-            IPerpetual(msg.sender).changeCredit(sender, senderFee);
-            if (senderFee < 0) {
-                isSafe(sender);
+        if (orderSenderFee != 0) {
+            IPerpetual(msg.sender).changeCredit(orderSender, orderSenderFee);
+            if (orderSenderFee < 0) {
+                isSafe(orderSender);
             }
         }
     }
 
-    function _matchCheck(Order memory takerOrder, Order memory makerOrder)
-        private
-        pure
-    {
-        require(takerOrder.perp == makerOrder.perp, "PERP NOT MATCH");
+    function _priceMatchCheck(
+        JOJOOrder.Order memory takerOrder,
+        JOJOOrder.Order memory makerOrder
+    ) internal pure {
+        require(takerOrder.perp == makerOrder.perp, Errors.PERP_MISMATCH);
         // require
         // takercredit * abs(makerpaper) / abs(takerpaper) + makercredit <= 0
         // makercredit - takercredit * makerpaper / takerpaper <= 0
@@ -180,54 +164,20 @@ contract JOJOTrading is JOJOFunding, EIP712("JOJO Order", "1") {
         // makercredit * takerpaper >= takercredit * makerpaper
         if (takerOrder.paperAmount > 0) {
             // taker open long, tradePaperAmount > 0
-            require(makerOrder.paperAmount < 0, "ORDER MATCH SIDE WRONG");
+            require(makerOrder.paperAmount < 0, Errors.ORDER_PRICE_NOT_MATCH);
             require(
                 makerOrder.creditAmount * takerOrder.paperAmount <=
                     takerOrder.creditAmount * makerOrder.paperAmount,
-                "PRICE NOT MATCH"
+                Errors.ORDER_PRICE_NOT_MATCH
             );
         } else {
             // taker open short, tradePaperAmount < 0
-            require(makerOrder.paperAmount > 0, "ORDER MATCH SIDE WRONG");
+            require(makerOrder.paperAmount > 0, Errors.ORDER_PRICE_NOT_MATCH);
             require(
                 makerOrder.creditAmount * takerOrder.paperAmount >=
                     takerOrder.creditAmount * makerOrder.paperAmount,
-                "PRICE NOT MATCH"
+                Errors.ORDER_PRICE_NOT_MATCH
             );
         }
-    }
-
-    function _checkOrder(Order memory order, bytes memory signature)
-        private
-        returns (bytes32 orderHash)
-    {
-        orderHash = _hashTypedDataV4(
-            keccak256(
-                abi.encode(
-                    ORDER_TYPEHASH,
-                    order.perp,
-                    order.paperAmount,
-                    order.creditAmount,
-                    order.signer,
-                    order.sender,
-                    order.expiration,
-                    order.salt
-                )
-            )
-        );
-        if (Address.isContract(order.signer)) {
-            require(
-                ITradingProxy(order.signer).isValidPerpetualOperator(
-                    ECDSA.recover(orderHash, signature)
-                ),
-                "INVALID SIGNATURE"
-            );
-        } else {
-            require(
-                ECDSA.recover(orderHash, signature) == order.signer,
-                "INVALID SIGNATURE"
-            );
-        }
-        require(order.paperAmount < 0 || order.creditAmount < 0);
     }
 }

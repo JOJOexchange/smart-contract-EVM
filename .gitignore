@@ -1,0 +1,15 @@
+.coverage*
+.DS_Store
+.env.local
+.idea
+
+build/
+dist/
+node_modules/
+coverage/
+lint/
+script/
+
+# VIM
+*.swo
+*.swp

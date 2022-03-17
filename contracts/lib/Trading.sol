@@ -34,7 +34,7 @@ library Trading {
         Types.State storage state,
         address orderSender,
         bytes calldata tradeData
-    ) internal returns (Types.MatchResult memory result) {
+    ) public returns (Types.MatchResult memory result) {
         require(
             state.perpRiskParams[msg.sender].isRegistered,
             Errors.PERP_NOT_REGISTERED

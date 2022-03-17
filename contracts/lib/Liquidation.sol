@@ -18,7 +18,7 @@ library Liquidation {
     using SignedDecimalMath for int256;
 
     function _getTotalExposure(Types.State storage state, address trader)
-        internal
+        public
         returns (
             int256 netValue,
             uint256 exposure,
@@ -67,7 +67,7 @@ library Liquidation {
     }
 
     function _isSafe(Types.State storage state, address trader)
-        internal
+        public
         returns (bool)
     {
         if (state.openPositions[trader].length == 0) {
@@ -137,7 +137,7 @@ library Liquidation {
         Types.State storage state,
         address trader,
         uint256 index
-    ) internal {
+    ) private {
         address[] storage positionList = state.openPositions[trader];
         state.hasPosition[trader][positionList[index]] = false;
         positionList[index] = positionList[positionList.length - 1];

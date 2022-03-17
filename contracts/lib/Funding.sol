@@ -21,7 +21,7 @@ library Funding {
         Types.State storage state,
         uint256 amount,
         address to
-    ) internal {
+    ) public {
         IERC20(state.underlyingAsset).safeTransferFrom(
             msg.sender,
             address(this),
@@ -34,7 +34,7 @@ library Funding {
         Types.State storage state,
         uint256 amount,
         address to
-    ) internal {
+    ) public {
         require(
             state.trueCredit[msg.sender] >= int256(amount),
             Errors.CREDIT_NOT_ENOUGH
@@ -48,7 +48,7 @@ library Funding {
     }
 
     function _withdrawPendingFund(Types.State storage state, address to)
-        internal
+        public
     {
         require(
             state.requestWithdrawTimestamp[msg.sender] +
@@ -66,7 +66,7 @@ library Funding {
         address payer,
         address to,
         uint256 amount
-    ) internal {
+    ) private {
         state.trueCredit[payer] -= int256(amount);
         IERC20(state.underlyingAsset).safeTransfer(to, amount);
 

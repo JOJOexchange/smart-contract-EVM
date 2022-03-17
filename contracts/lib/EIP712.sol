@@ -11,7 +11,7 @@ import "./Types.sol";
 
 library EIP712 {
     function _buildDomainSeparator(string memory name, string memory version)
-        internal
+        public
         view
         returns (bytes32)
     {
@@ -33,7 +33,7 @@ library EIP712 {
     }
 
     function _hashTypedDataV4(bytes32 domainSeparator, bytes32 structHash)
-        internal
+        public
         pure
         returns (bytes32)
     {

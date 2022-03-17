@@ -18,7 +18,7 @@ export default {
   solidity: "0.8.9",
   settings: {
     optimizer: {
-      enabled: false,
+      enabled: true,
       runs: 10000,
     },
   },

@@ -12,7 +12,7 @@ pragma solidity 0.8.9;
 // 4. liquidation - getLiquidateCreditAmount
 
 interface IDealer {
-    function approveTrade(address sender, bytes calldata tradeData)
+    function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (
             address taker,

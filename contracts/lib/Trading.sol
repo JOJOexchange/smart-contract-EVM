@@ -8,18 +8,17 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SignedMath.sol";
-import "./JOJOFunding.sol";
 import "../intf/IPerpetual.sol";
+import "../intf/ITradingProxy.sol";
 import "../utils/SignedDecimalMath.sol";
-import "../utils/JOJOOrder.sol";
 import "../utils/Errors.sol";
+import "./Liquidation.sol";
+import "./EIP712.sol";
+import "./Types.sol";
 
-contract JOJOTrading is JOJOFunding {
+library Trading {
     using SignedMath for int256;
     using Math for uint256;
-
-    mapping(bytes32 => uint256) public filledPaperAmount;
-    address public orderValidator;
 
     event OrderFilled(
         bytes32 orderHash,
@@ -31,18 +30,13 @@ contract JOJOTrading is JOJOFunding {
     // charge fee from all makers and taker, then transfer the fee to orderSender
     // if the taker open long and maker open short, tradePaperAmount > 0
     // Pay attention to sorting when submitting, then de-duplicate here to save gas
-    function approveTrade(address orderSender, bytes calldata tradeData)
-        external
-        nonReentrant
-        returns (
-            address taker,
-            address[] memory makerList,
-            int256[] memory tradePaperAmountList,
-            int256[] memory tradeCreditAmountList
-        )
-    {
+    function _approveTrade(
+        Types.State storage state,
+        address orderSender,
+        bytes calldata tradeData
+    ) internal returns (Types.MatchResult memory result) {
         require(
-            perpRiskParams[msg.sender].markPriceSource != address(0),
+            state.perpRiskParams[msg.sender].isRegistered,
             Errors.PERP_NOT_REGISTERED
         );
         // first taker and following multiple makers
@@ -50,10 +44,10 @@ contract JOJOTrading is JOJOFunding {
         // matchPaperAmount.length = orderList.length
         // matchPaperAmount[0] = summary of the following
         (
-            JOJOOrder.Order[] memory orderList,
+            Types.Order[] memory orderList,
             bytes[] memory signatureList,
             uint256[] memory matchPaperAmount
-        ) = abi.decode(tradeData, (JOJOOrder.Order[], bytes[], uint256[]));
+        ) = abi.decode(tradeData, (Types.Order[], bytes[], uint256[]));
 
         // de-duplicate maker to save gas
         {
@@ -69,30 +63,33 @@ contract JOJOTrading is JOJOFunding {
                 matchPaperAmount[0] == totalMakerFilledPaper,
                 Errors.TAKER_TRADE_AMOUNT_WRONG
             );
-            makerList = new address[](uniqueMakerNum);
+            result.makerList = new address[](uniqueMakerNum);
         }
 
         // validate maker order & merge paper amount
-        tradePaperAmountList = new int256[](makerList.length);
-        tradeCreditAmountList = new int256[](makerList.length);
-        int256[] memory makerFeeList = new int256[](makerList.length);
+        result.tradePaperAmountList = new int256[](result.makerList.length);
+        result.tradeCreditAmountList = new int256[](result.makerList.length);
+        result.makerFeeList = new int256[](result.makerList.length);
         {
             uint256 currentMakerIndex;
             for (uint256 i = 1; i < orderList.length; i++) {
-                bytes32 makerOrderHash = JOJOOrder(orderValidator)
-                    .validateOrder(orderList[i], signatureList[i]);
+                bytes32 makerOrderHash = _validateOrder(
+                    state.domainSeparator,
+                    orderList[i],
+                    signatureList[i]
+                );
                 require(orderList[i].perp == msg.sender, Errors.PERP_MISMATCH);
                 require(
                     orderList[i].orderSender == orderSender ||
                         orderList[i].orderSender == address(0),
                     Errors.INVALID_ORDER_SENDER
                 );
+                state.filledPaperAmount[makerOrderHash] += matchPaperAmount[i];
                 require(
-                    filledPaperAmount[makerOrderHash] + matchPaperAmount[i] <=
+                    state.filledPaperAmount[makerOrderHash] <=
                         orderList[i].paperAmount.abs(),
                     Errors.ORDER_FILLED_OVERFLOW
                 );
-                filledPaperAmount[makerOrderHash] += matchPaperAmount[i];
 
                 _priceMatchCheck(orderList[0], orderList[i]);
                 int256 paper = orderList[0].paperAmount > 0
@@ -100,16 +97,16 @@ contract JOJOTrading is JOJOFunding {
                     : -1 * int256(matchPaperAmount[i]);
 
                 // welcome new maker
-                _addPosition(msg.sender, orderList[i].signer);
+                _addPosition(state, msg.sender, orderList[i].signer);
                 if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
                     currentMakerIndex += 1;
                 }
 
-                tradePaperAmountList[currentMakerIndex] += paper;
-                tradeCreditAmountList[currentMakerIndex] +=
+                result.tradePaperAmountList[currentMakerIndex] += paper;
+                result.tradeCreditAmountList[currentMakerIndex] +=
                     (paper * orderList[i].creditAmount) /
                     orderList[i].paperAmount;
-                makerFeeList[currentMakerIndex] +=
+                result.makerFeeList[currentMakerIndex] +=
                     int256(matchPaperAmount[i]) *
                     orderList[i].makerFeeRate;
             }
@@ -117,8 +114,9 @@ contract JOJOTrading is JOJOFunding {
 
         // modify taker order status
         {
-            taker = orderList[0].signer;
-            bytes32 takerOrderHash = JOJOOrder(orderValidator).validateOrder(
+            result.taker = orderList[0].signer;
+            bytes32 takerOrderHash = _validateOrder(
+                state.domainSeparator,
                 orderList[0],
                 signatureList[0]
             );
@@ -128,13 +126,14 @@ contract JOJOTrading is JOJOFunding {
                     orderList[0].orderSender == address(0),
                 Errors.INVALID_ORDER_SENDER
             );
+            state.filledPaperAmount[takerOrderHash] += matchPaperAmount[0];
             require(
-                filledPaperAmount[takerOrderHash] + matchPaperAmount[0] <=
+                state.filledPaperAmount[takerOrderHash] <=
                     orderList[0].paperAmount.abs(),
                 Errors.ORDER_FILLED_OVERFLOW
             );
-            filledPaperAmount[takerOrderHash] += matchPaperAmount[0];
-            _addPosition(msg.sender, taker);
+
+            _addPosition(state, msg.sender, result.taker);
         }
 
         // trading fee related
@@ -143,32 +142,32 @@ contract JOJOTrading is JOJOFunding {
         int256 takerFee = int256(matchPaperAmount[0]) *
             int256(orderList[0].takerFeeRate);
         if (takerFee != 0) {
-            IPerpetual(msg.sender).changeCredit(taker, takerFee);
+            IPerpetual(msg.sender).changeCredit(result.taker, takerFee);
             orderSenderFee -= takerFee;
         }
 
-        for (uint256 i = 0; i < makerList.length; i++) {
-            if (makerFeeList[i] != 0) {
+        for (uint256 i = 0; i < result.makerList.length; i++) {
+            if (result.makerFeeList[i] != 0) {
                 IPerpetual(msg.sender).changeCredit(
-                    makerList[i],
-                    makerFeeList[i]
+                    result.makerList[i],
+                    result.makerFeeList[i]
                 );
-                orderSenderFee -= makerFeeList[i];
+                orderSenderFee -= result.makerFeeList[i];
             }
         }
 
         if (orderSenderFee != 0) {
             IPerpetual(msg.sender).changeCredit(orderSender, orderSenderFee);
             if (orderSenderFee < 0) {
-                isSafe(orderSender);
+                Liquidation._isSafe(state, orderSender);
             }
         }
     }
 
     function _priceMatchCheck(
-        JOJOOrder.Order memory takerOrder,
-        JOJOOrder.Order memory makerOrder
-    ) internal pure {
+        Types.Order memory takerOrder,
+        Types.Order memory makerOrder
+    ) private pure {
         require(takerOrder.perp == makerOrder.perp, Errors.PERP_MISMATCH);
         // require
         // takercredit * abs(makerpaper) / abs(takerpaper) + makercredit <= 0
@@ -194,5 +193,56 @@ contract JOJOTrading is JOJOFunding {
                 Errors.ORDER_PRICE_NOT_MATCH
             );
         }
+    }
+
+    function _addPosition(
+        Types.State storage state,
+        address perp,
+        address trader
+    ) private {
+        if (!state.hasPosition[trader][perp]) {
+            state.hasPosition[trader][perp] = true;
+            state.openPositions[trader].push(perp);
+        }
+    }
+
+    function _validateOrder(
+        bytes32 domainSeparator,
+        Types.Order memory order,
+        bytes memory signature
+    ) private returns (bytes32 orderHash) {
+        orderHash = EIP712._hashTypedDataV4(
+            domainSeparator,
+            keccak256(
+                abi.encode(
+                    Types.ORDER_TYPEHASH,
+                    order.perp,
+                    order.paperAmount,
+                    order.creditAmount,
+                    order.signer,
+                    order.orderSender,
+                    order.expiration,
+                    order.salt
+                )
+            )
+        );
+        if (Address.isContract(order.signer)) {
+            require(
+                ITradingProxy(order.signer).isValidPerpetualOperator(
+                    ECDSA.recover(orderHash, signature)
+                ),
+                Errors.INVALID_ORDER_SIGNATURE
+            );
+        } else {
+            require(
+                ECDSA.recover(orderHash, signature) == order.signer,
+                Errors.INVALID_ORDER_SIGNATURE
+            );
+        }
+        require(
+            (order.paperAmount < 0 && order.creditAmount > 0) ||
+                (order.paperAmount > 0 && order.creditAmount < 0),
+            Errors.ORDER_PRICE_NEGATIVE
+        );
     }
 }

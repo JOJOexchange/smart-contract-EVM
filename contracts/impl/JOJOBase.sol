@@ -22,24 +22,13 @@ contract JOJOBase is Ownable, ReentrancyGuard {
         uint256 insuranceFeeRate;
         int256 fundingRatio;
         address markPriceSource;
+        string name;
     }
-    mapping(address => bool) public perpRegister;
     mapping(address => riskParams) public perpRiskParams;
-
-    modifier perpRegistered(address perp) {
-        require(perpRegister[perp], Errors.PERP_NOT_REGISTERED);
-        _;
-    }
-
-    modifier perpNotRegistered(address perp) {
-        require(!perpRegister[perp], Errors.PERP_ALREADY_REGISTERED);
-        _;
-    }
 
     function getFundingRatio(address perpetualAddress)
         external
         view
-        perpRegistered(perpetualAddress)
         returns (int256)
     {
         return perpRiskParams[perpetualAddress].fundingRatio;
@@ -55,11 +44,14 @@ contract JOJOBase is Ownable, ReentrancyGuard {
         }
     }
 
-    function registerNewPerp(address perp, riskParams calldata param)
+    function registerPerp(address perp, riskParams calldata param)
         external
         onlyOwner
-        perpNotRegistered(perp)
     {
         perpRiskParams[perp] = param;
+    }
+
+    function setInsurance(address newInsurance) external onlyOwner {
+        insurance = newInsurance;
     }
 }

@@ -21,7 +21,12 @@ contract JOJOTrading is JOJOFunding {
     mapping(bytes32 => uint256) public filledPaperAmount;
     address public orderValidator;
 
-    event OrderFilled(bytes32 orderHash, int256 filledPaperAmount, int256 filledCreditAmount, int256 fee);
+    event OrderFilled(
+        bytes32 orderHash,
+        int256 filledPaperAmount,
+        int256 filledCreditAmount,
+        int256 fee
+    );
 
     // charge fee from all makers and taker, then transfer the fee to orderSender
     // if the taker open long and maker open short, tradePaperAmount > 0
@@ -29,7 +34,6 @@ contract JOJOTrading is JOJOFunding {
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         nonReentrant
-        perpRegistered(msg.sender)
         returns (
             address taker,
             address[] memory makerList,
@@ -37,6 +41,10 @@ contract JOJOTrading is JOJOFunding {
             int256[] memory tradeCreditAmountList
         )
     {
+        require(
+            perpRiskParams[msg.sender].markPriceSource != address(0),
+            Errors.PERP_NOT_REGISTERED
+        );
         // first taker and following multiple makers
         // orderList >= 2
         // matchPaperAmount.length = orderList.length

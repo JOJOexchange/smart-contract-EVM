@@ -63,17 +63,25 @@ contract JOJOFunding is JOJOBase {
     }
 
     function withdrawPendingFund(address to) external nonReentrant {
-        require(requestWithdrawTimestamp[msg.sender]+withdrawTimeLock <= block.timestamp, "TN");
+        require(
+            requestWithdrawTimestamp[msg.sender] + withdrawTimeLock <=
+                block.timestamp,
+            "TN"
+        );
         uint256 amount = requestWithdrawTimestamp[msg.sender];
         _withdraw(msg.sender, to, amount);
         pendingWithdraw[msg.sender] = 0;
-    } 
+    }
 
-    function _withdraw(address payer, address to, uint256 amount) internal {
+    function _withdraw(
+        address payer,
+        address to,
+        uint256 amount
+    ) internal {
         trueCredit[payer] -= int256(amount);
-            IERC20(underlyingAsset).safeTransfer(to, amount);
-            require(isSafe(payer), Errors.ACCOUNT_NOT_SAFE);
-            emit Withdraw(to, payer, amount);
+        IERC20(underlyingAsset).safeTransfer(to, amount);
+        require(isSafe(payer), Errors.ACCOUNT_NOT_SAFE);
+        emit Withdraw(to, payer, amount);
     }
 
     function getTotalExposure(address trader)
@@ -92,7 +100,7 @@ contract JOJOFunding is JOJOBase {
                 openPositions[trader][i]
             ).balanceOf(trader);
             riskParams memory params = perpRiskParams[openPositions[trader][i]];
-            (uint256 price, , ) = IMarkPriceSource(params.markPriceSource)
+            uint256 price = IMarkPriceSource(params.markPriceSource)
                 .getMarkPrice();
             int256 signedExposure = paperAmount.decimalMul(int256(price));
 
@@ -152,17 +160,16 @@ contract JOJOFunding is JOJOBase {
     function getLiquidateCreditAmount(
         address brokenTrader,
         int256 liquidatePaperAmount
-    )
-        external
-        perpRegistered(msg.sender)
-        returns (int256 paperAmount, int256 creditAmount)
-    {
+    ) external returns (int256 paperAmount, int256 creditAmount) {
         require(!isSafe(brokenTrader), Errors.ACCOUNT_IS_SAFE);
 
         // get price
         riskParams memory params = perpRiskParams[msg.sender];
-        (uint256 price, , ) = IMarkPriceSource(params.markPriceSource)
-            .getMarkPrice();
+        require(
+            params.markPriceSource != address(0),
+            Errors.PERP_NOT_REGISTERED
+        );
+        uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
         uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
 
         // calculate trade

@@ -9,11 +9,15 @@ pragma experimental ABIEncoderV2;
 import "./JOJOView.sol";
 import "./JOJOExternal.sol";
 import "./JOJOOperation.sol";
+import "../lib/EIP712.sol";
 
 contract JOJODealer is JOJOView, JOJOExternal, JOJOOperation {
-    constructor(address _underlyingAsset, address _orderValidator) Ownable() {
+    constructor(address _underlyingAsset) Ownable() {
         state.underlyingAsset = _underlyingAsset;
-        state.orderValidator = _orderValidator;
-        state.domainSeparator = EIP712._buildDomainSeparator("JOJO", "1");
+        state.domainSeparator = EIP712._buildDomainSeparator(
+            "JOJO",
+            "1",
+            address(this)
+        );
     }
 }

@@ -1,13 +1,17 @@
 import { ethers } from "hardhat";
-import { Contract, Signer, utils } from "ethers";
+import { Contract, Wallet, Signer, utils } from "ethers";
 
 /*
     Default Context Params
-    10 characters: owner insurance trader1~8
+    5 characters: owner insurance trader1~3
     3 perp markets:
     - BTC 20x 3% liquidation 1% price offset 1% insurance
     - ETH 10x 5% liquidation 1% price offset 1% insurance
     - AR  5x  10% liquidation 3% price offset 2% insurance
+    Init price
+    - BTC 30000
+    - ETH 2000
+    - AR 10
 */
 
 export interface Context {
@@ -19,26 +23,65 @@ export interface Context {
   ownerAddress: string;
   insurance: Signer;
   insuranceAddress: string;
-  traderList: Signer[];
-  traderAddressList: string[];
+  traderList: Wallet[];
 }
 
 export async function basicContext(): Promise<Context> {
-  let signers: Signer[] = await ethers.getSigners();
 
+   let owner = (await ethers.getSigners())[0]
+   let ownerAddress = await owner.getAddress()
+
+   let insurance = (await ethers.getSigners())[1]
+   let insuranceAddress = await insurance.getAddress()
+
+  let traders: Wallet[] = [];
+  for (let i = 0; i < 3; i++) {
+    let wallet = new ethers.Wallet(
+      "0x012345678901234567890123456789012345678901234567890123456789012"+i.toString(),
+      ethers.provider
+    );
+    traders.push(wallet);
+    let tx = {
+        to: wallet.address,
+        value:utils.parseEther("10")
+    }
+    await owner.sendTransaction(tx)
+  }
+
+  // Deploy libraries
+  const EIP712Lib = await (await ethers.getContractFactory("EIP712")).deploy();
+  const LiquidationLib = await (
+    await ethers.getContractFactory("Liquidation")
+  ).deploy();
+  const FundingLib = await (
+    await ethers.getContractFactory("Funding", {
+      libraries: { Liquidation: LiquidationLib.address },
+    })
+  ).deploy();
+  const TradingLib = await (
+    await ethers.getContractFactory("Trading", {
+      libraries: {
+        EIP712: EIP712Lib.address,
+        Liquidation: LiquidationLib.address,
+      },
+    })
+  ).deploy();
+
+  // deploy core contracts
   let underlyingAsset: Contract = await (
     await ethers.getContractFactory("TestERC20")
   ).deploy("USDT", "USDT");
-  let jojoOrder: Contract = await (
-    await ethers.getContractFactory("JOJOOrder")
-  ).deploy();
   let dealer = await (
-    await ethers.getContractFactory("JOJODealer")
-  ).deploy(
-    underlyingAsset.address,
-    jojoOrder.address
-  );
-  await dealer.setInsurance(await signers[1].getAddress())
+    await ethers.getContractFactory("JOJODealer", {
+      libraries: {
+        EIP712: EIP712Lib.address,
+        Funding: FundingLib.address,
+        Liquidation: LiquidationLib.address,
+        Trading: TradingLib.address,
+      },
+    })
+  ).deploy(underlyingAsset.address);
+  await dealer.setInsurance(insuranceAddress);
 
   let perpList: Contract[] = [];
   let priceSourceList: Contract[] = [];
@@ -49,26 +92,53 @@ export async function basicContext(): Promise<Context> {
     priceSourceList[index] = await (
       await ethers.getContractFactory("TestMarkPriceSource")
     ).deploy();
-    await dealer.registerNewPerp(perpList[index].address, [
-      100,
-      100,
-      100,
-      100,
-      priceSourceList[index].address,
-    ]);
   }
 
-  let traderList: Signer[] = [];
-  let traderAddressList: string[] = [];
-  for (let index = 2; index < 10; index++) {
-    let trader = signers[index];
-    let traderAddress = await signers[index].getAddress();
+  // set BTC market
+  await dealer.setPerpRiskParams(perpList[0].address, [
+    utils.parseEther("0.03"), // 3% liquidation
+    utils.parseEther("0.01"), // 1% price offset
+    utils.parseEther("0.01"), // 1% insurance fee
+    utils.parseEther("1"), // init funding ratio 1
+    priceSourceList[0].address, // mark price source
+    "BTC20x", // name
+    true, // register
+  ]);
+  await priceSourceList[0].setMarkPrice(utils.parseEther("30000"));
+
+  // set ETH market
+  await dealer.setPerpRiskParams(perpList[1].address, [
+    utils.parseEther("0.05"), // 5% liquidation
+    utils.parseEther("0.01"), // 1% price offset
+    utils.parseEther("0.01"), // 1% insurance fee
+    utils.parseEther("1"), // init funding ratio 1
+    priceSourceList[1].address, // mark price source
+    "ETH10x", // name
+    true, // register
+  ]);
+  await priceSourceList[1].setMarkPrice(utils.parseEther("2000"));
+
+  // set AR market
+  await dealer.setPerpRiskParams(perpList[2].address, [
+    utils.parseEther("0.10"), // 10% liquidation
+    utils.parseEther("0.03"), // 3% price offset
+    utils.parseEther("0.02"), // 2% insurance fee
+    utils.parseEther("1"), // init funding ratio 1
+    priceSourceList[2].address, // mark price source
+    "AR5x", // name
+    true, // register
+  ]);
+  await priceSourceList[2].setMarkPrice(utils.parseEther("10"));
+
+  let traderList: Wallet[] = [];
+  for (let index = 2; index < traders.length; index++) {
+    let trader = traders[index];
     traderList.push(trader);
-    traderAddressList.push(traderAddress);
+    // 1M for each trader
     await underlyingAsset
-      .connect(signers[index])
+      .connect(traders[index])
       .approve(dealer.address, utils.parseEther("1000000"));
-    await underlyingAsset.mint([traderAddress], [utils.parseEther("1000000")]);
+    await underlyingAsset.mint([trader.address], [utils.parseEther("1000000")]);
   }
 
   return {
@@ -76,11 +146,10 @@ export async function basicContext(): Promise<Context> {
     dealer: dealer,
     perpList: perpList,
     priceSourceList: priceSourceList,
-    owner: signers[0],
-    ownerAddress: await signers[0].getAddress(),
-    insurance: signers[1],
-    insuranceAddress: await signers[1].getAddress(),
-    traderList: signers.slice(2, 10),
-    traderAddressList: traderAddressList,
+    owner: owner,
+    ownerAddress: ownerAddress,
+    insurance: insurance,
+    insuranceAddress: insuranceAddress,
+    traderList: traders,
   };
 }

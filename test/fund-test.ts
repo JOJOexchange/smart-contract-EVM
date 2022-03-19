@@ -3,25 +3,45 @@ import { Contract, Signer, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
 
-describe("BasicToken", () => {
+describe("Funding", () => {
   let context: Context;
+  let trader1: Signer;
+  let trader2: Signer;
+  let trader1Address: string;
+  let trader2Address: string;
+
   beforeEach(async () => {
     context = await basicContext();
+    trader1 = context.traderList[0];
+    trader2 = context.traderList[1];
+    trader1Address = await trader1.getAddress();
+    trader2Address = await trader2.getAddress();
   });
 
-  // it("underlying asset balance", async () => {
-  //   for (let index = 0; index < context.traderAddressList.length; index++) {
-  //     expect(
-  //       await context.underlyingAsset.balanceOf(
-  //         context.traderAddressList[index]
-  //       )
-  //     ).to.equal(utils.parseEther("1000000"));
-  //   }
-  // });
-
-  it("perp registered", async () => {
-    console.log(await context.dealer.getRegisteredPerp());
+  it("deposit", async () => {
+    let c = context.dealer.connect(trader1);
+    await c.deposit(utils.parseEther("100000"), trader1Address);
+    expect(await context.underlyingAsset.balanceOf(trader1Address)).to.equal(
+      utils.parseEther("900000")
+    );
+    expect(
+      await context.underlyingAsset.balanceOf(context.dealer.address)
+    ).to.equal(utils.parseEther("100000"));
+    const credit = await context.dealer.getCreditOf(trader1Address);
+    expect(credit.trueCredit).to.equal(utils.parseEther("100000"));
+    expect(credit.virtualCredit).to.equal(utils.parseEther("0"));
   });
+
+  it("set virtual credit", async () => {
+    await context.dealer.setVirtualCredit(trader1Address, utils.parseEther("10"))
+    await context.dealer.setVirtualCredit(trader2Address, utils.parseEther("20"))
+    const credit1 = await context.dealer.getCreditOf(trader1Address);
+    expect(credit1.trueCredit).to.equal(utils.parseEther("0"));
+    expect(credit1.virtualCredit).to.equal(utils.parseEther("10"));
+    const credit2 = await context.dealer.getCreditOf(trader2Address);
+    expect(credit2.trueCredit).to.equal(utils.parseEther("0"));
+    expect(credit2.virtualCredit).to.equal(utils.parseEther("20"));
+  })
 
   //   it('Assigns initial balance', async () => {
   //       const gretter = await ethers.getContractFactory("")

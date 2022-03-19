@@ -7,7 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/math/SignedMath.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../intf/IPerpetual.sol";
 import "../intf/ITradingProxy.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -17,7 +17,7 @@ import "./EIP712.sol";
 import "./Types.sol";
 
 library Trading {
-    using SignedMath for int256;
+    using SignedDecimalMath for int256;
     using Math for uint256;
 
     event OrderFilled(
@@ -64,6 +64,7 @@ library Trading {
                 Errors.TAKER_TRADE_AMOUNT_WRONG
             );
             result.makerList = new address[](uniqueMakerNum);
+            result.makerList[0] = orderList[1].signer;
         }
 
         // validate maker order & merge paper amount
@@ -100,15 +101,24 @@ library Trading {
                 _addPosition(state, msg.sender, orderList[i].signer);
                 if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
                     currentMakerIndex += 1;
+                    result.makerList[currentMakerIndex] = orderList[i].signer;
                 }
 
-                result.tradePaperAmountList[currentMakerIndex] += paper;
-                result.tradeCreditAmountList[currentMakerIndex] +=
-                    (paper * orderList[i].creditAmount) /
+                // matching result
+                int256 matchCreditAmount = (paper * orderList[i].creditAmount) /
                     orderList[i].paperAmount;
-                result.makerFeeList[currentMakerIndex] +=
-                    int256(matchPaperAmount[i]) *
-                    orderList[i].makerFeeRate;
+                result.tradePaperAmountList[currentMakerIndex] += paper;
+                result.tradeCreditAmountList[
+                    currentMakerIndex
+                ] += matchCreditAmount;
+
+                // fees
+                result.makerFeeList[currentMakerIndex] += int256(
+                    matchCreditAmount.abs()
+                ).decimalMul(orderList[i].makerFeeRate);
+                result.takerFee += int256(matchCreditAmount.abs()).decimalMul(
+                    orderList[0].takerFeeRate
+                );
             }
         }
 
@@ -139,20 +149,21 @@ library Trading {
         // trading fee related
 
         int256 orderSenderFee;
-        int256 takerFee = int256(matchPaperAmount[0]) *
-            int256(orderList[0].takerFeeRate);
-        if (takerFee != 0) {
-            IPerpetual(msg.sender).changeCredit(result.taker, takerFee);
-            orderSenderFee -= takerFee;
+        if (result.takerFee != 0) {
+            IPerpetual(msg.sender).changeCredit(
+                result.taker,
+                -1 * result.takerFee
+            );
+            orderSenderFee += result.takerFee;
         }
 
         for (uint256 i = 0; i < result.makerList.length; i++) {
             if (result.makerFeeList[i] != 0) {
                 IPerpetual(msg.sender).changeCredit(
                     result.makerList[i],
-                    result.makerFeeList[i]
+                    -1 * result.makerFeeList[i]
                 );
-                orderSenderFee -= result.makerFeeList[i];
+                orderSenderFee += result.makerFeeList[i];
             }
         }
 
@@ -210,7 +221,7 @@ library Trading {
         bytes32 domainSeparator,
         Types.Order memory order,
         bytes memory signature
-    ) private returns (bytes32 orderHash) {
+    ) public returns (bytes32 orderHash) {
         orderHash = EIP712._hashTypedDataV4(
             domainSeparator,
             keccak256(
@@ -219,6 +230,8 @@ library Trading {
                     order.perp,
                     order.paperAmount,
                     order.creditAmount,
+                    order.makerFeeRate,
+                    order.takerFeeRate,
                     order.signer,
                     order.orderSender,
                     order.expiration,

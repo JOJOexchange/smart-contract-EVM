@@ -12,5 +12,5 @@ import "../lib/EIP712.sol";
 import "../lib/Types.sol";
 
 contract JOJOStorage is Ownable, ReentrancyGuard {
-    Types.State state;
+    Types.State public state;
 }

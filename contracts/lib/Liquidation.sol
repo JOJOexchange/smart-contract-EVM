@@ -6,7 +6,6 @@
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../intf/IPerpetual.sol";
 import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -14,7 +13,6 @@ import "../utils/Errors.sol";
 import "./Types.sol";
 
 library Liquidation {
-    using SafeERC20 for IERC20;
     using SignedDecimalMath for int256;
 
     function _getTotalExposure(Types.State storage state, address trader)
@@ -104,6 +102,12 @@ library Liquidation {
             brokenTrader
         );
         require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);
+        // if (
+        //     (brokenPaperAmount.abs() * price) / 10**18 >=
+        //     params.largePositionThreshold
+        // ) {
+        //     brokenPaperAmount = int256(params.largePositionThreshold / 2);
+        // }
 
         if (brokenPaperAmount > 0) {
             // close long

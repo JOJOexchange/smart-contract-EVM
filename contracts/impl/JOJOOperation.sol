@@ -61,7 +61,7 @@ contract JOJOOperation is JOJOStorage {
                 }
             }
         }
-        if (!state.perpRiskParams[perp].isRegistered && !param.isRegistered) {
+        if (!state.perpRiskParams[perp].isRegistered && param.isRegistered) {
             // new perp
             state.registeredPerp.push(perp);
         }

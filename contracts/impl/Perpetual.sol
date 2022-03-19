@@ -20,7 +20,7 @@ contract Perpetual is Ownable, IPerpetual {
 
     // modifier
 
-    // constructor 
+    // constructor
     constructor(address _owner) Ownable() {
         transferOwnership(_owner);
     }
@@ -50,6 +50,7 @@ contract Perpetual is Ownable, IPerpetual {
             int256[] memory tradePaperAmountList,
             int256[] memory tradeCreditAmountList
         ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
+
         for (uint256 i = 0; i < makerList.length; i++) {
             _trade(
                 taker,
@@ -89,23 +90,31 @@ contract Perpetual is Ownable, IPerpetual {
 
         int256 ratio = IDealer(owner()).getFundingRatio(address(this));
 
+        // ratio = 1000000000000000000
+        // tradePaper = 1000000000000000000
+        // tradeCredit = -30000000000000000000000
+        // takerCredit = -30000000000000000000000
+        // paperAmountMap[taker] = 1000000000000000000
+        // reduced =
+
         // settle taker
-        int256 takerCredit = paperAmountMap[taker] *
-            ratio +
+        int256 takerCredit = paperAmountMap[taker].decimalMul(ratio) +
             reducedCreditMap[taker] +
             tradeCreditAmount;
         paperAmountMap[taker] += tradePaperAmount;
-        reducedCreditMap[taker] = takerCredit - paperAmountMap[taker] * ratio;
+        reducedCreditMap[taker] =
+            takerCredit -
+            paperAmountMap[taker].decimalMul(ratio);
 
         // settle maker
         // -1 * tradePaperAmount & -1 * tradeCreditAmount
-        int256 makerCredit = paperAmountMap[maker] *
-            ratio +
+        int256 makerCredit = paperAmountMap[maker].decimalMul(ratio) +
             reducedCreditMap[maker] +
             (-1 * tradeCreditAmount);
         paperAmountMap[maker] += (-1 * tradePaperAmount);
-        reducedCreditMap[maker] = makerCredit - paperAmountMap[maker] * ratio;
-
+        reducedCreditMap[maker] =
+            makerCredit -
+            paperAmountMap[maker].decimalMul(ratio);
     }
 
     function changeCredit(address trader, int256 amount) external onlyOwner {

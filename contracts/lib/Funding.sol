@@ -57,8 +57,8 @@ library Funding {
             Errors.WITHDRAW_PENDING
         );
         uint256 amount = state.requestWithdrawTimestamp[msg.sender];
-        _settleWithdraw(state, msg.sender, to, amount);
         state.pendingWithdraw[msg.sender] = 0;
+        _settleWithdraw(state, msg.sender, to, amount);
     }
 
     function _settleWithdraw(

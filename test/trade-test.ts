@@ -9,6 +9,33 @@ import {
   OrderEnv,
 } from "../scripts/order";
 
+/*
+  Test cases list
+  - single match 
+    - taker long
+    - taker short
+    - close position
+  - multi match
+    - maker de-duplicate
+    - without maker de-duplicate
+  - using maker price
+  - negative fee rate
+    - independent order fee rate
+  - change funding ratio
+
+  Revert cases list
+  - order price negative
+  - order amount 0
+  - wrong signer
+  - wrong sender
+  - wrong perp
+  - wrong match amount
+  - be liquidated
+  - order over filled
+  - price not match
+  - 
+*/
+
 describe("Trade", () => {
   let context: Context;
   let trader1: Wallet;

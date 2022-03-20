@@ -2,6 +2,24 @@ import { ethers } from "hardhat";
 import { Contract, Signer, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
+import * as chekcers from "./checkers";
+import { timeJump } from "./timemachine";
+
+/*
+  Test cases list
+  - deposit
+    - deposit to others
+  - set virtual credit
+    - increase
+    - decrease
+  - withdraw
+    - withdraw without timelock
+    - withdraw with timelock
+
+  Revert cases list
+  - withdraw when being liquidated
+  - withdraw when not enough balance
+*/
 
 describe("Funding", () => {
   let context: Context;
@@ -20,28 +38,72 @@ describe("Funding", () => {
 
   it("deposit", async () => {
     let c = context.dealer.connect(trader1);
+
+    // deposit to self
     await c.deposit(utils.parseEther("100000"), trader1Address);
-    expect(await context.underlyingAsset.balanceOf(trader1Address)).to.equal(
-      utils.parseEther("900000")
-    );
-    expect(
-      await context.underlyingAsset.balanceOf(context.dealer.address)
-    ).to.equal(utils.parseEther("100000"));
-    const credit = await context.dealer.getCreditOf(trader1Address);
-    expect(credit.trueCredit).to.equal(utils.parseEther("100000"));
-    expect(credit.virtualCredit).to.equal(utils.parseEther("0"));
+    chekcers.checkUnderlyingAsset(context, trader1Address, "900000")
+    chekcers.checkUnderlyingAsset(context, context.dealer.address, "100000")
+    chekcers.checkCredit(context, trader1Address, "100000", "0");
+
+    // deposit to others
+    await c.deposit(utils.parseEther("20000"), trader2Address);
+    chekcers.checkUnderlyingAsset(context, trader2Address, "880000")
+    chekcers.checkUnderlyingAsset(context, context.dealer.address, "120000")
+    chekcers.checkCredit(context, trader2Address, "20000", "0");
   });
 
   it("set virtual credit", async () => {
-    await context.dealer.setVirtualCredit(trader1Address, utils.parseEther("10"))
-    await context.dealer.setVirtualCredit(trader2Address, utils.parseEther("20"))
-    const credit1 = await context.dealer.getCreditOf(trader1Address);
-    expect(credit1.trueCredit).to.equal(utils.parseEther("0"));
-    expect(credit1.virtualCredit).to.equal(utils.parseEther("10"));
-    const credit2 = await context.dealer.getCreditOf(trader2Address);
-    expect(credit2.trueCredit).to.equal(utils.parseEther("0"));
-    expect(credit2.virtualCredit).to.equal(utils.parseEther("20"));
-  })
+    await context.dealer.setVirtualCredit(
+      trader1Address,
+      utils.parseEther("10")
+    );
+    await context.dealer.setVirtualCredit(
+      trader2Address,
+      utils.parseEther("20")
+    );
+    chekcers.checkCredit(context, trader1Address, "0", "10");
+    chekcers.checkCredit(context, trader2Address, "0", "20");
+
+    await context.dealer.setVirtualCredit(
+      trader1Address,
+      utils.parseEther("5")
+    );
+    chekcers.checkCredit(context, trader1Address, "0", "5");
+  });
+
+  it("withdraw", async () => {
+    it("without timelock", async () => {
+      const state = await context.dealer.state();
+      expect(state.withdrawTimeLock).to.equal(utils.parseEther("0"));
+      let d = context.dealer.connect(trader1);
+      await d.deposit(utils.parseEther("100000"), trader1Address);
+      await d.withdraw(utils.parseEther("30000"), trader1Address);
+      await d.withdraw(utils.parseEther("70000"), trader2Address);
+      chekcers.checkCredit(context, trader1Address, "0", "0");
+      chekcers.checkUnderlyingAsset(context, trader1Address, "930000")
+      chekcers.checkUnderlyingAsset(context, trader2Address, "1070000")
+      chekcers.checkUnderlyingAsset(context, context.dealer.address, "0")
+    });
+
+    it("with timelock", async () => {
+      await context.dealer.setWithdrawTimeLock("100")
+      const state = await context.dealer.state();
+      expect(state.withdrawTimeLock).to.equal("100");
+      let d = context.dealer.connect(trader1);
+      await d.deposit(utils.parseEther("100000"), trader1Address);
+      await d.withdraw(utils.parseEther("30000"), trader1Address);
+      chekcers.checkCredit(context, trader1Address, "100000", "0");
+      chekcers.checkUnderlyingAsset(context, trader1Address, "900000")
+      
+      await timeJump(50)
+      expect(await d.withdrawPendingFund(trader1Address)).reverted("JOJO_WITHDRAW_PENDING")
+
+      await timeJump(51)
+      await d.withdrawPendingFund(trader1Address)
+      chekcers.checkCredit(context, trader1Address, "70000", "0")
+      chekcers.checkUnderlyingAsset(context, trader1Address, "930000")
+    });
+  });
 
   //   it('Assigns initial balance', async () => {
   //       const gretter = await ethers.getContractFactory("")

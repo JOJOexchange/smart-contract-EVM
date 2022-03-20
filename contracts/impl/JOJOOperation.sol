@@ -71,4 +71,8 @@ contract JOJOOperation is JOJOStorage {
     function setInsurance(address newInsurance) external onlyOwner {
         state.insurance = newInsurance;
     }
+
+    function setWithdrawTimeLock(uint256 newTimeLock) external onlyOwner {
+        state.withdrawTimeLock = newTimeLock;
+    }
 }

@@ -5,9 +5,12 @@ import { Contract, Wallet, Signer, utils } from "ethers";
     Default Context Params
     5 characters: owner insurance trader1~3
     3 perp markets:
-    - BTC 20x 3% liquidation 1% price offset 1% insurance
-    - ETH 10x 5% liquidation 1% price offset 1% insurance
-    - AR  5x  10% liquidation 3% price offset 2% insurance
+    - BTC 20x 
+      3% liquidation 1% price offset 1% insurance 
+    - ETH 10x 
+      5% liquidation 1% price offset 1% insurance 
+    - AR  5x  
+      10% liquidation 3% price offset 2% insurance 
     Init price
     - BTC 30000
     - ETH 2000
@@ -98,6 +101,7 @@ export async function basicContext(): Promise<Context> {
   await dealer.setPerpRiskParams(perpList[0].address, [
     utils.parseEther("0.03"), // 3% liquidation
     utils.parseEther("0.01"), // 1% price offset
+    // utils.parseEther("100"), // 100BTC max
     utils.parseEther("0.01"), // 1% insurance fee
     utils.parseEther("1"), // init funding ratio 1
     priceSourceList[0].address, // mark price source
@@ -110,6 +114,7 @@ export async function basicContext(): Promise<Context> {
   await dealer.setPerpRiskParams(perpList[1].address, [
     utils.parseEther("0.05"), // 5% liquidation
     utils.parseEther("0.01"), // 1% price offset
+    // utils.parseEther("1000"), // 1000ETH max
     utils.parseEther("0.01"), // 1% insurance fee
     utils.parseEther("1"), // init funding ratio 1
     priceSourceList[1].address, // mark price source
@@ -122,6 +127,7 @@ export async function basicContext(): Promise<Context> {
   await dealer.setPerpRiskParams(perpList[2].address, [
     utils.parseEther("0.10"), // 10% liquidation
     utils.parseEther("0.03"), // 3% price offset
+    // utils.parseEther("1000"), // 1000AR max
     utils.parseEther("0.02"), // 2% insurance fee
     utils.parseEther("1"), // init funding ratio 1
     priceSourceList[2].address, // mark price source
@@ -130,13 +136,11 @@ export async function basicContext(): Promise<Context> {
   ]);
   await priceSourceList[2].setMarkPrice(utils.parseEther("10"));
 
-  let traderList: Wallet[] = [];
-  for (let index = 2; index < traders.length; index++) {
+  for (let index = 0; index < traders.length; index++) {
     let trader = traders[index];
-    traderList.push(trader);
     // 1M for each trader
     await underlyingAsset
-      .connect(traders[index])
+      .connect(trader)
       .approve(dealer.address, utils.parseEther("1000000"));
     await underlyingAsset.mint([trader.address], [utils.parseEther("1000000")]);
   }

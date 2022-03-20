@@ -53,7 +53,7 @@ library Types {
         // the lower liquidationThreshold, leverage multiplier higher
         uint256 liquidationThreshold;
         uint256 liquidationPriceOff;
-        // uint256 largePositionThreshold;
+        // uint256 maxPositionSize; // count in paper amount
         uint256 insuranceFeeRate;
         int256 fundingRatio;
         address markPriceSource;

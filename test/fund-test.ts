@@ -7,7 +7,7 @@ import {
   fundTrader,
   setPrice,
 } from "../scripts/context";
-import {checkCredit, checkUnderlyingAsset} from "./checkers";
+import { checkCredit, checkUnderlyingAsset } from "./checkers";
 import { timeJump } from "./timemachine";
 import { getDefaultOrderEnv, openPosition } from "../scripts/order";
 
@@ -117,9 +117,9 @@ describe("Funding", () => {
   it("withdraw when not enough balance", async () => {
     let d = context.dealer.connect(trader1);
     await d.deposit(utils.parseEther("100000"), trader1Address);
-    expect(d.withdraw(utils.parseEther("100001"), trader1Address)).to.be.revertedWith(
-      "JOJO_CREDIT_NOT_ENOUGH"
-    );
+    expect(
+      d.withdraw(utils.parseEther("100001"), trader1Address)
+    ).to.be.revertedWith("JOJO_CREDIT_NOT_ENOUGH");
   });
 
   it("withdraw when liquidated", async () => {
@@ -133,8 +133,12 @@ describe("Funding", () => {
       await getDefaultOrderEnv(context.dealer)
     );
     await setPrice(context.priceSourceList[0], "10000");
-    await context.dealer.isSafe(trader1.address);
-    await context.dealer.callStatic.isSafe
+    expect(await context.dealer.isSafe(trader1.address)).to.be.false;
+    expect(
+      context.dealer
+        .connect(trader1)
+        .withdraw(utils.parseEther("1"), trader1.address)
+    ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
   });
 
   //   it('Assigns initial balance', async () => {

@@ -46,6 +46,28 @@ library Trading {
             uint256[] memory matchPaperAmount
         ) = abi.decode(tradeData, (Types.Order[], bytes[], uint256[]));
 
+        // validate orders
+        for (uint256 i = 0; i < orderList.length; i++) {
+            bytes32 orderHash = _validateOrder(
+                state.domainSeparator,
+                orderList[i],
+                signatureList[i]
+            );
+            require(orderList[i].perp == msg.sender, Errors.PERP_MISMATCH);
+            require(
+                orderList[i].orderSender == orderSender ||
+                    orderList[i].orderSender == address(0),
+                Errors.INVALID_ORDER_SENDER
+            );
+            state.filledPaperAmount[orderHash] += matchPaperAmount[i];
+            require(
+                state.filledPaperAmount[orderHash] <=
+                    orderList[i].paperAmount.abs(),
+                Errors.ORDER_FILLED_OVERFLOW
+            );
+            _addPosition(state, msg.sender, orderList[i].signer);
+        }
+
         // de-duplicate trader to save gas
         {
             uint256 uniqueTraderNum = 1;
@@ -79,25 +101,6 @@ library Trading {
                     result.traderList[currentTraderIndex] = orderList[i].signer;
                 }
 
-                bytes32 makerOrderHash = _validateOrder(
-                    state.domainSeparator,
-                    orderList[i],
-                    signatureList[i]
-                );
-                require(orderList[i].perp == msg.sender, Errors.PERP_MISMATCH);
-                require(
-                    orderList[i].orderSender == orderSender ||
-                        orderList[i].orderSender == address(0),
-                    Errors.INVALID_ORDER_SENDER
-                );
-                state.filledPaperAmount[makerOrderHash] += matchPaperAmount[i];
-                require(
-                    state.filledPaperAmount[makerOrderHash] <=
-                        orderList[i].paperAmount.abs(),
-                    Errors.ORDER_FILLED_OVERFLOW
-                );
-                _addPosition(state, msg.sender, orderList[i].signer);
-
                 // matching result
                 int256 paperChange = orderList[i].paperAmount > 0
                     ? int256(matchPaperAmount[i])
@@ -113,29 +116,6 @@ library Trading {
                 result.feeList[currentTraderIndex] += int256(creditChange.abs())
                     .decimalMul(orderList[i].makerFeeRate);
             }
-        }
-
-        // modify taker order status
-        {
-            bytes32 takerOrderHash = _validateOrder(
-                state.domainSeparator,
-                orderList[0],
-                signatureList[0]
-            );
-            require(orderList[0].perp == msg.sender, Errors.PERP_MISMATCH);
-            require(
-                orderList[0].orderSender == orderSender ||
-                    orderList[0].orderSender == address(0),
-                Errors.INVALID_ORDER_SENDER
-            );
-            state.filledPaperAmount[takerOrderHash] += matchPaperAmount[0];
-            require(
-                state.filledPaperAmount[takerOrderHash] <=
-                    orderList[0].paperAmount.abs(),
-                Errors.ORDER_FILLED_OVERFLOW
-            );
-
-            _addPosition(state, msg.sender, orderList[0].signer);
         }
 
         // trading fee related

@@ -50,7 +50,7 @@ contract JOJOView is JOJOStorage {
                     order.signer,
                     order.orderSender,
                     order.expiration,
-                    order.salt
+                    order.nounce
                 )
             )
         );

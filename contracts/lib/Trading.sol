@@ -27,9 +27,6 @@ library Trading {
         int256 fee
     );
 
-    // charge fee from all makers and taker, then transfer the fee to orderSender
-    // if the taker open long and maker open short, tradePaperAmount > 0
-    // Pay attention to sorting when submitting, then de-duplicate here to save gas
     function _approveTrade(
         Types.State storage state,
         address orderSender,
@@ -49,13 +46,14 @@ library Trading {
             uint256[] memory matchPaperAmount
         ) = abi.decode(tradeData, (Types.Order[], bytes[], uint256[]));
 
-        // de-duplicate maker to save gas
+        // de-duplicate trader to save gas
         {
-            uint256 uniqueMakerNum = 1;
-            uint256 totalMakerFilledPaper = matchPaperAmount[1];
-            for (uint256 i = 2; i < orderList.length; i++) {
+            uint256 uniqueTraderNum = 1;
+            uint256 totalMakerFilledPaper;
+
+            for (uint256 i = 1; i < orderList.length; i++) {
                 if (orderList[i].signer != orderList[i - 1].signer) {
-                    uniqueMakerNum += 1;
+                    uniqueTraderNum += 1;
                 }
                 totalMakerFilledPaper += matchPaperAmount[i];
             }
@@ -63,17 +61,24 @@ library Trading {
                 matchPaperAmount[0] == totalMakerFilledPaper,
                 Errors.TAKER_TRADE_AMOUNT_WRONG
             );
-            result.makerList = new address[](uniqueMakerNum);
-            result.makerList[0] = orderList[1].signer;
+            require(uniqueTraderNum >= 2, Errors.INVALID_TRADER_NUMBER);
+            result.traderList = new address[](uniqueTraderNum);
+            result.traderList[0] = orderList[0].signer;
         }
 
         // validate maker order & merge paper amount
-        result.tradePaperAmountList = new int256[](result.makerList.length);
-        result.tradeCreditAmountList = new int256[](result.makerList.length);
-        result.makerFeeList = new int256[](result.makerList.length);
+        result.paperChangeList = new int256[](result.traderList.length);
+        result.creditChangeList = new int256[](result.traderList.length);
+        result.feeList = new int256[](result.traderList.length);
         {
-            uint256 currentMakerIndex;
+            uint256 currentTraderIndex = 1;
             for (uint256 i = 1; i < orderList.length; i++) {
+                _priceMatchCheck(orderList[0], orderList[i]);
+                if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
+                    currentTraderIndex += 1;
+                    result.traderList[currentTraderIndex] = orderList[i].signer;
+                }
+
                 bytes32 makerOrderHash = _validateOrder(
                     state.domainSeparator,
                     orderList[i],
@@ -91,40 +96,27 @@ library Trading {
                         orderList[i].paperAmount.abs(),
                     Errors.ORDER_FILLED_OVERFLOW
                 );
-
-                _priceMatchCheck(orderList[0], orderList[i]);
-                int256 paper = orderList[0].paperAmount > 0
-                    ? int256(matchPaperAmount[i])
-                    : -1 * int256(matchPaperAmount[i]);
-
-                // welcome new maker
                 _addPosition(state, msg.sender, orderList[i].signer);
-                if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
-                    currentMakerIndex += 1;
-                    result.makerList[currentMakerIndex] = orderList[i].signer;
-                }
 
                 // matching result
-                int256 matchCreditAmount = (paper * orderList[i].creditAmount) /
-                    orderList[i].paperAmount;
-                result.tradePaperAmountList[currentMakerIndex] += paper;
-                result.tradeCreditAmountList[
-                    currentMakerIndex
-                ] += matchCreditAmount;
+                int256 paperChange = orderList[i].paperAmount > 0
+                    ? int256(matchPaperAmount[i])
+                    : -1 * int256(matchPaperAmount[i]);
+                int256 creditChange = (paperChange *
+                    orderList[i].creditAmount) / orderList[i].paperAmount;
+                result.paperChangeList[currentTraderIndex] += paperChange;
+                result.creditChangeList[currentTraderIndex] += creditChange;
+                result.paperChangeList[0] -= paperChange;
+                result.creditChangeList[0] -= creditChange;
 
                 // fees
-                result.makerFeeList[currentMakerIndex] += int256(
-                    matchCreditAmount.abs()
-                ).decimalMul(orderList[i].makerFeeRate);
-                result.takerFee += int256(matchCreditAmount.abs()).decimalMul(
-                    orderList[0].takerFeeRate
-                );
+                result.feeList[currentTraderIndex] += int256(creditChange.abs())
+                    .decimalMul(orderList[i].makerFeeRate);
             }
         }
 
         // modify taker order status
         {
-            result.taker = orderList[0].signer;
             bytes32 takerOrderHash = _validateOrder(
                 state.domainSeparator,
                 orderList[0],
@@ -143,35 +135,24 @@ library Trading {
                 Errors.ORDER_FILLED_OVERFLOW
             );
 
-            _addPosition(state, msg.sender, result.taker);
+            _addPosition(state, msg.sender, orderList[0].signer);
         }
 
         // trading fee related
-
         int256 orderSenderFee;
-        if (result.takerFee != 0) {
+        result.feeList[0] = int256(result.creditChangeList[0].abs()).decimalMul(
+            orderList[0].takerFeeRate
+        );
+        for (uint256 i = 0; i < result.feeList.length; i++) {
             IPerpetual(msg.sender).changeCredit(
-                result.taker,
-                -1 * result.takerFee
+                result.traderList[i],
+                -1 * result.feeList[i]
             );
-            orderSenderFee += result.takerFee;
+            orderSenderFee += result.feeList[i];
         }
-
-        for (uint256 i = 0; i < result.makerList.length; i++) {
-            if (result.makerFeeList[i] != 0) {
-                IPerpetual(msg.sender).changeCredit(
-                    result.makerList[i],
-                    -1 * result.makerFeeList[i]
-                );
-                orderSenderFee += result.makerFeeList[i];
-            }
-        }
-
-        if (orderSenderFee != 0) {
-            IPerpetual(msg.sender).changeCredit(orderSender, orderSenderFee);
-            if (orderSenderFee < 0) {
-                Liquidation._isSafe(state, orderSender);
-            }
+        IPerpetual(msg.sender).changeCredit(orderSender, orderSenderFee);
+        if (orderSenderFee < 0) {
+            Liquidation._isSafe(state, orderSender);
         }
     }
 
@@ -235,7 +216,7 @@ library Trading {
                     order.signer,
                     order.orderSender,
                     order.expiration,
-                    order.salt
+                    order.nounce
                 )
             )
         );

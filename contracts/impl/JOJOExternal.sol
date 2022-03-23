@@ -31,10 +31,9 @@ contract JOJOExternal is JOJOStorage {
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (
-            address, // taker
-            address[] memory, // makerList
-            int256[] memory, // tradePaperAmountList
-            int256[] memory // tradeCreditAmountList
+            address[] memory, // traderList
+            int256[] memory, // paperChangeList
+            int256[] memory // creditChangeList
         )
     {
         Types.MatchResult memory result = Trading._approveTrade(
@@ -43,14 +42,13 @@ contract JOJOExternal is JOJOStorage {
             tradeData
         );
         return (
-            result.taker,
-            result.makerList,
-            result.tradePaperAmountList,
-            result.tradeCreditAmountList
+            result.traderList,
+            result.paperChangeList,
+            result.creditChangeList
         );
     }
 
-    function isSafe(address trader) external returns (bool) {
+    function isSafe(address trader) external view returns (bool safe) {
         return Liquidation._isSafe(state, trader);
     }
 
@@ -66,4 +64,7 @@ contract JOJOExternal is JOJOStorage {
             );
     }
 
+    function positionClear(address trader) external {
+        Liquidation._positionClear(state, trader);
+    }
 }

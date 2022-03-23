@@ -30,25 +30,25 @@ export interface Context {
 }
 
 export async function basicContext(): Promise<Context> {
+  let owner = (await ethers.getSigners())[0];
+  let ownerAddress = await owner.getAddress();
 
-   let owner = (await ethers.getSigners())[0]
-   let ownerAddress = await owner.getAddress()
-
-   let insurance = (await ethers.getSigners())[1]
-   let insuranceAddress = await insurance.getAddress()
+  let insurance = (await ethers.getSigners())[1];
+  let insuranceAddress = await insurance.getAddress();
 
   let traders: Wallet[] = [];
   for (let i = 0; i < 3; i++) {
     let wallet = new ethers.Wallet(
-      "0x012345678901234567890123456789012345678901234567890123456789012"+i.toString(),
+      "0x012345678901234567890123456789012345678901234567890123456789012" +
+        i.toString(),
       ethers.provider
     );
     traders.push(wallet);
     let tx = {
-        to: wallet.address,
-        value:utils.parseEther("10")
-    }
-    await owner.sendTransaction(tx)
+      to: wallet.address,
+      value: utils.parseEther("10"),
+    };
+    await owner.sendTransaction(tx);
   }
 
   // Deploy libraries
@@ -156,4 +156,16 @@ export async function basicContext(): Promise<Context> {
     insuranceAddress: insuranceAddress,
     traderList: traders,
   };
+}
+
+export async function fundTrader(context: Context) {
+  for (let i = 0; i < 3; i++) {
+    await context.dealer
+      .connect(context.traderList[i])
+      .deposit(utils.parseEther("1000000"), context.traderList[i].address);
+  }
+}
+
+export async function setPrice(priceSource: Contract, price: string) {
+  await priceSource.setMarkPrice(utils.parseEther(price));
 }

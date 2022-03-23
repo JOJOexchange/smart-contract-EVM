@@ -40,12 +40,12 @@ library Types {
         address signer;
         address orderSender;
         uint256 expiration;
-        uint256 salt;
+        uint256 nounce;
     }
 
     bytes32 public constant ORDER_TYPEHASH =
         keccak256(
-            "Order(address perp,int256 paperAmount,int256 creditAmount,int128 makerFeeRate,int128 takerFeeRate,address signer,address orderSender,uint256 expiration,uint256 salt)"
+            "Order(address perp,int256 paperAmount,int256 creditAmount,int128 makerFeeRate,int128 takerFeeRate,address signer,address orderSender,uint256 expiration,uint256 nounce)"
         );
 
     struct RiskParams {
@@ -62,11 +62,9 @@ library Types {
     }
 
     struct MatchResult {
-        address taker;
-        address[] makerList;
-        int256[] tradePaperAmountList;
-        int256[] tradeCreditAmountList;
-        int256 takerFee;
-        int256[] makerFeeList;
+        address[] traderList;
+        int256[] paperChangeList;
+        int256[] creditChangeList;
+        int256[] feeList;
     }
 }

@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { BigNumber } from "bignumber.js";
 import { Contract, Wallet, utils } from "ethers";
+import { Context } from "./context";
 
 let ORDER_STRUCTRUE = [
   { name: "perp", type: "address" },
@@ -11,7 +12,7 @@ let ORDER_STRUCTRUE = [
   { name: "signer", type: "address" },
   { name: "orderSender", type: "address" },
   { name: "expiration", type: "uint256" },
-  { name: "salt", type: "uint256" },
+  { name: "nounce", type: "uint256" },
 ];
 
 interface Order {
@@ -23,7 +24,7 @@ interface Order {
   signer: string;
   orderSender: string;
   expiration: string;
-  salt: string;
+  nounce: string;
 }
 
 export interface OrderEnv {
@@ -71,7 +72,7 @@ export async function buildOrder(
     expiration: Math.floor(
       new Date().getTime() / 1000 + 60 * 60 * 24 * 10
     ).toFixed(0),
-    salt: Math.round(Math.random() * Date.now()) + "",
+    nounce: Math.round(new Date().getTime() / 1000) + "",
   };
   let types = {
     Order: ORDER_STRUCTRUE,
@@ -91,10 +92,43 @@ export function encodeTradeData(
   let abiCoder = new ethers.utils.AbiCoder();
   return abiCoder.encode(
     [
-      "tuple(address perp, int256 paperAmount, int256 creditAmount, int128 makerFeeRate, int128 takerFeeRate, address signer, address orderSender, uint256 expiration, uint256 salt)[]",
+      "tuple(address perp, int256 paperAmount, int256 creditAmount, int128 makerFeeRate, int128 takerFeeRate, address signer, address orderSender, uint256 expiration, uint256 nounce)[]",
       "bytes[]",
       "uint256[]",
     ],
     [orderList, signatureList, matchAmountList]
   );
+}
+
+export async function openPosition(
+  taker: Wallet,
+  maker: Wallet,
+  takerPaper: string,
+  price: string,
+  perp: Contract,
+  orderEnv: OrderEnv
+) {
+  let paperAmount = utils.parseEther(takerPaper);
+  let creditAmount = paperAmount.mul(price).mul(-1);
+  let o1 = await buildOrder(
+    orderEnv,
+    perp.address,
+    paperAmount.toString(),
+    creditAmount.toString(),
+    taker
+  );
+  let o2 = await buildOrder(
+    orderEnv,
+    perp.address,
+    paperAmount.mul(-1).toString(),
+    creditAmount.mul(-1).toString(),
+    maker
+  );
+
+  let encodedTradeData = encodeTradeData(
+    [o1.order, o2.order],
+    [o1.signature, o2.signature],
+    [paperAmount.toString(), paperAmount.toString()]
+  );
+  await perp.trade(encodedTradeData);
 }

@@ -15,10 +15,9 @@ interface IDealer {
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (
-            address taker,
-            address[] memory makerList,
-            int256[] memory tradePaperAmountList,
-            int256[] memory tradeCreditAmountList
+            address[] memory traderList,
+            int256[] memory paperChangeList,
+            int256[] memory creditChangeList
         );
 
     function isSafe(address trader) external returns (bool);
@@ -33,4 +32,8 @@ interface IDealer {
         address brokenTrader,
         int256 liquidatePaperAmount
     ) external returns (int256 paperAmount, int256 creditAmount);
+
+    function positionClear(
+        address trader
+    ) external;
 }

@@ -6,6 +6,7 @@ import {
   buildOrder,
   encodeTradeData,
   getDefaultOrderEnv,
+  openPosition,
   OrderEnv,
 } from "../scripts/order";
 
@@ -64,27 +65,14 @@ describe("Trade", () => {
   });
 
   it("match single order", async () => {
-    let o1 = await buildOrder(
-      orderEnv,
-      context.perpList[0].address,
-      utils.parseEther("1").toString(),
-      utils.parseEther("-30000").toString(),
-      trader1
-    );
-    let o2 = await buildOrder(
-      orderEnv,
-      context.perpList[0].address,
-      utils.parseEther("-1").toString(),
-      utils.parseEther("30000").toString(),
-      trader2
-    );
-    
-    let encodedTradeData = encodeTradeData(
-      [o1.order, o2.order],
-      [o1.signature, o2.signature],
-      [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
-    );
-    await context.perpList[0].trade(encodedTradeData)
+    await openPosition(
+      trader1,
+      trader2,
+      "1",
+      "30000",
+      context.perpList[0],
+      orderEnv
+    )
     console.log(await context.perpList[0].balanceOf(trader1.address),trader1.address)
     console.log(await context.perpList[0].balanceOf(trader2.address),trader2.address)
     console.log(await context.perpList[0].balanceOf(context.ownerAddress),context.ownerAddress)

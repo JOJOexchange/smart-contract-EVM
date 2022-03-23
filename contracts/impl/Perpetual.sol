@@ -45,36 +45,48 @@ contract Perpetual is Ownable, IPerpetual {
 
     function trade(bytes calldata tradeData) external {
         (
-            address taker,
-            address[] memory makerList,
-            int256[] memory tradePaperAmountList,
-            int256[] memory tradeCreditAmountList
+            address[] memory traderList,
+            int256[] memory paperChangeList,
+            int256[] memory creditChangeList
         ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
 
-        for (uint256 i = 0; i < makerList.length; i++) {
-            _trade(
-                taker,
-                makerList[i],
-                tradePaperAmountList[i],
-                tradeCreditAmountList[i]
-            );
-        }
+        int256 ratio = IDealer(owner()).getFundingRatio(address(this));
 
-        for (uint256 i = 0; i < makerList.length; i++) {
-            require(IDealer(owner()).isSafe(makerList[i]), "MAKER BROKEN");
+        for (uint256 i = 0; i < traderList.length; i++) {
+            address trader = traderList[i];
+            _settle(trader, ratio, paperChangeList[i], creditChangeList[i]);
+            require(IDealer(owner()).isSafe(trader), "TRADER BROKEN");
+            if (paperAmountMap[trader] == 0) {
+                IDealer(owner()).positionClear(trader);
+            }
         }
-        require(IDealer(owner()).isSafe(taker), "TAKER BROKEN");
     }
 
     // when you liquidate a long position, liqudatePaperAmount < 0 and liquidateCreditAmount > 0
-    function liquidate(address brokenTrader, int256 liquidatePaperAmount)
+    function liquidate(address liquidatedTrader, int256 liquidatePaperAmount)
         external
     {
-        (int256 paperAmount, int256 creditAmount) = IDealer(owner())
-            .getLiquidateCreditAmount(brokenTrader, liquidatePaperAmount);
+        (int256 ltPaperChange, int256 ltCreditChange) = IDealer(owner())
+            .getLiquidateCreditAmount(liquidatedTrader, liquidatePaperAmount);
+        int256 ratio = IDealer(owner()).getFundingRatio(address(this));
+        _settle(liquidatedTrader, ratio, ltPaperChange, ltCreditChange);
+        _settle(msg.sender, ratio, ltPaperChange * -1, ltCreditChange * -1);
+        require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR BROKEN");
+    }
 
-        _trade(msg.sender, brokenTrader, paperAmount, creditAmount);
-        IDealer(owner()).isSafe(msg.sender);
+    function _settle(
+        address trader,
+        int256 ratio,
+        int256 paperChange,
+        int256 creditChange
+    ) internal {
+        int256 credit = paperAmountMap[trader].decimalMul(ratio) +
+            reducedCreditMap[trader] +
+            creditChange;
+        paperAmountMap[trader] += paperChange;
+        reducedCreditMap[trader] =
+            credit -
+            paperAmountMap[trader].decimalMul(ratio);
     }
 
     function _trade(
@@ -89,13 +101,6 @@ contract Perpetual is Ownable, IPerpetual {
         );
 
         int256 ratio = IDealer(owner()).getFundingRatio(address(this));
-
-        // ratio = 1000000000000000000
-        // tradePaper = 1000000000000000000
-        // tradeCredit = -30000000000000000000000
-        // takerCredit = -30000000000000000000000
-        // paperAmountMap[taker] = 1000000000000000000
-        // reduced =
 
         // settle taker
         int256 takerCredit = paperAmountMap[taker].decimalMul(ratio) +

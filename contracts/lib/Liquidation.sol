@@ -17,6 +17,7 @@ library Liquidation {
 
     function _getTotalExposure(Types.State storage state, address trader)
         public
+        view
         returns (
             int256 netValue,
             uint256 exposure,
@@ -41,21 +42,6 @@ library Liquidation {
             exposureDelta = signedExposure.abs();
             threshold = params.liquidationThreshold;
 
-            // no position in this case
-            if (exposureDelta == 0) {
-                _removePosition(state, trader, i);
-                // clear remaining credit if needed
-                // if netValueDelta < 0, deposit credit to perp
-                // if netValueDelta > 0, withdraw credit from perp
-                if (netValueDelta != 0) {
-                    IPerpetual(state.openPositions[trader][i]).changeCredit(
-                        trader,
-                        -1 * netValueDelta
-                    );
-                    state.trueCredit[trader] += netValueDelta;
-                }
-            }
-
             netValue += netValueDelta;
             exposure += exposureDelta;
             if (threshold > liquidationThreshold) {
@@ -66,6 +52,7 @@ library Liquidation {
 
     function _isSafe(Types.State storage state, address trader)
         public
+        view
         returns (bool)
     {
         if (state.openPositions[trader].length == 0) {
@@ -137,14 +124,23 @@ library Liquidation {
         );
     }
 
-    function _removePosition(
-        Types.State storage state,
-        address trader,
-        uint256 index
-    ) private {
+    function _positionClear(Types.State storage state, address trader)
+        external
+    {
+        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
+        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
+
+        (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
+        IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
+
+        state.hasPosition[trader][msg.sender] = false;
         address[] storage positionList = state.openPositions[trader];
-        state.hasPosition[trader][positionList[index]] = false;
-        positionList[index] = positionList[positionList.length - 1];
-        positionList.pop();
+        for (uint256 i = 0; i < positionList.length; i++) {
+            if (positionList[i] == msg.sender) {
+                positionList[i] = positionList[positionList.length - 1];
+                positionList.pop();
+                break;
+            }
+        }
     }
 }

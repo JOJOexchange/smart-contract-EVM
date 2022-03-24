@@ -15,10 +15,21 @@ import "./Types.sol";
 library Liquidation {
     using SignedDecimalMath for int256;
 
-    event PositionClear(
-        address indexed user,
+    event BeingLiquidated(
         address indexed perp,
-        uint256 serialId
+        address indexed liquidatedTrader,
+        int256 paperChange,
+        int256 creditChange,
+        uint256 positionSerialNum
+    );
+
+    event JoinLiquidation(
+        address indexed perp,
+        address indexed liquidator,
+        address indexed liquidatedTrader,
+        int256 paperChange,
+        int256 creditChange,
+        uint256 positionSerialNum
     );
 
     function _getTotalExposure(Types.State storage state, address trader)
@@ -56,14 +67,26 @@ library Liquidation {
         }
     }
 
+    // don't count virtual credit
+    function _isSolidSafe(Types.State storage state, address trader)
+        public
+        view
+        returns (bool)
+    {
+        (
+            int256 netValue,
+            uint256 exposure,
+            uint256 liquidationThreshold
+        ) = _getTotalExposure(state, trader);
+        netValue = netValue + state.trueCredit[trader];
+        return netValue >= int256((exposure * liquidationThreshold) / 10**18);
+    }
+
     function _isSafe(Types.State storage state, address trader)
         public
         view
         returns (bool)
     {
-        if (state.openPositions[trader].length == 0) {
-            return true;
-        }
         (
             int256 netValue,
             uint256 exposure,
@@ -107,7 +130,7 @@ library Liquidation {
             // close long
             price = price - priceOffset;
             ltPaperChange = brokenPaperAmount.abs() > requestPaperAmount
-                ? -1*int256(requestPaperAmount)
+                ? -1 * int256(requestPaperAmount)
                 : -1 * brokenPaperAmount;
         } else {
             // close short
@@ -117,7 +140,9 @@ library Liquidation {
                 : -1 * brokenPaperAmount;
         }
         ltCreditChange = ltPaperChange.decimalMul(int256(price));
-        insuranceFee = (ltCreditChange.abs() * params.insuranceFeeRate) / 10**18;
+        insuranceFee =
+            (ltCreditChange.abs() * params.insuranceFeeRate) /
+            10**18;
     }
 
     function _positionClear(Types.State storage state, address trader)
@@ -128,12 +153,7 @@ library Liquidation {
 
         (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
         IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
-        emit PositionClear(
-            trader,
-            msg.sender,
-            state.positionSerialId[trader][msg.sender]
-        );
-        state.positionSerialId[trader][msg.sender] += 1;
+        state.positionSerialNum[trader][msg.sender] += 1;
 
         state.hasPosition[trader][msg.sender] = false;
         address[] storage positionList = state.openPositions[trader];

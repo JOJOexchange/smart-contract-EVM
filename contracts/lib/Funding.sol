@@ -65,7 +65,6 @@ library Funding {
     ) private {
         state.trueCredit[payer] -= int256(amount);
         IERC20(state.underlyingAsset).safeTransfer(to, amount);
-
-        require(Liquidation._isSafe(state, payer), Errors.ACCOUNT_NOT_SAFE);
+        require(Liquidation._isSolidSafe(state, payer), Errors.ACCOUNT_NOT_SAFE);
     }
 }

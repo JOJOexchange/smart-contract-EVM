@@ -18,7 +18,11 @@ contract Perpetual is Ownable, IPerpetual {
     mapping(address => int256) public paperAmountMap;
     mapping(address => int256) public reducedCreditMap;
 
-    event BalanceChange(address indexed trader, int256 paperChange, int256 creditChange);
+    event BalanceChange(
+        address indexed trader,
+        int256 paperChange,
+        int256 creditChange
+    );
 
     // modifier
 
@@ -58,9 +62,6 @@ contract Perpetual is Ownable, IPerpetual {
             address trader = traderList[i];
             _settle(trader, ratio, paperChangeList[i], creditChangeList[i]);
             require(IDealer(owner()).isSafe(trader), "TRADER BROKEN");
-            if (paperAmountMap[trader] == 0) {
-                IDealer(owner()).positionClear(trader);
-            }
         }
     }
 
@@ -102,6 +103,9 @@ contract Perpetual is Ownable, IPerpetual {
             credit -
             paperAmountMap[trader].decimalMul(ratio);
         emit BalanceChange(trader, paperChange, creditChange);
+        if (paperAmountMap[trader] == 0) {
+            IDealer(owner()).positionClear(trader);
+        }
     }
 
     function _trade(
@@ -165,5 +169,3 @@ contract Perpetual is Ownable, IPerpetual {
 // counterparty
 // if counterparty is contract => allowPerpetualSwap(counterparty, swapPaperAmount, swapCreditAmount) reutrns (bool)
 // if counterparty is EOA => signature
-
-// TODO check 0 dividen

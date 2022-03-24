@@ -21,10 +21,12 @@ import { getDefaultOrderEnv, openPosition } from "../scripts/order";
   - withdraw
     - withdraw without timelock
     - withdraw with timelock
+  - withdraw make ture credit negative
 
   Revert cases list
   - withdraw when being liquidated
   - withdraw when not enough balance
+  - want to avoid safe check with virtual credit
 */
 
 describe("Funding", () => {

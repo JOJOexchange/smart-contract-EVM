@@ -52,7 +52,27 @@ contract JOJOExternal is JOJOStorage {
         return Liquidation._isSafe(state, trader);
     }
 
+    // view version for requestLiquidate
+    function getLiquidationCost(
+        address liquidatedTrader,
+        uint256 requestPaperAmount
+    )
+        external
+        view
+        returns (int256 liquidatorPaperChange, int256 liquidatorCreditChange)
+    {
+        (int256 ltPaperChange, int256 ltCreditChange, ) = Liquidation
+            ._getLiquidateCreditAmount(
+                state,
+                liquidatedTrader,
+                requestPaperAmount
+            );
+        liquidatorPaperChange = ltPaperChange * -1;
+        liquidatorCreditChange = ltCreditChange * -1;
+    }
+
     function requestLiquidate(
+        address liquidator,
         address liquidatedTrader,
         uint256 requestPaperAmount
     )
@@ -64,6 +84,9 @@ contract JOJOExternal is JOJOStorage {
             int256 ltCreditChange
         )
     {
+        address perp = msg.sender;
+        uint256 ltSN = state.positionSerialNum[liquidatedTrader][perp];
+        uint256 liquidatorSN = state.positionSerialNum[liquidator][perp];
         uint256 insuranceFee;
         (ltPaperChange, ltCreditChange, insuranceFee) = Liquidation
             ._getLiquidateCreditAmount(
@@ -75,6 +98,21 @@ contract JOJOExternal is JOJOStorage {
         liquidatorCreditChange = ltCreditChange * -1;
         liquidatorPaperChange = ltPaperChange * -1;
         ltCreditChange -= int256(insuranceFee);
+        emit Liquidation.BeingLiquidated(
+            perp,
+            liquidatedTrader,
+            liquidatorPaperChange,
+            liquidatorCreditChange,
+            ltSN
+        );
+        emit Liquidation.JoinLiquidation(
+            perp,
+            liquidator,
+            liquidatedTrader,
+            liquidatorPaperChange,
+            liquidatorCreditChange,
+            liquidatorSN
+        );
     }
 
     function positionClear(address trader) external {

@@ -21,7 +21,7 @@ library Types {
         // account position register
         mapping(address => address[]) openPositions; // all user's open positions, for liquidation check
         mapping(address => mapping(address => bool)) hasPosition; // user => perp => hasPosition
-        mapping(address => mapping(address => uint256)) positionSerialId; // user => perp => serial Id increase whenever last position cleared
+        mapping(address => mapping(address => uint256)) positionSerialNum; // user => perp => serial Num increase whenever last position cleared
         // withdraw control
         uint256 withdrawTimeLock;
         mapping(address => uint256) pendingWithdraw;
@@ -63,8 +63,10 @@ library Types {
     }
 
     struct MatchResult {
+        address perp;
         address[] traderList;
         int256[] paperChangeList;
         int256[] creditChangeList;
+        int256 orderSenderFee;
     }
 }

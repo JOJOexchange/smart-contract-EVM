@@ -62,18 +62,16 @@ contract JOJOView is JOJOStorage {
         external
         view
         returns (
-            int256 positionNetValue,
-            uint256 exposure,
-            int256 trueCredit,
-            uint256 virtualCredit
+            int256 netValue,
+            uint256 exposure
         )
     {
+        int256 positionNetValue;
         (positionNetValue, exposure, ) = Liquidation._getTotalExposure(
             state,
             trader
         );
-        trueCredit = state.trueCredit[trader];
-        virtualCredit = state.virtualCredit[trader];
+        netValue = positionNetValue + state.trueCredit[trader] + int256(state.virtualCredit[trader]);
     }
 
     // return 0 if the trader can not be liquidated

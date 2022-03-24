@@ -20,10 +20,18 @@ library Trading {
     using SignedDecimalMath for int256;
     using Math for uint256;
 
+    // if the order is long, filledPaperAmount>0 and filledCreditAmount<0
+    // if sender charge fee from this order, fee>0
+    // if sender provide rebate to this order, fee<0
     event OrderFilled(
-        bytes32 orderHash,
+        bytes32 indexed orderHash,
         int256 filledPaperAmount,
         int256 filledCreditAmount,
+        int256 fee
+    );
+
+    event RelayerFeeCollected(
+        address indexed relayer,
         int256 fee
     );
 
@@ -47,8 +55,9 @@ library Trading {
         ) = abi.decode(tradeData, (Types.Order[], bytes[], uint256[]));
 
         // validate orders
+        bytes32[] memory orderHashList = new bytes32[](orderList.length);
         for (uint256 i = 0; i < orderList.length; i++) {
-            bytes32 orderHash = _validateOrder(
+            orderHashList[i] = _validateOrder(
                 state.domainSeparator,
                 orderList[i],
                 signatureList[i]
@@ -59,9 +68,9 @@ library Trading {
                     orderList[i].orderSender == address(0),
                 Errors.INVALID_ORDER_SENDER
             );
-            state.filledPaperAmount[orderHash] += matchPaperAmount[i];
+            state.filledPaperAmount[orderHashList[i]] += matchPaperAmount[i];
             require(
-                state.filledPaperAmount[orderHash] <=
+                state.filledPaperAmount[orderHashList[i]] <=
                     orderList[i].paperAmount.abs(),
                 Errors.ORDER_FILLED_OVERFLOW
             );
@@ -69,6 +78,7 @@ library Trading {
         }
 
         // de-duplicate trader to save gas
+        // traderList[0] is taker
         {
             uint256 uniqueTraderNum = 1;
             uint256 totalMakerFilledPaper;
@@ -91,7 +101,7 @@ library Trading {
         // validate maker order & merge paper amount
         result.paperChangeList = new int256[](result.traderList.length);
         result.creditChangeList = new int256[](result.traderList.length);
-        result.feeList = new int256[](result.traderList.length);
+        int256 orderSenderFee;
         {
             uint256 currentTraderIndex = 1;
             for (uint256 i = 1; i < orderList.length; i++) {
@@ -107,32 +117,38 @@ library Trading {
                     : -1 * int256(matchPaperAmount[i]);
                 int256 creditChange = (paperChange *
                     orderList[i].creditAmount) / orderList[i].paperAmount;
+                int256 fee = int256(creditChange.abs()).decimalMul(
+                    orderList[i].makerFeeRate
+                );
+                emit OrderFilled(
+                    orderHashList[i],
+                    paperChange,
+                    creditChange,
+                    fee
+                );
                 result.paperChangeList[currentTraderIndex] += paperChange;
                 result.creditChangeList[currentTraderIndex] += creditChange;
+                result.creditChangeList[currentTraderIndex] -= fee;
                 result.paperChangeList[0] -= paperChange;
                 result.creditChangeList[0] -= creditChange;
-
-                // fees
-                result.feeList[currentTraderIndex] += int256(creditChange.abs())
-                    .decimalMul(orderList[i].makerFeeRate);
+                orderSenderFee += fee;
             }
         }
 
         // trading fee related
-        int256 orderSenderFee;
-        result.feeList[0] = int256(result.creditChangeList[0].abs()).decimalMul(
-            orderList[0].takerFeeRate
-        );
-        for (uint256 i = 0; i < result.feeList.length; i++) {
-            IPerpetual(msg.sender).changeCredit(
-                result.traderList[i],
-                -1 * result.feeList[i]
-            );
-            orderSenderFee += result.feeList[i];
-        }
-        IPerpetual(msg.sender).changeCredit(orderSender, orderSenderFee);
-        if (orderSenderFee < 0) {
-            Liquidation._isSafe(state, orderSender);
+        {
+            int256 takerFee = int256(result.creditChangeList[0].abs())
+                .decimalMul(orderList[0].takerFeeRate);
+            result.creditChangeList[0] -= takerFee;
+            orderSenderFee += takerFee;
+            state.trueCredit[orderSender] += orderSenderFee;
+            if (orderSenderFee < 0) {
+                require(
+                    Liquidation._isSafe(state, orderSender),
+                    Errors.ORDER_SENDER_NOT_SAFE
+                );
+            }
+            emit RelayerFeeCollected(orderSender, orderSenderFee);
         }
     }
 

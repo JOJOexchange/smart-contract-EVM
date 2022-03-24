@@ -27,13 +27,19 @@ interface IDealer {
         view
         returns (int256);
 
-    // if the brokenTrader in long position, liquidatePaperAmount < 0 and liquidateCreditAmount > 0;
-    function getLiquidateCreditAmount(
-        address brokenTrader,
-        int256 liquidatePaperAmount
-    ) external returns (int256 paperAmount, int256 creditAmount);
+    // lt = liquidatedTrader who is broken
+    // liquidator is the one wants take over lt's position
+    function requestLiquidate(
+        address liquidatedTrader,
+        int256 requestPaperAmount
+    )
+        external
+        returns (
+            int256 liquidatorPaperChange,
+            int256 liquidatorCreditChange,
+            int256 ltPaperChange,
+            int256 ltCreditChange
+        );
 
-    function positionClear(
-        address trader
-    ) external;
+    function positionClear(address trader) external;
 }

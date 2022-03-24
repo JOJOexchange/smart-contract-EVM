@@ -15,6 +15,12 @@ import "./Types.sol";
 library Liquidation {
     using SignedDecimalMath for int256;
 
+    event PositionClear(
+        address indexed user,
+        address indexed perp,
+        uint256 serialId
+    );
+
     function _getTotalExposure(Types.State storage state, address trader)
         public
         view
@@ -70,13 +76,20 @@ library Liquidation {
         return netValue >= int256((exposure * liquidationThreshold) / 10**18);
     }
 
-    // if the brokenTrader in long position, liquidatePaperAmount < 0 and liquidateCreditAmount > 0;
     function _getLiquidateCreditAmount(
         Types.State storage state,
-        address brokenTrader,
-        int256 liquidatePaperAmount
-    ) external returns (int256 paperAmount, int256 creditAmount) {
-        require(!_isSafe(state, brokenTrader), Errors.ACCOUNT_IS_SAFE);
+        address liquidatedTrader,
+        uint256 requestPaperAmount
+    )
+        external
+        view
+        returns (
+            int256 ltPaperChange,
+            int256 ltCreditChange,
+            uint256 insuranceFee
+        )
+    {
+        require(!_isSafe(state, liquidatedTrader), Errors.ACCOUNT_IS_SAFE);
 
         // get price
         Types.RiskParams memory params = state.perpRiskParams[msg.sender];
@@ -86,42 +99,25 @@ library Liquidation {
 
         // calculate trade
         (int256 brokenPaperAmount, ) = IPerpetual(msg.sender).balanceOf(
-            brokenTrader
+            liquidatedTrader
         );
         require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);
-        // if (
-        //     (brokenPaperAmount.abs() * price) / 10**18 >=
-        //     params.largePositionThreshold
-        // ) {
-        //     brokenPaperAmount = int256(params.largePositionThreshold / 2);
-        // }
 
         if (brokenPaperAmount > 0) {
             // close long
             price = price - priceOffset;
-            paperAmount = brokenPaperAmount > liquidatePaperAmount
-                ? liquidatePaperAmount
-                : brokenPaperAmount;
+            ltPaperChange = brokenPaperAmount.abs() > requestPaperAmount
+                ? -1*int256(requestPaperAmount)
+                : -1 * brokenPaperAmount;
         } else {
             // close short
             price = price + priceOffset;
-            paperAmount = brokenPaperAmount < liquidatePaperAmount
-                ? liquidatePaperAmount
-                : brokenPaperAmount;
+            ltPaperChange = brokenPaperAmount.abs() > requestPaperAmount
+                ? int256(requestPaperAmount)
+                : -1 * brokenPaperAmount;
         }
-        creditAmount = paperAmount.decimalMul(int256(price));
-
-        // charge insurance fee
-        uint256 insuranceFee = (creditAmount.abs() * params.insuranceFeeRate) /
-            10**18;
-        IPerpetual(msg.sender).changeCredit(
-            brokenTrader,
-            -1 * int256(insuranceFee)
-        );
-        IPerpetual(msg.sender).changeCredit(
-            state.insurance,
-            int256(insuranceFee)
-        );
+        ltCreditChange = ltPaperChange.decimalMul(int256(price));
+        insuranceFee = (ltCreditChange.abs() * params.insuranceFeeRate) / 10**18;
     }
 
     function _positionClear(Types.State storage state, address trader)
@@ -132,6 +128,12 @@ library Liquidation {
 
         (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
         IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
+        emit PositionClear(
+            trader,
+            msg.sender,
+            state.positionSerialId[trader][msg.sender]
+        );
+        state.positionSerialId[trader][msg.sender] += 1;
 
         state.hasPosition[trader][msg.sender] = false;
         address[] storage positionList = state.openPositions[trader];

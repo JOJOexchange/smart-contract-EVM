@@ -18,6 +18,8 @@ contract Perpetual is Ownable, IPerpetual {
     mapping(address => int256) public paperAmountMap;
     mapping(address => int256) public reducedCreditMap;
 
+    event BalanceChange(address indexed trader, int256 paperChange, int256 creditChange);
+
     // modifier
 
     // constructor
@@ -63,14 +65,26 @@ contract Perpetual is Ownable, IPerpetual {
     }
 
     // when you liquidate a long position, liqudatePaperAmount < 0 and liquidateCreditAmount > 0
-    function liquidate(address liquidatedTrader, int256 liquidatePaperAmount)
+    function liquidate(address liquidatedTrader, int256 requestPaperAmount)
         external
     {
-        (int256 ltPaperChange, int256 ltCreditChange) = IDealer(owner())
-            .getLiquidateCreditAmount(liquidatedTrader, liquidatePaperAmount);
+        (
+            int256 liquidatorPaperChange,
+            int256 liquidatorCreditChange,
+            int256 ltPaperChange,
+            int256 ltCreditChange
+        ) = IDealer(owner()).requestLiquidate(
+                liquidatedTrader,
+                requestPaperAmount
+            );
         int256 ratio = IDealer(owner()).getFundingRatio(address(this));
         _settle(liquidatedTrader, ratio, ltPaperChange, ltCreditChange);
-        _settle(msg.sender, ratio, ltPaperChange * -1, ltCreditChange * -1);
+        _settle(
+            msg.sender,
+            ratio,
+            liquidatorPaperChange,
+            liquidatorCreditChange
+        );
         require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR BROKEN");
     }
 
@@ -87,6 +101,7 @@ contract Perpetual is Ownable, IPerpetual {
         reducedCreditMap[trader] =
             credit -
             paperAmountMap[trader].decimalMul(ratio);
+        emit BalanceChange(trader, paperChange, creditChange);
     }
 
     function _trade(

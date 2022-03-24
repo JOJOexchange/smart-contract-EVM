@@ -19,8 +19,9 @@ library Types {
         mapping(address => int256) trueCredit; // created by deposit funding, can be converted to funding
         mapping(address => uint256) virtualCredit; // for market maker, can not converted to any asset, only for trading
         // account position register
-        mapping(address => address[]) openPositions; // all user's open positions
+        mapping(address => address[]) openPositions; // all user's open positions, for liquidation check
         mapping(address => mapping(address => bool)) hasPosition; // user => perp => hasPosition
+        mapping(address => mapping(address => uint256)) positionSerialId; // user => perp => serial Id increase whenever last position cleared
         // withdraw control
         uint256 withdrawTimeLock;
         mapping(address => uint256) pendingWithdraw;
@@ -65,6 +66,5 @@ library Types {
         address[] traderList;
         int256[] paperChangeList;
         int256[] creditChangeList;
-        int256[] feeList;
     }
 }

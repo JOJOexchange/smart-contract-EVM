@@ -35,10 +35,6 @@ library Funding {
         uint256 amount,
         address to
     ) public {
-        require(
-            state.trueCredit[msg.sender] >= int256(amount),
-            Errors.CREDIT_NOT_ENOUGH
-        );
         if (state.withdrawTimeLock == 0) {
             _settleWithdraw(state, msg.sender, to, amount);
         } else {

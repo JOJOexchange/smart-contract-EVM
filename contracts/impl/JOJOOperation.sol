@@ -22,18 +22,18 @@ contract JOJOOperation is JOJOStorage {
         state.virtualCredit[trader] = amount;
     }
 
-    function handleBadDebt(address brokenTrader) external onlyOwner {
+    function handleBadDebt(address liquidatedTrader) external onlyOwner {
         require(
-            !Liquidation._isSafe(state, brokenTrader),
+            !Liquidation._isSafe(state, liquidatedTrader),
             Errors.ACCOUNT_IS_SAFE
         );
         require(
-            state.openPositions[brokenTrader].length == 0,
+            state.openPositions[liquidatedTrader].length == 0,
             Errors.TRADER_STILL_IN_LIQUIDATION
         );
-        state.trueCredit[state.insurance] += state.trueCredit[brokenTrader];
-        state.trueCredit[brokenTrader] = 0;
-        state.virtualCredit[brokenTrader] = 0;
+        state.trueCredit[state.insurance] += state.trueCredit[liquidatedTrader];
+        state.trueCredit[liquidatedTrader] = 0;
+        state.virtualCredit[liquidatedTrader] = 0;
     }
 
     function setFundingRatio(

@@ -52,16 +52,29 @@ contract JOJOExternal is JOJOStorage {
         return Liquidation._isSafe(state, trader);
     }
 
-    function getLiquidateCreditAmount(
-        address brokenTrader,
-        int256 liquidatePaperAmount
-    ) external returns (int256 paperAmount, int256 creditAmount) {
-        return
-            Liquidation._getLiquidateCreditAmount(
+    function requestLiquidate(
+        address liquidatedTrader,
+        uint256 requestPaperAmount
+    )
+        external
+        returns (
+            int256 liquidatorPaperChange,
+            int256 liquidatorCreditChange,
+            int256 ltPaperChange,
+            int256 ltCreditChange
+        )
+    {
+        uint256 insuranceFee;
+        (ltPaperChange, ltCreditChange, insuranceFee) = Liquidation
+            ._getLiquidateCreditAmount(
                 state,
-                brokenTrader,
-                liquidatePaperAmount
+                liquidatedTrader,
+                requestPaperAmount
             );
+        state.trueCredit[state.insurance] += int256(insuranceFee);
+        liquidatorCreditChange = ltCreditChange * -1;
+        liquidatorPaperChange = ltPaperChange * -1;
+        ltCreditChange -= int256(insuranceFee);
     }
 
     function positionClear(address trader) external {

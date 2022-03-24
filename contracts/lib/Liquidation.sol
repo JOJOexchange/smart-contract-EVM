@@ -32,6 +32,69 @@ library Liquidation {
         uint256 positionSerialNum
     );
 
+    function _getLiquidationPrice(
+        Types.State storage state,
+        address trader,
+        address perp
+    ) public view returns (uint256 liquidationPrice) {
+        (int256 paperAmount, ) = IPerpetual(perp).balanceOf(trader);
+        if (paperAmount == 0) {
+            return 0;
+        }
+
+        (
+            int256 positionNetValue,
+            uint256 exposure,
+            uint256 liquidationThreshold
+        ) = _getTotalExposure(state, trader);
+
+        Types.RiskParams memory params = state.perpRiskParams[perp];
+        uint256 markPrice = IMarkPriceSource(params.markPriceSource)
+            .getMarkPrice();
+
+        // remove perp paper influence
+        exposure -= (uint256(paperAmount) * markPrice) / 10**18;
+        int256 netValue = positionNetValue +
+            state.trueCredit[trader] +
+            int256(state.virtualCredit[trader]) -
+            paperAmount.decimalMul(int256(markPrice));
+
+        /*
+            exposure * liquidationThreshold <= netValue
+
+            if paperAmount > 0
+            (exposure + paperAmount * price) * liqThreshold <= netValue + paperAmount * price
+            exposure * liqThreshold - netValue <= paperAmount * price * (1-liqThreshold)
+            price >= (exposure * liqThreshold - netValue) / paperAmount / (1-liqThreshold)
+                >> if paperAmount=0, no liqPrice
+                >> if the right side is less than zero, the account is super safe, no liqPrice
+
+            if paperAmount < 0
+            (exposure - paperAmount * price) * liqThreshold <= netValue + paperAmount * price
+            exposure * liqThreshold - netValue <= paperAmount * price * (1+liqThreshold)
+            price <= (exposure * liqThreshold - netValue) / paperAmount / (1+liqThreshold)
+                >> if paperAmount=0, no liqPrice
+                >> if the right side is less than zero, the position must already be liquidated, no liqPrice
+            
+            let temp1 = exposure * liqThreshold - netValue
+            let temp2 = 1-liqThreshold or 1+liqThreshold
+            then liqPrice = temp1/paperAmount/temp2
+        */
+        int256 temp1 = int256((exposure * liquidationThreshold) / 10**18) -
+            netValue;
+        int256 temp2 = int256(
+            paperAmount > 0
+                ? 1 - liquidationThreshold
+                : 1 + liquidationThreshold
+        );
+        int256 liqPrice = temp1.decimalDiv(temp2.decimalMul(paperAmount));
+        if (liqPrice < 0) {
+            liquidationPrice = 0;
+        } else {
+            liquidationPrice = uint256(liqPrice);
+        }
+    }
+
     function _getTotalExposure(Types.State storage state, address trader)
         public
         view

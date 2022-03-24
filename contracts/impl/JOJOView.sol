@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
+import "../lib/Liquidation.sol";
 import "../utils/Errors.sol";
 
 contract JOJOView is JOJOStorage {
@@ -55,5 +56,32 @@ contract JOJOView is JOJOStorage {
             )
         );
         return orderHash;
+    }
+
+    function getTraderRisk(address trader)
+        external
+        view
+        returns (
+            int256 positionNetValue,
+            uint256 exposure,
+            int256 trueCredit,
+            uint256 virtualCredit
+        )
+    {
+        (positionNetValue, exposure, ) = Liquidation._getTotalExposure(
+            state,
+            trader
+        );
+        trueCredit = state.trueCredit[trader];
+        virtualCredit = state.virtualCredit[trader];
+    }
+
+    // return 0 if the trader can not be liquidated
+    function getLiquidationPrice(address trader, address perp)
+        external
+        view
+        returns (uint256 liquidationPrice)
+    {
+        return Liquidation._getLiquidationPrice(state, trader, perp);
     }
 }

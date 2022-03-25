@@ -52,6 +52,10 @@ contract JOJOExternal is JOJOStorage {
         return Liquidation._isSafe(state, trader);
     }
 
+    function isPositionSafe(address trader, address perp) external view returns (bool safe) {
+        return Liquidation._isPositionSafe(state, trader, perp);
+    }
+
     // view version for requestLiquidate
     function getLiquidationCost(
         address liquidatedTrader,

@@ -106,7 +106,7 @@ library Liquidation {
         int256 netValueDelta;
         uint256 exposureDelta;
         uint256 threshold;
-        for (uint256 i = 0; i < [trader].length; i++) {
+        for (uint256 i = 0; i < state.openPositions[trader].length; i++) {
             (int256 paperAmount, int256 credit) = IPerpetual(
                 state.openPositions[trader][i]
             ).balanceOf(trader);

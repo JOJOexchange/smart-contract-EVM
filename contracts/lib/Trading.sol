@@ -78,12 +78,14 @@ library Trading {
 
         // de-duplicate trader to save gas
         // traderList[0] is taker
+        // traderList[1] is maker
+        // traderList[2:] are other makers
         {
-            uint256 uniqueTraderNum = 1;
+            uint256 uniqueTraderNum = 2;
             uint256 totalMakerFilledPaper;
 
             for (uint256 i = 1; i < orderList.length; i++) {
-                if (orderList[i].signer != orderList[i - 1].signer) {
+                if (i>=2 && orderList[i].signer != orderList[i - 1].signer) {
                     uniqueTraderNum += 1;
                 }
                 totalMakerFilledPaper += matchPaperAmount[i];
@@ -102,9 +104,12 @@ library Trading {
         result.creditChangeList = new int256[](result.traderList.length);
         {
             uint256 currentTraderIndex = 1;
+            result.traderList[1] = orderList[1].signer;
             for (uint256 i = 1; i < orderList.length; i++) {
                 _priceMatchCheck(orderList[0], orderList[i]);
-                if (i > 1 && orderList[i].signer != orderList[i - 1].signer) {
+
+                // welcome new maker
+                if (i >= 2 && orderList[i].signer != orderList[i - 1].signer) {
                     currentTraderIndex += 1;
                     result.traderList[currentTraderIndex] = orderList[i].signer;
                 }

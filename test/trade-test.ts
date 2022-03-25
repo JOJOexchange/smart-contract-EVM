@@ -48,7 +48,7 @@ describe("Trade", () => {
     context = await basicContext();
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
-    trader3 = context.traderList[1];
+    trader3 = context.traderList[2];
     await context.dealer.setVirtualCredit(
       trader1.address,
       utils.parseEther("1000000")
@@ -76,6 +76,7 @@ describe("Trade", () => {
     console.log(await context.perpList[0].balanceOf(trader1.address),trader1.address)
     console.log(await context.perpList[0].balanceOf(trader2.address),trader2.address)
     console.log(await context.perpList[0].balanceOf(context.ownerAddress),context.ownerAddress)
+    console.log(await context.dealer.getCreditOf(context.ownerAddress),context.ownerAddress)
   });
 
   //   it('Assigns initial balance', async () => {

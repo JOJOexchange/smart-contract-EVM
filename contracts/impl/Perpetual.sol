@@ -107,40 +107,7 @@ contract Perpetual is Ownable, IPerpetual {
             IDealer(owner()).positionClear(trader);
         }
     }
-
-    function _trade(
-        address taker,
-        address maker,
-        int256 tradePaperAmount,
-        int256 tradeCreditAmount
-    ) internal {
-        require(
-            (tradePaperAmount > 0 && tradeCreditAmount <= 0) ||
-                (tradePaperAmount <= 0 && tradeCreditAmount > 0)
-        );
-
-        int256 ratio = IDealer(owner()).getFundingRatio(address(this));
-
-        // settle taker
-        int256 takerCredit = paperAmountMap[taker].decimalMul(ratio) +
-            reducedCreditMap[taker] +
-            tradeCreditAmount;
-        paperAmountMap[taker] += tradePaperAmount;
-        reducedCreditMap[taker] =
-            takerCredit -
-            paperAmountMap[taker].decimalMul(ratio);
-
-        // settle maker
-        // -1 * tradePaperAmount & -1 * tradeCreditAmount
-        int256 makerCredit = paperAmountMap[maker].decimalMul(ratio) +
-            reducedCreditMap[maker] +
-            (-1 * tradeCreditAmount);
-        paperAmountMap[maker] += (-1 * tradePaperAmount);
-        reducedCreditMap[maker] =
-            makerCredit -
-            paperAmountMap[maker].decimalMul(ratio);
-    }
-
+    
     function changeCredit(address trader, int256 amount) external onlyOwner {
         reducedCreditMap[trader] += amount;
     }

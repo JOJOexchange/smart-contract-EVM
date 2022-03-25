@@ -12,7 +12,7 @@ let ORDER_STRUCTRUE = [
   { name: "signer", type: "address" },
   { name: "orderSender", type: "address" },
   { name: "expiration", type: "uint256" },
-  { name: "nounce", type: "uint256" },
+  { name: "nonce", type: "uint256" },
 ];
 
 interface Order {
@@ -24,7 +24,7 @@ interface Order {
   signer: string;
   orderSender: string;
   expiration: string;
-  nounce: string;
+  nonce: string;
 }
 
 export interface OrderEnv {
@@ -72,7 +72,7 @@ export async function buildOrder(
     expiration: Math.floor(
       new Date().getTime() / 1000 + 60 * 60 * 24 * 10
     ).toFixed(0),
-    nounce: Math.round(new Date().getTime() / 1000) + "",
+    nonce: Math.round(new Date().getTime() / 1000) + "",
   };
   let types = {
     Order: ORDER_STRUCTRUE,
@@ -92,7 +92,7 @@ export function encodeTradeData(
   let abiCoder = new ethers.utils.AbiCoder();
   return abiCoder.encode(
     [
-      "tuple(address perp, int256 paperAmount, int256 creditAmount, int128 makerFeeRate, int128 takerFeeRate, address signer, address orderSender, uint256 expiration, uint256 nounce)[]",
+      "tuple(address perp, int256 paperAmount, int256 creditAmount, int128 makerFeeRate, int128 takerFeeRate, address signer, address orderSender, uint256 expiration, uint256 nonce)[]",
       "bytes[]",
       "uint256[]",
     ],

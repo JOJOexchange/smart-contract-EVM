@@ -17,6 +17,12 @@ import "./Types.sol";
 library Funding {
     using SafeERC20 for IERC20;
 
+    event Deposit(address indexed to, address indexed payer, uint256 amount);
+
+    event Withdraw(address indexed to, address indexed payer, uint256 amount);
+
+    event PendingWithdraw(address indexed payer, uint256 amount);
+
     function _deposit(
         Types.State storage state,
         uint256 amount,
@@ -28,6 +34,7 @@ library Funding {
             amount
         );
         state.trueCredit[to] += int256(amount);
+        emit Deposit(to, msg.sender, amount);
     }
 
     function _withdraw(
@@ -40,6 +47,7 @@ library Funding {
         } else {
             state.pendingWithdraw[msg.sender] = amount;
             state.requestWithdrawTimestamp[msg.sender] = block.timestamp;
+            emit PendingWithdraw(msg.sender, amount);
         }
     }
 
@@ -65,6 +73,10 @@ library Funding {
     ) private {
         state.trueCredit[payer] -= int256(amount);
         IERC20(state.underlyingAsset).safeTransfer(to, amount);
-        require(Liquidation._isSolidSafe(state, payer), Errors.ACCOUNT_NOT_SAFE);
+        require(
+            Liquidation._isSolidSafe(state, payer),
+            Errors.ACCOUNT_NOT_SAFE
+        );
+        emit Withdraw(to, payer, amount);
     }
 }

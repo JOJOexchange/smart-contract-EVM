@@ -79,7 +79,7 @@ describe("Funding", () => {
     checkCredit(context, trader1Address, "0", "5");
   });
 
-  it("withdraw", async () => {
+  describe("withdraw", async () => {
     it("without timelock", async () => {
       const state = await context.dealer.state();
       expect(state.withdrawTimeLock).to.equal(utils.parseEther("0"));
@@ -104,78 +104,42 @@ describe("Funding", () => {
       checkUnderlyingAsset(context, trader1Address, "900000");
 
       await timeJump(50);
-      expect(await d.withdrawPendingFund(trader1Address)).to.be.revertedWith(
+      expect( d.withdrawPendingFund(trader1Address)).to.be.revertedWith(
         "JOJO_WITHDRAW_PENDING"
       );
-
-      await timeJump(51);
+      await timeJump(10000);
       await d.withdrawPendingFund(trader1Address);
       checkCredit(context, trader1Address, "70000", "0");
       checkUnderlyingAsset(context, trader1Address, "930000");
     });
   });
 
-  // Revert cases
-  it("withdraw when not enough balance", async () => {
-    let d = context.dealer.connect(trader1);
-    await d.deposit(utils.parseEther("100000"), trader1Address);
-    expect(
-      d.withdraw(utils.parseEther("100001"), trader1Address)
-    ).to.be.revertedWith("JOJO_CREDIT_NOT_ENOUGH");
+  describe("Revert cases", async () => {
+    it("withdraw when not enough balance", async () => {
+      let d = context.dealer.connect(trader1);
+      await d.deposit(utils.parseEther("100000"), trader1Address);
+      expect(
+        d.withdraw(utils.parseEther("100001"), trader1Address)
+      ).to.be.revertedWith("JOJO_CREDIT_NOT_ENOUGH");
+    });
+
+    it("withdraw when liquidated", async () => {
+      await fundTrader(context);
+      await openPosition(
+        trader1,
+        trader2,
+        "100",
+        "30000",
+        context.perpList[0],
+        await getDefaultOrderEnv(context.dealer)
+      );
+      await setPrice(context.priceSourceList[0], "10000");
+      expect(await context.dealer.isSafe(trader1.address)).to.be.false;
+      expect(
+        context.dealer
+          .connect(trader1)
+          .withdraw(utils.parseEther("1"), trader1.address)
+      ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
+    });
   });
-
-  it("withdraw when liquidated", async () => {
-    await fundTrader(context);
-    await openPosition(
-      trader1,
-      trader2,
-      "100",
-      "30000",
-      context.perpList[0],
-      await getDefaultOrderEnv(context.dealer)
-    );
-    await setPrice(context.priceSourceList[0], "10000");
-    expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-    expect(
-      context.dealer
-        .connect(trader1)
-        .withdraw(utils.parseEther("1"), trader1.address)
-    ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
-  });
-
-  //   it('Assigns initial balance', async () => {
-  //       const gretter = await ethers.getContractFactory("")
-  //     expect(await token.balanceOf(wallet.address)).to.equal(1000);
-  //   });
-
-  //   it('Transfer adds amount to destination account', async () => {
-  //     await token.transfer(walletTo.address, 7);
-  //     expect(await token.balanceOf(walletTo.address)).to.equal(7);
-  //   });
-
-  //   it('Transfer emits event', async () => {
-  //     await expect(token.transfer(walletTo.address, 7))
-  //       .to.emit(token, 'Transfer')
-  //       .withArgs(wallet.address, walletTo.address, 7);
-  //   });
-
-  //   it('Can not transfer above the amount', async () => {
-  //     await expect(token.transfer(walletTo.address, 1007)).to.be.reverted;
-  //   });
-
-  //   it('Can not transfer from empty account', async () => {
-  //     const tokenFromOtherWallet = token.connect(walletTo);
-  //     await expect(tokenFromOtherWallet.transfer(wallet.address, 1))
-  //       .to.be.reverted;
-  //   });
-
-  //   it('Calls totalSupply on BasicToken contract', async () => {
-  //     await token.totalSupply();
-  //     expect('totalSupply').to.be.calledOnContract(token);
-  //   });
-
-  //   it('Calls balanceOf with sender address on BasicToken contract', async () => {
-  //     await token.balanceOf(wallet.address);
-  //     expect('balanceOf').to.be.calledOnContractWith(token, [wallet.address]);
-  //   });
 });

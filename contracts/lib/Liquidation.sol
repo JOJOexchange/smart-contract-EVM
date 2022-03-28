@@ -237,6 +237,7 @@ library Liquidation {
 
         (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
         IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
+        state.trueCredit[trader] += creditAmount;
         state.positionSerialNum[trader][msg.sender] += 1;
 
         state.hasPosition[trader][msg.sender] = false;

@@ -15,7 +15,7 @@ let ORDER_STRUCTRUE = [
   { name: "nonce", type: "uint256" },
 ];
 
-interface Order {
+export interface Order {
   perp: string;
   paperAmount: string;
   creditAmount: string;
@@ -128,7 +128,7 @@ export async function openPosition(
   let encodedTradeData = encodeTradeData(
     [o1.order, o2.order],
     [o1.signature, o2.signature],
-    [paperAmount.toString(), paperAmount.toString()]
+    [paperAmount.abs().toString(), paperAmount.abs().toString()]
   );
   await perp.trade(encodedTradeData);
 }

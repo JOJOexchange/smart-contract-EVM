@@ -13,6 +13,17 @@ export async function checkCredit(
   expect(credit.virtualCredit).to.equal(utils.parseEther(virtualCredit));
 }
 
+export async function checkBalance(
+    perp: Contract,
+    trader: string,
+    paper:string,
+    credit:string
+) {
+    const balance = await perp.balanceOf(trader)
+    expect(balance[0]).to.equal(utils.parseEther(paper));
+    expect(balance[1]).to.equal(utils.parseEther(credit))
+}
+
 export async function checkUnderlyingAsset(
   context: Context,
   account: string,

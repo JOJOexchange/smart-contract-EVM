@@ -61,7 +61,7 @@ contract Perpetual is Ownable, IPerpetual {
         for (uint256 i = 0; i < traderList.length; i++) {
             address trader = traderList[i];
             _settle(trader, ratio, paperChangeList[i], creditChangeList[i]);
-            require(IDealer(owner()).isSafe(trader), "TRADER BROKEN");
+            require(IDealer(owner()).isSafe(trader), "TRADER_NOT_SAFE");
         }
     }
 
@@ -86,7 +86,7 @@ contract Perpetual is Ownable, IPerpetual {
             liquidatorPaperChange,
             liquidatorCreditChange
         );
-        require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR BROKEN");
+        require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
     }
 
     function _settle(

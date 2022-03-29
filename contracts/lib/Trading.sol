@@ -26,6 +26,7 @@ library Trading {
     event OrderFilled(
         bytes32 indexed orderHash,
         address indexed trader,
+        address indexed perp,
         int256 filledPaperAmount,
         int256 filledCreditAmount,
         uint256 positionSerialNum
@@ -127,6 +128,7 @@ library Trading {
                 emit OrderFilled(
                     orderHashList[i],
                     orderList[i].signer,
+                    result.perp,
                     paperChange,
                     creditChange - fee,
                     serialNum

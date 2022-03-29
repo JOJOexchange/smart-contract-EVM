@@ -21,12 +21,12 @@ import { getDefaultOrderEnv, openPosition } from "../scripts/order";
   - withdraw
     - withdraw without timelock
     - withdraw with timelock
-  - withdraw make ture credit negative
+  - withdrawal can make ture credit negative
 
   Revert cases list
   - withdraw when being liquidated
   - withdraw when not enough balance
-  - want to avoid safe check with virtual credit
+  - can not withdraw virtual credit
 */
 
 describe("Funding", () => {
@@ -44,40 +44,42 @@ describe("Funding", () => {
     trader2Address = await trader2.getAddress();
   });
 
-  it("deposit", async () => {
-    let c = context.dealer.connect(trader1);
-
-    // deposit to self
-    await c.deposit(utils.parseEther("100000"), trader1Address);
-    checkUnderlyingAsset(context, trader1Address, "900000");
-    checkUnderlyingAsset(context, context.dealer.address, "100000");
-    checkCredit(context, trader1Address, "100000", "0");
-
-    // deposit to others
-    await c.deposit(utils.parseEther("20000"), trader2Address);
-    checkUnderlyingAsset(context, trader2Address, "880000");
-    checkUnderlyingAsset(context, context.dealer.address, "120000");
-    checkCredit(context, trader2Address, "20000", "0");
-  });
-
-  it("set virtual credit", async () => {
-    await context.dealer.setVirtualCredit(
-      trader1Address,
-      utils.parseEther("10")
-    );
-    await context.dealer.setVirtualCredit(
-      trader2Address,
-      utils.parseEther("20")
-    );
-    checkCredit(context, trader1Address, "0", "10");
-    checkCredit(context, trader2Address, "0", "20");
-
-    await context.dealer.setVirtualCredit(
-      trader1Address,
-      utils.parseEther("5")
-    );
-    checkCredit(context, trader1Address, "0", "5");
-  });
+  describe("funding",async () => {
+    it("deposit", async () => {
+      let c = context.dealer.connect(trader1);
+  
+      // deposit to self
+      await c.deposit(utils.parseEther("100000"), trader1Address);
+      checkUnderlyingAsset(context, trader1Address, "900000");
+      checkUnderlyingAsset(context, context.dealer.address, "100000");
+      checkCredit(context, trader1Address, "100000", "0");
+  
+      // deposit to others
+      await c.deposit(utils.parseEther("20000"), trader2Address);
+      checkUnderlyingAsset(context, trader2Address, "880000");
+      checkUnderlyingAsset(context, context.dealer.address, "120000");
+      checkCredit(context, trader2Address, "20000", "0");
+    });
+  
+    it("set virtual credit", async () => {
+      await context.dealer.setVirtualCredit(
+        trader1Address,
+        utils.parseEther("10")
+      );
+      await context.dealer.setVirtualCredit(
+        trader2Address,
+        utils.parseEther("20")
+      );
+      checkCredit(context, trader1Address, "0", "10");
+      checkCredit(context, trader2Address, "0", "20");
+  
+      await context.dealer.setVirtualCredit(
+        trader1Address,
+        utils.parseEther("5")
+      );
+      checkCredit(context, trader1Address, "0", "5");
+    });
+  })
 
   describe("withdraw", async () => {
     it("without timelock", async () => {
@@ -141,5 +143,18 @@ describe("Funding", () => {
           .withdraw(utils.parseEther("1"), trader1.address)
       ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
     });
+
+    it("can not withdraw virtual credit",async () => {
+      await fundTrader(context)
+      await context.dealer.setVirtualCredit(
+        trader1.address,
+        utils.parseEther("1000000")
+      );
+      expect(
+        context.dealer
+          .connect(trader1)
+          .withdraw(utils.parseEther("1000001"), trader1.address)
+      ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
+    })
   });
 });

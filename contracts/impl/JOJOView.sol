@@ -27,10 +27,15 @@ contract JOJOView is JOJOStorage {
     function getCreditOf(address trader)
         external
         view
-        returns (int256 trueCredit, uint256 virtualCredit)
+        returns (
+            int256 trueCredit,
+            uint256 virtualCredit,
+            uint256 pendingWithdraw
+        )
     {
         trueCredit = state.trueCredit[trader];
         virtualCredit = state.virtualCredit[trader];
+        pendingWithdraw = state.pendingWithdraw[trader];
     }
 
     function getOrderHash(Types.Order memory order)
@@ -61,17 +66,17 @@ contract JOJOView is JOJOStorage {
     function getTraderRisk(address trader)
         external
         view
-        returns (
-            int256 netValue,
-            uint256 exposure
-        )
+        returns (int256 netValue, uint256 exposure)
     {
         int256 positionNetValue;
         (positionNetValue, exposure, ) = Liquidation._getTotalExposure(
             state,
             trader
         );
-        netValue = positionNetValue + state.trueCredit[trader] + int256(state.virtualCredit[trader]);
+        netValue =
+            positionNetValue +
+            state.trueCredit[trader] +
+            int256(state.virtualCredit[trader]);
     }
 
     // return 0 if the trader can not be liquidated

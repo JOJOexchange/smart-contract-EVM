@@ -414,5 +414,31 @@ describe("Trade", () => {
         "TRADER_NOT_SAFE"
       );
     });
+    it("order sender not safe",async () => {
+      orderEnv.makerFeeRate = utils.parseEther("-0.5").toString()
+      orderEnv.takerFeeRate = utils.parseEther("-0.5").toString()
+      let makerO = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("-1").toString(),
+        utils.parseEther("30000").toString(),
+        context.traderList[0]
+      );
+      let takerO= await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("1").toString(),
+        utils.parseEther("-30000").toString(),
+        context.traderList[1]
+      );
+      let data = encodeTradeData(
+        [makerO.order, takerO.order],
+        [makerO.signature, takerO.signature],
+        [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
+      );
+      expect(context.perpList[0].trade(data)).to.be.revertedWith(
+        "JOJO_ORDER_SENDER_NOT_SAFE"
+      );
+    })
   });
 });

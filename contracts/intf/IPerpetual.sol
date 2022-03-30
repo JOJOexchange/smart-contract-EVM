@@ -21,7 +21,7 @@ interface IPerpetual {
         bytes calldata tradeData
     ) external;
 
-    function liquidate(address liquidatedTrader, int256 requestPaperAmount)
+    function liquidate(address liquidatedTrader, uint256 requestPaperAmount)
         external;
 
     function changeCredit(address trader, int256 amount) external;

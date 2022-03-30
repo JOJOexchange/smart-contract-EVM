@@ -22,6 +22,8 @@ interface IDealer {
 
     function isSafe(address trader) external returns (bool);
 
+    function isPositionSafe(address trader, address perp) external view returns (bool safe);
+
     function getFundingRatio(address perpetualAddress)
         external
         view
@@ -30,8 +32,9 @@ interface IDealer {
     // lt = liquidatedTrader who is broken
     // liquidator is the one wants take over lt's position
     function requestLiquidate(
+        address liquidator,
         address liquidatedTrader,
-        int256 requestPaperAmount
+        uint256 requestPaperAmount
     )
         external
         returns (

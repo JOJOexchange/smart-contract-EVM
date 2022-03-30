@@ -1,5 +1,4 @@
-import { ethers } from "hardhat";
-import { Contract, Wallet, utils } from "ethers";
+import { Wallet, utils } from "ethers";
 import { expect } from "chai";
 import {
   basicContext,

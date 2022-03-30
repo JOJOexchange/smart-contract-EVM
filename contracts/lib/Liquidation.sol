@@ -11,6 +11,7 @@ import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Types.sol";
+import "hardhat/console.sol";
 
 library Liquidation {
     using SignedDecimalMath for int256;
@@ -32,6 +33,8 @@ library Liquidation {
         uint256 positionSerialNum
     );
 
+    // For reference only
+    // has accuracy problems, usually less than 10 wei
     function _getLiquidationPrice(
         Types.State storage state,
         address trader,
@@ -42,21 +45,24 @@ library Liquidation {
             return 0;
         }
 
-        (
-            int256 positionNetValue,
-            uint256 exposure,
-        ) = _getTotalExposure(state, trader);
+        (int256 positionNetValue, uint256 exposure, ) = _getTotalExposure(
+            state,
+            trader
+        );
 
         Types.RiskParams memory params = state.perpRiskParams[perp];
         uint256 markPrice = IMarkPriceSource(params.markPriceSource)
             .getMarkPrice();
 
         // remove perp paper influence
-        exposure -= (uint256(paperAmount) * markPrice) / 10**18;
+        exposure -= (paperAmount.abs() * markPrice) / 10**18;
         int256 netValue = positionNetValue +
             state.trueCredit[trader] +
             int256(state.virtualCredit[trader]) -
             paperAmount.decimalMul(int256(markPrice));
+        console.logInt(positionNetValue);
+        console.log(exposure);
+        console.logInt(netValue);
 
         /*
             exposure * liquidationThreshold <= netValue
@@ -79,13 +85,16 @@ library Liquidation {
             let temp2 = 1-liqThreshold or 1+liqThreshold
             then liqPrice = temp1/paperAmount/temp2
         */
-        int256 temp1 = int256((exposure * params.liquidationThreshold) / 10**18) -
-            netValue;
+        int256 temp1 = int256(
+            (exposure * params.liquidationThreshold) / 10**18
+        ) - netValue;
+        console.logInt(temp1);
         int256 temp2 = int256(
             paperAmount > 0
-                ? 1 - params.liquidationThreshold
-                : 1 + params.liquidationThreshold
+                ? 10**18 - params.liquidationThreshold
+                : 10**18 + params.liquidationThreshold
         );
+        console.logInt(temp2);
         int256 liqPrice = temp1.decimalDiv(temp2.decimalMul(paperAmount));
         if (liqPrice < 0) {
             liquidationPrice = 0;
@@ -199,7 +208,10 @@ library Liquidation {
         // get price
         Types.RiskParams memory params = state.perpRiskParams[msg.sender];
         require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
-        require(!_isPositionSafe(state, liquidatedTrader, msg.sender), Errors.ACCOUNT_IS_SAFE);
+        require(
+            !_isPositionSafe(state, liquidatedTrader, msg.sender),
+            Errors.ACCOUNT_IS_SAFE
+        );
 
         uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
         uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
@@ -223,7 +235,7 @@ library Liquidation {
                 ? int256(requestPaperAmount)
                 : -1 * brokenPaperAmount;
         }
-        ltCreditChange = ltPaperChange.decimalMul(int256(price));
+        ltCreditChange = -1 * ltPaperChange.decimalMul(int256(price));
         insuranceFee =
             (ltCreditChange.abs() * params.insuranceFeeRate) /
             10**18;

@@ -156,6 +156,14 @@ library Trading {
                 );
             }
             emit RelayerFeeCollected(orderSender, result.orderSenderFee);
+            emit OrderFilled(
+                    orderHashList[0],
+                    orderList[0].signer,
+                    result.perp,
+                    result.paperChangeList[0],
+                    result.creditChangeList[0],
+                    state.positionSerialNum[orderList[0].signer][result.perp]
+                );
         }
     }
 

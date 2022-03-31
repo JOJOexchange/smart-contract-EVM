@@ -34,10 +34,13 @@ import { checkBalance, checkCredit } from "./checkers";
         - partially liquidated
         - mark price changed
         - funding ratio changed
+    - handle bad debt
 
     Revert cases
     - can not liquidate safe trader
     - liquidator not safe
+    - safe account can not be handleDebt
+    - can not handle debt before liquidation finished
 */
 
 describe("Liquidation", () => {
@@ -306,6 +309,21 @@ describe("Liquidation", () => {
       await checkCredit(context, trader1.address, "5000", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.false;
     });
+    it("bad debt", async () => {
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("19000"));
+      await perp0
+        .connect(liquidator)
+        .liquidate(trader1.address, utils.parseEther("1"));
+      await checkCredit(context, trader1.address, "-6393.1", "5000");
+      expect(await context.dealer.isSafe(trader1.address)).to.be.false;
+      expect(
+        await context.dealer.isPositionSafe(trader1.address, perp0.address)
+      ).to.be.true;
+      await context.dealer.handleBadDebt(trader1.address);
+      await checkCredit(context, insurance, "-6205", "0");
+      expect(await context.dealer.isSafe(trader1.address)).to.be.true;
+    });
+
     describe("return to safe before liquidate all position", async () => {
       it("partially liquidated", async () => {
         await perp0
@@ -314,8 +332,9 @@ describe("Liquidation", () => {
         expect(await context.dealer.isSafe(trader1.address)).to.be.true;
       });
     });
+
     describe("revert cases", async () => {
-      it("can not liquidate safe trader", async () => {
+      it("can not liquidate or bad debt safe trader", async () => {
         await context.priceSourceList[0].setMarkPrice(
           utils.parseEther("22000")
         );
@@ -323,6 +342,9 @@ describe("Liquidation", () => {
           perp0
             .connect(liquidator)
             .liquidate(trader1.address, utils.parseEther("0.01"))
+        ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
+        expect(
+          context.dealer.handleBadDebt(trader1.address)
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
       });
       it("liquidator not safe", async () => {
@@ -335,6 +357,14 @@ describe("Liquidation", () => {
             .connect(liquidator)
             .liquidate(trader1.address, utils.parseEther("0.01"))
         ).to.be.revertedWith("LIQUIDATOR_NOT_SAFE");
+      });
+      it("can not handle debt before liquidation finished", async () => {
+        await perp0
+          .connect(liquidator)
+          .liquidate(trader1.address, utils.parseEther("0.01"));
+        expect(
+          context.dealer.handleBadDebt(trader1.address)
+        ).to.be.revertedWith("JOJO_TRADER_STILL_IN_LIQUIDATION");
       });
     });
   });

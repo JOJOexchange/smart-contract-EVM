@@ -1,118 +1,128 @@
-// await openPosition(
-//     trader1,
-//     trader2,
-//     "1",
-//     "30000",
-//     context.perpList[0],
-//     orderEnv
-//   );
+import { Wallet, utils } from "ethers";
+import { expect } from "chai";
+import {
+  basicContext,
+  Context,
+  fundTrader,
+  setPrice,
+} from "../scripts/context";
+import { checkCredit, checkUnderlyingAsset } from "./checkers";
+import { timeJump } from "./timemachine";
+import { getDefaultOrderEnv, openPosition, OrderEnv } from "../scripts/order";
 
-  // trader1 long
-  // exposure = 0 netValue = -15+10000-30000 = -20015
-  // temp1 = 20015
-  // temp2 = 0.97
-  // liqPrice = 20015/0.97 = 20634.020618556701030927
+/*
+  Test cases
+  - getFundingRatio
+  - getRegisteredPerp
+  - getCreditOf
+  - getTraderRisk
+  - getLiquidationPrice
+*/
 
-  // trader2 short
-  // exposure = 0 netValue = -3+10000+30000 = 39997
-  // temp1 = -39997
-  // temp2 = 1.03
-  // liqPrice = 39997/1.03 = 38832.038834951456310679
+describe("view-functions", async () => {
+  let context: Context;
+  let trader1: Wallet;
+  let trader2: Wallet;
+  let trader1Address: string;
+  let trader2Address: string;
+  let orderEnv: OrderEnv;
 
-  // console.log(
-  //   await context.dealer.getLiquidationPrice(
-  //     trader1.address,
-  //     context.perpList[0].address
-  //   )
-  // );
-  // console.log(
-  //   await context.dealer.getLiquidationPrice(
-  //     trader2.address,
-  //     context.perpList[0].address
-  //   )
-  // );
+  beforeEach(async () => {
+    context = await basicContext();
+    trader1 = context.traderList[0];
+    trader2 = context.traderList[1];
+    trader1Address = await trader1.getAddress();
+    trader2Address = await trader2.getAddress();
+    orderEnv = await getDefaultOrderEnv(context.dealer);
+    await context.dealer.setVirtualCredit(
+      trader1.address,
+      utils.parseEther("10000")
+    );
+    await context.dealer.setVirtualCredit(
+      trader2.address,
+      utils.parseEther("10000")
+    );
+    await openPosition(
+      trader1,
+      trader2,
+      "1",
+      "30000",
+      context.perpList[0],
+      orderEnv
+    );
+    await openPosition(
+      trader1,
+      trader2,
+      "10",
+      "2000",
+      context.perpList[1],
+      orderEnv
+    );
+  });
+
+  it("get funding ratio", async () => {
+    await context.dealer.updateFundingRatio(
+      [context.perpList[1].address],
+      [utils.parseEther("10")]
+    );
+    expect(
+      await context.dealer.getFundingRatio(context.perpList[1].address)
+    ).to.equal(utils.parseEther("10"));
+    expect(
+      await context.dealer.getFundingRatio(context.perpList[0].address)
+    ).to.equal(utils.parseEther("1"));
+  });
+
+  it("get registered perp",async () => {
+    let perpList:string[] = await context.dealer.getRegisteredPerp()
+    expect(perpList[0]).to.equal(context.perpList[0].address)
+    expect(perpList[1]).to.equal(context.perpList[1].address)
+    expect(perpList[2]).to.equal(context.perpList[2].address)
+  })
+
+  it("get trader risk",async()=>{
+    await context.priceSourceList[0].setMarkPrice(utils.parseEther("35000"));
+    await context.priceSourceList[1].setMarkPrice(utils.parseEther("1800"));
+    const risk1 = await context.dealer.getTraderRisk(trader1.address)
+    const risk2 = await context.dealer.getTraderRisk(trader2.address)
+    // risk1
+    // netvalue = 10000-15-10+5000-2000 = 12975
+    // exposure = 35000+18000 = 53000
+    expect(risk1.netValue).to.be.equal(utils.parseEther("12975"))
+    expect(risk1.exposure).to.be.equal(utils.parseEther("53000"))
+    // risk2
+    // netvalue = 10000-3-2-5000+2000 = 6995
+    // exposure = 35000+18000 = 53000
+    expect(risk2.netValue).to.be.equal(utils.parseEther("6995"))
+    expect(risk2.exposure).to.be.equal(utils.parseEther("53000"))
+  })
+
+  it("get trader risk & liq price", async () => {
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader1.address,
+        context.perpList[0].address
+      )
+    ).to.be.equal("21262886597938144329896");
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader1.address,
+        context.perpList[1].address
+      )
+    ).to.be.equal("1213157894736842105263");
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader2.address,
+        context.perpList[0].address
+      )
+    ).to.be.equal("38247572815533980582524");
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader2.address,
+        context.perpList[1].address
+      )
+    ).to.be.equal("2713809523809523809523");
+  });
+});
 
 
-
-//   it.only("multi position check", async () => {
-//     await openPosition(
-//       trader1,
-//       trader2,
-//       "1",
-//       "30000",
-//       context.perpList[0],
-//       orderEnv
-//     );
-//     await openPosition(
-//       trader1,
-//       trader2,
-//       "10",
-//       "2000",
-//       context.perpList[1],
-//       orderEnv
-//     );
-//     await context.priceSourceList[0].setMarkPrice(utils.parseEther("21262"));
-//     expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[0].address)).to.be.false;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[1].address)).to.be.false;
-//     expect(await context.dealer.isSafe(trader2.address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[0].address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[1].address)).to.be.true;
-
-//     await context.priceSourceList[0].setMarkPrice(utils.parseEther("38248"))
-//     expect(await context.dealer.isSafe(trader1.address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[0].address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[1].address)).to.be.true;
-//     expect(await context.dealer.isSafe(trader2.address)).to.be.false;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[0].address)).to.be.false;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[1].address)).to.be.false;
-
-//     await context.priceSourceList[0].setMarkPrice(utils.parseEther("30000"))
-
-//     await context.priceSourceList[1].setMarkPrice(utils.parseEther("1213"))
-//     expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[0].address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[1].address)).to.be.false;
-//     expect(await context.dealer.isSafe(trader2.address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[0].address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[1].address)).to.be.true;
-
-//     await context.priceSourceList[1].setMarkPrice(utils.parseEther("2714"))
-//     expect(await context.dealer.isSafe(trader1.address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[0].address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[1].address)).to.be.true;
-//     expect(await context.dealer.isSafe(trader2.address)).to.be.false;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[0].address)).to.be.true;
-//     expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[1].address)).to.be.false;
-
-//     console.log(
-//       await context.dealer.getLiquidationPrice(
-//         trader1.address,
-//         context.perpList[0].address
-//       )
-//     );
-//     console.log(
-//       await context.dealer.getLiquidationPrice(
-//         trader1.address,
-//         context.perpList[1].address
-//       )
-//     );
-//     console.log(
-//       await context.dealer.getLiquidationPrice(
-//         trader2.address,
-//         context.perpList[0].address
-//       )
-//     );
-//     console.log(
-//       await context.dealer.getLiquidationPrice(
-//         trader2.address,
-//         context.perpList[1].address
-//       )
-//     );
-//   });
-// });
-
-// 21262886597938144329896
-// 1213157894736842105263
-// 38247572815533980582524
-// 2713809523809523809523

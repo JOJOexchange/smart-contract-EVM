@@ -11,7 +11,7 @@ import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Types.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 library Liquidation {
     using SignedDecimalMath for int256;
@@ -35,6 +35,7 @@ library Liquidation {
 
     // For reference only
     // has accuracy problems, usually less than 10 wei
+    // return 0 if can not calculate liquidation price
     function _getLiquidationPrice(
         Types.State storage state,
         address trader,
@@ -60,9 +61,9 @@ library Liquidation {
             state.trueCredit[trader] +
             int256(state.virtualCredit[trader]) -
             paperAmount.decimalMul(int256(markPrice));
-        console.logInt(positionNetValue);
-        console.log(exposure);
-        console.logInt(netValue);
+        // console.logInt(positionNetValue);
+        // console.log(exposure);
+        // console.logInt(netValue);
 
         /*
             exposure * liquidationThreshold <= netValue
@@ -88,16 +89,19 @@ library Liquidation {
         int256 temp1 = int256(
             (exposure * params.liquidationThreshold) / 10**18
         ) - netValue;
-        console.logInt(temp1);
+        // console.logInt(temp1);
         int256 temp2 = int256(
             paperAmount > 0
                 ? 10**18 - params.liquidationThreshold
                 : 10**18 + params.liquidationThreshold
         );
-        console.logInt(temp2);
+        // console.logInt(temp2);
+        if (temp2.decimalMul(paperAmount)==0){
+            return 0;
+        }
         int256 liqPrice = temp1.decimalDiv(temp2.decimalMul(paperAmount));
         if (liqPrice < 0) {
-            liquidationPrice = 0;
+            return 0;
         } else {
             liquidationPrice = uint256(liqPrice);
         }

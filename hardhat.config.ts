@@ -1,6 +1,8 @@
 import { task } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
+import "solidity-coverage";
+import "hardhat-gas-reporter"
 // import '@typechain/hardhat'
 // import '@nomiclabs/hardhat-ethers'
 // import '@nomiclabs/hardhat-waffle'
@@ -16,11 +18,21 @@ import "@nomiclabs/hardhat-ethers";
 // });
 
 export default {
-  solidity: "0.8.9",
-  settings: {
-    optimizer: {
-      enabled: true,
-      runs: 10000,
+  solidity: {
+    version: "0.8.9",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 10000,
+      },
     },
   },
+  networks:{
+    hardhat:{
+      gas:20000000,
+    }
+  },
+  gasReporter: {
+    enabled: false
+  }
 };

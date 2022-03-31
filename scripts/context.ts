@@ -43,12 +43,8 @@ export async function basicContext(): Promise<Context> {
         i.toString(),
       ethers.provider
     );
+    await ethers.provider.send("hardhat_setBalance",[wallet.address, "0x10000000000000000000"])
     traders.push(wallet);
-    let tx = {
-      to: wallet.address,
-      value: utils.parseEther("10"),
-    };
-    await owner.sendTransaction(tx);
   }
 
   // Deploy libraries

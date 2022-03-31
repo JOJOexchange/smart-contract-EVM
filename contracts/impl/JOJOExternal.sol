@@ -52,7 +52,15 @@ contract JOJOExternal is JOJOStorage {
         return Liquidation._isSafe(state, trader);
     }
 
-    function isPositionSafe(address trader, address perp) external view returns (bool safe) {
+    function isPositionSafe(address trader, address perp)
+        external
+        view
+        returns (bool safe)
+    {
+        (int256 paper, ) = IPerpetual(perp).balanceOf(trader);
+        if (paper == 0) {
+            return true;
+        }
         return Liquidation._isPositionSafe(state, trader, perp);
     }
 

@@ -12,6 +12,14 @@ import "../lib/Liquidation.sol";
 import "../utils/Errors.sol";
 
 contract JOJOView is JOJOStorage {
+    function getRiskParams(address perpetualAddress)
+        external
+        view
+        returns (Types.RiskParams memory params)
+    {
+        params = state.perpRiskParams[perpetualAddress];
+    }
+
     function getFundingRatio(address perpetualAddress)
         external
         view

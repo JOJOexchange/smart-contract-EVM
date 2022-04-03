@@ -17,6 +17,7 @@ library Errors {
     string constant ORDER_PRICE_NOT_MATCH = "JOJO_ORDER_PRICE_NOT_MATCH";
     string constant ORDER_PRICE_NEGATIVE = "JOJO_ORDER_PRICE_NEGATIVE";
     string constant ORDER_SENDER_NOT_SAFE = "JOJO_ORDER_SENDER_NOT_SAFE";
+    string constant ORDER_EXPIRED = "JOJO_ORDER_EXPIRED";
     string constant ACCOUNT_NOT_SAFE = "JOJO_ACCOUNT_NOT_SAFE";
     string constant ACCOUNT_IS_SAFE = "JOJO_ACCOUNT_IS_SAFE";
     string constant CREDIT_NOT_ENOUGH = "JOJO_CREDIT_NOT_ENOUGH";

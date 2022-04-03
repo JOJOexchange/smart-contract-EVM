@@ -86,7 +86,7 @@ library Trading {
             uint256 totalMakerFilledPaper;
 
             for (uint256 i = 1; i < orderList.length; i++) {
-                if (i>=2 && orderList[i].signer != orderList[i - 1].signer) {
+                if (i >= 2 && orderList[i].signer != orderList[i - 1].signer) {
                     uniqueTraderNum += 1;
                 }
                 totalMakerFilledPaper += matchPaperAmount[i];
@@ -124,7 +124,9 @@ library Trading {
                 int256 fee = int256(creditChange.abs()).decimalMul(
                     orderList[i].makerFeeRate
                 );
-                uint256 serialNum = state.positionSerialNum[orderList[i].signer][result.perp];
+                uint256 serialNum = state.positionSerialNum[
+                    orderList[i].signer
+                ][result.perp];
                 emit OrderFilled(
                     orderHashList[i],
                     orderList[i].signer,
@@ -157,13 +159,13 @@ library Trading {
             }
             emit RelayerFeeCollected(orderSender, result.orderSenderFee);
             emit OrderFilled(
-                    orderHashList[0],
-                    orderList[0].signer,
-                    result.perp,
-                    result.paperChangeList[0],
-                    result.creditChangeList[0],
-                    state.positionSerialNum[orderList[0].signer][result.perp]
-                );
+                orderHashList[0],
+                orderList[0].signer,
+                result.perp,
+                result.paperChangeList[0],
+                result.creditChangeList[0],
+                state.positionSerialNum[orderList[0].signer][result.perp]
+            );
         }
     }
 
@@ -244,6 +246,7 @@ library Trading {
                 Errors.INVALID_ORDER_SIGNATURE
             );
         }
+        require(order.expiration >= block.timestamp, Errors.ORDER_EXPIRED);
         require(
             (order.paperAmount < 0 && order.creditAmount > 0) ||
                 (order.paperAmount > 0 && order.creditAmount < 0),

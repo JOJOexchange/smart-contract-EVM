@@ -20,7 +20,7 @@ import { checkBalance, checkCredit } from "./checkers";
   - ratio decrease
 */
 
-describe("Trade", () => {
+describe("Funding ratio", () => {
   let context: Context;
   let trader1: Wallet;
   let trader2: Wallet;

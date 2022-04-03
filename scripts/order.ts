@@ -52,7 +52,8 @@ export async function buildOrder(
   perpAddress: string,
   paperAmount: string,
   creditAmount: string,
-  signer: Wallet
+  signer: Wallet,
+  subaccount?:string,
 ): Promise<{ order: Order; hash: string; signature: string }> {
   let chainid = await signer.getChainId();
   let domain = {
@@ -70,10 +71,13 @@ export async function buildOrder(
     signer: signer.address,
     orderSender: orderEnv.orderSender,
     expiration: Math.floor(
-      new Date().getTime() / 1000 + 60 * 60 * 24 * 10
+      new Date().getTime() / 1000 + 1000
     ).toFixed(0),
     nonce: Math.round(new Date().getTime() / 1000) + "",
   };
+  if (subaccount){
+    order.signer = subaccount
+  }
   let types = {
     Order: ORDER_STRUCTRUE,
   };

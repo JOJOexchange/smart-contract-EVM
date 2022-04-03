@@ -12,6 +12,11 @@ pragma solidity 0.8.9;
 // 4. liquidation - getLiquidateCreditAmount
 
 interface IDealer {
+
+    function withdraw(uint256 amount, address to) external;
+
+    function withdrawPendingFund(address to) external;
+
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (

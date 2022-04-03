@@ -10,6 +10,7 @@ import {
   OrderEnv,
 } from "../scripts/order";
 import { checkBalance, checkCredit } from "./checkers";
+import { timeJump } from "./timemachine";
 
 /*
   Test cases list
@@ -413,7 +414,14 @@ describe("Trade", () => {
       expect(context.perpList[0].trade(data10)).to.be.revertedWith(
         "TRADER_NOT_SAFE"
       );
+
+      // 9. order expired
+      await timeJump(1000)
+      expect( context.perpList[0].trade(data5)
+      ).to.be.revertedWith("JOJO_ORDER_EXPIRED");
     });
+
+    // order sender not safe
     it("order sender not safe",async () => {
       orderEnv.makerFeeRate = utils.parseEther("-0.5").toString()
       orderEnv.takerFeeRate = utils.parseEther("-0.5").toString()

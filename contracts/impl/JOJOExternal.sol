@@ -66,6 +66,7 @@ contract JOJOExternal is JOJOStorage {
 
     // view version for requestLiquidate
     function getLiquidationCost(
+        address perp,
         address liquidatedTrader,
         uint256 requestPaperAmount
     )
@@ -76,6 +77,7 @@ contract JOJOExternal is JOJOStorage {
         (int256 ltPaperChange, int256 ltCreditChange, ) = Liquidation
             ._getLiquidateCreditAmount(
                 state,
+                perp,
                 liquidatedTrader,
                 requestPaperAmount
             );
@@ -83,6 +85,7 @@ contract JOJOExternal is JOJOStorage {
         liquidatorCreditChange = ltCreditChange * -1;
     }
 
+    // perp only
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,
@@ -97,12 +100,11 @@ contract JOJOExternal is JOJOStorage {
         )
     {
         address perp = msg.sender;
-        uint256 ltSN = state.positionSerialNum[liquidatedTrader][perp];
-        uint256 liquidatorSN = state.positionSerialNum[liquidator][perp];
         uint256 insuranceFee;
         (ltPaperChange, ltCreditChange, insuranceFee) = Liquidation
             ._getLiquidateCreditAmount(
                 state,
+                perp,
                 liquidatedTrader,
                 requestPaperAmount
             );
@@ -110,6 +112,8 @@ contract JOJOExternal is JOJOStorage {
         liquidatorCreditChange = ltCreditChange * -1;
         liquidatorPaperChange = ltPaperChange * -1;
         ltCreditChange -= int256(insuranceFee);
+        uint256 ltSN = state.positionSerialNum[liquidatedTrader][perp];
+        uint256 liquidatorSN = state.positionSerialNum[liquidator][perp];
         emit Liquidation.BeingLiquidated(
             perp,
             liquidatedTrader,

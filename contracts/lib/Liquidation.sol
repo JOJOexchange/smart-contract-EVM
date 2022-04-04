@@ -198,6 +198,7 @@ library Liquidation {
 
     function _getLiquidateCreditAmount(
         Types.State storage state,
+        address perp,
         address liquidatedTrader,
         uint256 requestPaperAmount
     )
@@ -210,10 +211,10 @@ library Liquidation {
         )
     {
         // get price
-        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
+        Types.RiskParams memory params = state.perpRiskParams[perp];
         require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
         require(
-            !_isPositionSafe(state, liquidatedTrader, msg.sender),
+            !_isPositionSafe(state, liquidatedTrader, perp),
             Errors.ACCOUNT_IS_SAFE
         );
 
@@ -221,7 +222,7 @@ library Liquidation {
         uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
 
         // calculate trade
-        (int256 brokenPaperAmount, ) = IPerpetual(msg.sender).balanceOf(
+        (int256 brokenPaperAmount, ) = IPerpetual(perp).balanceOf(
             liquidatedTrader
         );
         require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);

@@ -62,6 +62,7 @@ export async function buildOrder(
     chainId: chainid,
     verifyingContract: orderEnv.dealerAddress,
   };
+  
   let order: Order = {
     perp: perpAddress,
     paperAmount: paperAmount,

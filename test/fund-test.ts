@@ -1,3 +1,4 @@
+import "./utils/hooks"
 import { Wallet, utils } from "ethers";
 import { expect } from "chai";
 import {
@@ -6,8 +7,8 @@ import {
   fundTrader,
   setPrice,
 } from "../scripts/context";
-import { checkCredit, checkUnderlyingAsset } from "./checkers";
-import { timeJump } from "./timemachine";
+import { checkCredit, checkUnderlyingAsset } from "./utils/checkers";
+import { timeJump } from "./utils/timemachine";
 import { getDefaultOrderEnv, openPosition } from "../scripts/order";
 
 /*

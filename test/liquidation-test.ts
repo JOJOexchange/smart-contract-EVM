@@ -1,15 +1,9 @@
+import "./utils/hooks";
 import { Contract, Wallet, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
-import {
-  buildOrder,
-  encodeTradeData,
-  getDefaultOrderEnv,
-  openPosition,
-  Order,
-  OrderEnv,
-} from "../scripts/order";
-import { checkBalance, checkCredit } from "./checkers";
+import { getDefaultOrderEnv, openPosition, OrderEnv } from "../scripts/order";
+import { checkBalance, checkCredit } from "./utils/checkers";
 
 /*
     Test cases list
@@ -271,7 +265,7 @@ describe("Liquidation", () => {
     });
   });
 
-  describe("execute liquidate", async () => {
+  describe("execute liquidation", async () => {
     beforeEach(async () => {
       // liquidate trader1
       await openPosition(trader1, trader2, "1", "30000", perp0, orderEnv);
@@ -280,6 +274,17 @@ describe("Liquidation", () => {
       // trader1 net value = 9985 - 9400 = 585
     });
     it("single liquidation > total position", async () => {
+      const liquidatorChange = await context.dealer.getLiquidationCost(
+        perp0.address,
+        trader1.address,
+        utils.parseEther("2")
+      );
+      expect(liquidatorChange.liquidatorPaperChange).to.be.equal(
+        utils.parseEther("1")
+      );
+      expect(liquidatorChange.liquidatorCreditChange).to.be.equal(
+        utils.parseEther("-20394")
+      );
       await perp0
         .connect(liquidator)
         .liquidate(trader1.address, utils.parseEther("2"));
@@ -290,6 +295,17 @@ describe("Liquidation", () => {
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
     });
     it("single liquidation = total position", async () => {
+      const liquidatorChange = await context.dealer.getLiquidationCost(
+        perp0.address,
+        trader1.address,
+        utils.parseEther("1")
+      );
+      expect(liquidatorChange.liquidatorPaperChange).to.be.equal(
+        utils.parseEther("1")
+      );
+      expect(liquidatorChange.liquidatorCreditChange).to.be.equal(
+        utils.parseEther("-20394")
+      );
       await perp0
         .connect(liquidator)
         .liquidate(trader1.address, utils.parseEther("1"));
@@ -300,6 +316,17 @@ describe("Liquidation", () => {
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
     });
     it("single liquidation < total position", async () => {
+      const liquidatorChange = await context.dealer.getLiquidationCost(
+        perp0.address,
+        trader1.address,
+        utils.parseEther("0.01")
+      );
+      expect(liquidatorChange.liquidatorPaperChange).to.be.equal(
+        utils.parseEther("0.01")
+      );
+      expect(liquidatorChange.liquidatorCreditChange).to.be.equal(
+        utils.parseEther("-203.94")
+      );
       await perp0
         .connect(liquidator)
         .liquidate(trader1.address, utils.parseEther("0.01"));
@@ -309,6 +336,54 @@ describe("Liquidation", () => {
       await checkCredit(context, trader1.address, "5000", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.false;
     });
+    it("single liquidation > total position: short position",async () => {
+      // trader2 net value = 10000 - 3 = 9997
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("39000"));
+      // trader2 net value = 9997 - 9000 = 997
+      const liquidatorChange = await context.dealer.getLiquidationCost(
+        perp0.address,
+        trader2.address,
+        utils.parseEther("2")
+      );
+      expect(liquidatorChange.liquidatorPaperChange).to.be.equal(
+        utils.parseEther("-1")
+      );
+      expect(liquidatorChange.liquidatorCreditChange).to.be.equal(
+        utils.parseEther("39390")
+      );
+      await perp0
+        .connect(liquidator)
+        .liquidate(trader2.address, utils.parseEther("2"));
+        await checkBalance(perp0, liquidator.address, "-1", "39390");
+        await checkBalance(perp0, trader2.address, "0", "0");
+        await checkCredit(context, insurance, "393.9", "0");
+        await checkCredit(context, trader2.address, "-4786.9", "5000");
+        expect(await context.dealer.isSafe(trader2.address)).to.be.true;
+    })
+    it("single liquidation < total position: short position",async () => {
+      // trader2 net value = 10000 - 3 = 9997
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("39000"));
+      // trader2 net value = 9997 - 9000 = 997
+      const liquidatorChange = await context.dealer.getLiquidationCost(
+        perp0.address,
+        trader2.address,
+        utils.parseEther("0.01")
+      );
+      expect(liquidatorChange.liquidatorPaperChange).to.be.equal(
+        utils.parseEther("-0.01")
+      );
+      expect(liquidatorChange.liquidatorCreditChange).to.be.equal(
+        utils.parseEther("393.9")
+      );
+      await perp0
+        .connect(liquidator)
+        .liquidate(trader2.address, utils.parseEther("0.01"));
+        await checkBalance(perp0, liquidator.address, "-0.01", "393.9");
+        await checkBalance(perp0, trader2.address, "-0.99", "29599.161");
+        await checkCredit(context, insurance, "3.939", "0");
+        await checkCredit(context, trader2.address, "5000", "5000");
+        expect(await context.dealer.isSafe(trader2.address)).to.be.false;
+    })
     it("bad debt", async () => {
       await context.priceSourceList[0].setMarkPrice(utils.parseEther("19000"));
       await perp0

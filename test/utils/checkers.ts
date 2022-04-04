@@ -1,6 +1,6 @@
-import { Contract, Signer, utils } from "ethers";
+import { Contract, utils } from "ethers";
 import { expect } from "chai";
-import { Context } from "../scripts/context";
+import { Context } from "../../scripts/context";
 
 export async function checkCredit(
   context: Context,

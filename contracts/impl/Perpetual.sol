@@ -65,10 +65,6 @@ contract Perpetual is Ownable, IPerpetual {
         }
     }
 
-    function isSafe(address trader) view external returns(bool) {
-        return IDealer(owner()).isPositionSafe(trader, address(this));
-    }
-
     // when you liquidate a long position, liqudatePaperAmount < 0 and liquidateCreditAmount > 0
     function liquidate(address liquidatedTrader, uint256 requestPaperAmount)
         external

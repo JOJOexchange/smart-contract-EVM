@@ -1,15 +1,13 @@
+import "./utils/hooks"
 import { Wallet, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
 import {
-  buildOrder,
-  encodeTradeData,
   getDefaultOrderEnv,
   openPosition,
-  Order,
   OrderEnv,
 } from "../scripts/order";
-import { checkBalance, checkCredit } from "./checkers";
+import { checkBalance } from "./utils/checkers";
 
 /*
   Test cases list

@@ -1,14 +1,11 @@
+import "./utils/hooks"
 import { Wallet, utils } from "ethers";
 import { expect } from "chai";
 import {
   basicContext,
   Context,
-  fundTrader,
-  setPrice,
 } from "../scripts/context";
-import { checkCredit, checkUnderlyingAsset } from "./checkers";
-import { timeJump } from "./timemachine";
-import { getDefaultOrderEnv, openPosition, OrderEnv } from "../scripts/order";
+import { buildOrder, getDefaultOrderEnv, openPosition, OrderEnv } from "../scripts/order";
 
 /*
   Test cases
@@ -123,6 +120,68 @@ describe("view-functions", async () => {
       )
     ).to.be.equal("2713809523809523809523");
   });
+
+  it("can not get valid liq price",async () => {
+    // 1. no position
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader1.address,
+        context.perpList[2].address
+      )
+    ).to.be.equal("0");
+    // 2. mul to 0 because of position too small
+    await openPosition(
+      trader1,
+      trader2,
+      "0.000000000000000001",
+      "5",
+      context.perpList[2],
+      orderEnv
+    );
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader1.address,
+        context.perpList[2].address
+      )
+    ).to.be.equal("0");
+    // 3. small long position always safe
+    await openPosition(
+      trader1,
+      trader2,
+      "10",
+      "5",
+      context.perpList[2],
+      orderEnv
+    );
+    expect(
+      await context.dealer.getLiquidationPrice(
+        trader1.address,
+        context.perpList[2].address
+      )
+    ).to.be.equal("0");
+  })
+
+  it("get order hash",async () => {
+    let o = await buildOrder(
+      await getDefaultOrderEnv(context.dealer),
+      context.perpList[0].address,
+      utils.parseEther("1").toString(),
+      utils.parseEther("-30000").toString(),
+      context.traderList[0],
+    )
+    expect(await context.dealer.getOrderHash(o.order)).to.be.equal(o.hash)
+  })
+
+  it("get risk params",async () => {
+    let params = await context.dealer.getRiskParams(context.perpList[0].address)
+    expect(params.liquidationThreshold).to.be.equal(utils.parseEther("0.03"))
+    expect(params.liquidationPriceOff).to.be.equal(utils.parseEther("0.01"))
+    expect(params.insuranceFeeRate).to.be.equal(utils.parseEther("0.01"))
+    expect(params.fundingRatio).to.be.equal(utils.parseEther("1"))
+    expect(params.markPriceSource).to.be.equal(context.priceSourceList[0].address)
+    expect(params.name).to.be.equal("BTC20x")
+    expect(params.isRegistered).to.be.true
+  })
 });
 
 

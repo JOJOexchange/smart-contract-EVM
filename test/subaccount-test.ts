@@ -1,3 +1,4 @@
+import "./utils/hooks"
 import { expect } from "chai";
 import { Contract, utils, Wallet } from "ethers";
 import { ethers } from "hardhat";
@@ -8,8 +9,8 @@ import {
   getDefaultOrderEnv,
   OrderEnv,
 } from "../scripts/order";
-import { checkBalance, checkCredit, checkUnderlyingAsset } from "./checkers";
-import { timeJump } from "./timemachine";
+import { checkBalance, checkCredit, checkUnderlyingAsset } from "./utils/checkers";
+import { timeJump } from "./utils/timemachine";
 
 /*
     Test cases list

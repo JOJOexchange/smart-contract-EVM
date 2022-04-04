@@ -171,5 +171,8 @@ describe("Subaccount", () => {
     expect(
       trader1Sub.connect(trader2).withdrawPendingFund(trader2.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
+    expect(
+      trader1Sub.connect(trader1).init(trader2.address)
+    ).to.be.revertedWith("ALREADY INITIALIZED")
   });
 });

@@ -182,6 +182,29 @@ describe("view-functions", async () => {
     expect(params.name).to.be.equal("BTC20x")
     expect(params.isRegistered).to.be.true
   })
+
+  it("get positions",async () => {
+    let positions = await context.dealer.getPositions(trader1.address)
+    expect(positions.length).to.be.equal(2)
+    await openPosition(
+      trader2,
+      trader1,
+      "1",
+      "30000",
+      context.perpList[0],
+      orderEnv
+    );
+    await openPosition(
+      trader2,
+      trader1,
+      "10",
+      "2000",
+      context.perpList[1],
+      orderEnv
+    );
+    positions = await context.dealer.getPositions(trader1.address)
+    expect(positions.length).to.be.equal(0)
+  })
 });
 
 

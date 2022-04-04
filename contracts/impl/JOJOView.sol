@@ -12,6 +12,14 @@ import "../lib/Liquidation.sol";
 import "../utils/Errors.sol";
 
 contract JOJOView is JOJOStorage {
+    function getPositions(address trader)
+        external
+        view
+        returns (address[] memory)
+    {
+        return state.openPositions[trader];
+    }
+
     function getRiskParams(address perpetualAddress)
         external
         view

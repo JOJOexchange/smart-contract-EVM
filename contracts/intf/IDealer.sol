@@ -8,7 +8,7 @@ pragma solidity 0.8.9;
 // Dealer
 // 1. trade - approveTrade
 // 2. credit -  isSafe
-// 3. funding - getFundingRatio
+// 3. funding - getFundingRate
 // 4. liquidation - getLiquidateCreditAmount
 
 interface IDealer {
@@ -29,7 +29,7 @@ interface IDealer {
 
     function isPositionSafe(address trader, address perp) external view returns (bool safe);
 
-    function getFundingRatio(address perpetualAddress)
+    function getFundingRate(address perpetualAddress)
         external
         view
         returns (int256);

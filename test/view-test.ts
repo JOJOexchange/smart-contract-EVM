@@ -9,7 +9,7 @@ import { buildOrder, getDefaultOrderEnv, openPosition, OrderEnv } from "../scrip
 
 /*
   Test cases
-  - getFundingRatio
+  - getFundingRate
   - getRegisteredPerp
   - getCreditOf
   - getTraderRisk
@@ -57,16 +57,16 @@ describe("view-functions", async () => {
     );
   });
 
-  it("get funding ratio", async () => {
-    await context.dealer.updateFundingRatio(
+  it("get funding rate", async () => {
+    await context.dealer.updateFundingRate(
       [context.perpList[1].address],
       [utils.parseEther("10")]
     );
     expect(
-      await context.dealer.getFundingRatio(context.perpList[1].address)
+      await context.dealer.getFundingRate(context.perpList[1].address)
     ).to.equal(utils.parseEther("10"));
     expect(
-      await context.dealer.getFundingRatio(context.perpList[0].address)
+      await context.dealer.getFundingRate(context.perpList[0].address)
     ).to.equal(utils.parseEther("1"));
   });
 
@@ -177,7 +177,7 @@ describe("view-functions", async () => {
     expect(params.liquidationThreshold).to.be.equal(utils.parseEther("0.03"))
     expect(params.liquidationPriceOff).to.be.equal(utils.parseEther("0.01"))
     expect(params.insuranceFeeRate).to.be.equal(utils.parseEther("0.01"))
-    expect(params.fundingRatio).to.be.equal(utils.parseEther("1"))
+    expect(params.fundingRate).to.be.equal(utils.parseEther("1"))
     expect(params.markPriceSource).to.be.equal(context.priceSourceList[0].address)
     expect(params.name).to.be.equal("BTC20x")
     expect(params.isRegistered).to.be.true

@@ -28,12 +28,12 @@ contract JOJOView is JOJOStorage {
         params = state.perpRiskParams[perpetualAddress];
     }
 
-    function getFundingRatio(address perpetualAddress)
+    function getFundingRate(address perpetualAddress)
         external
         view
         returns (int256)
     {
-        return state.perpRiskParams[perpetualAddress].fundingRatio;
+        return state.perpRiskParams[perpetualAddress].fundingRate;
     }
 
     function getRegisteredPerp() external view returns (address[] memory) {

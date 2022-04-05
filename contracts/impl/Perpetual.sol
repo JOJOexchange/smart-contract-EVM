@@ -35,7 +35,7 @@ contract Perpetual is Ownable, IPerpetual {
     function creditOf(address trader) public view returns (int256 credit) {
         credit =
             paperAmountMap[trader].decimalMul(
-                IDealer(owner()).getFundingRatio(address(this))
+                IDealer(owner()).getFundingRate(address(this))
             ) +
             reducedCreditMap[trader];
     }
@@ -56,11 +56,11 @@ contract Perpetual is Ownable, IPerpetual {
             int256[] memory creditChangeList
         ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
 
-        int256 ratio = IDealer(owner()).getFundingRatio(address(this));
+        int256 rate = IDealer(owner()).getFundingRate(address(this));
 
         for (uint256 i = 0; i < traderList.length; i++) {
             address trader = traderList[i];
-            _settle(trader, ratio, paperChangeList[i], creditChangeList[i]);
+            _settle(trader, rate, paperChangeList[i], creditChangeList[i]);
             require(IDealer(owner()).isSafe(trader), "TRADER_NOT_SAFE");
         }
     }
@@ -79,11 +79,11 @@ contract Perpetual is Ownable, IPerpetual {
                 liquidatedTrader,
                 requestPaperAmount
             );
-        int256 ratio = IDealer(owner()).getFundingRatio(address(this));
-        _settle(liquidatedTrader, ratio, ltPaperChange, ltCreditChange);
+        int256 rate = IDealer(owner()).getFundingRate(address(this));
+        _settle(liquidatedTrader, rate, ltPaperChange, ltCreditChange);
         _settle(
             msg.sender,
-            ratio,
+            rate,
             liquidatorPaperChange,
             liquidatorCreditChange
         );
@@ -92,17 +92,17 @@ contract Perpetual is Ownable, IPerpetual {
 
     function _settle(
         address trader,
-        int256 ratio,
+        int256 rate,
         int256 paperChange,
         int256 creditChange
     ) internal {
-        int256 credit = paperAmountMap[trader].decimalMul(ratio) +
+        int256 credit = paperAmountMap[trader].decimalMul(rate) +
             reducedCreditMap[trader] +
             creditChange;
         paperAmountMap[trader] += paperChange;
         reducedCreditMap[trader] =
             credit -
-            paperAmountMap[trader].decimalMul(ratio);
+            paperAmountMap[trader].decimalMul(rate);
         emit BalanceChange(trader, paperChange, creditChange);
         if (paperAmountMap[trader] == 0) {
             IDealer(owner()).positionClear(trader);
@@ -114,11 +114,11 @@ contract Perpetual is Ownable, IPerpetual {
     }
 }
 
-// credit = （paper * ratio）+ reducedCredit
-// reducedCredit = credit - (paper * ratio)
+// credit = （paper * rate）+ reducedCredit
+// reducedCredit = credit - (paper * rate)
 
 // paper = 10
-// ratio = -2
+// rate = -2
 // reducedCredit = -1000
 
 // credit = -1020
@@ -127,7 +127,7 @@ contract Perpetual is Ownable, IPerpetual {
 
 // open 1 long with price 200
 // paper -> 11
-// ratio = -2
+// rate = -2
 // reducedCredit = -1198
 
 // credit -> -1220

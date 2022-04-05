@@ -13,7 +13,7 @@ import { checkBalance, checkCredit } from "./utils/checkers";
       - position independent safe check
       - all position pnl summary
     - being liquidated
-      - caused by funding ratio
+      - caused by funding rate
       - caused by mark price change
     - liquidate price
         - single liquidation > total position
@@ -27,7 +27,7 @@ import { checkBalance, checkCredit } from "./utils/checkers";
     - return to safe before liquidate all position
         - partially liquidated
         - mark price changed
-        - funding ratio changed
+        - funding rate changed
     - handle bad debt
 
     Revert cases
@@ -228,7 +228,7 @@ describe("Liquidation", () => {
   });
 
   describe("being liquidated", async () => {
-    it("caused by funding ratio", async () => {
+    it("caused by funding rate", async () => {
       await openPosition(
         trader1,
         trader2,
@@ -237,26 +237,26 @@ describe("Liquidation", () => {
         context.perpList[0],
         orderEnv
       );
-      await context.dealer.updateFundingRatio(
+      await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("-84")]
       );
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
       expect(await context.dealer.isSafe(trader2.address)).to.be.true;
-      await context.dealer.updateFundingRatio(
+      await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("-85")]
       );
       expect(await context.dealer.isSafe(trader1.address)).to.be.false;
       expect(await context.dealer.isSafe(trader2.address)).to.be.true;
 
-      await context.dealer.updateFundingRatio(
+      await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("98")]
       );
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
       expect(await context.dealer.isSafe(trader2.address)).to.be.true;
-      await context.dealer.updateFundingRatio(
+      await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("99")]
       );

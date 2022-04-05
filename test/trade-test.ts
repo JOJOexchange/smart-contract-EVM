@@ -25,7 +25,7 @@ import { revert, snapshot, timeJump } from "./utils/timemachine";
     - using maker price
     - without maker de-duplicate
     - negative fee rate
-  - change funding ratio
+  - change funding rate
   - self match
 
   Revert cases list

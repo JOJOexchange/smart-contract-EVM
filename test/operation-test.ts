@@ -26,7 +26,7 @@ describe("operations", async () => {
       utils.parseEther("0.01"), // 1% price offset
       // utils.parseEther("1000"), // 1000ETH max
       utils.parseEther("0.01"), // 1% insurance fee
-      utils.parseEther("1"), // init funding ratio 1
+      utils.parseEther("1"), // init funding rate 1
       context.perpList[1].address, // mark price source
       "ETH10x", // name
       false, // register

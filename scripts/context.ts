@@ -99,7 +99,7 @@ export async function basicContext(): Promise<Context> {
     utils.parseEther("0.01"), // 1% price offset
     // utils.parseEther("100"), // 100BTC max
     utils.parseEther("0.01"), // 1% insurance fee
-    utils.parseEther("1"), // init funding ratio 1
+    utils.parseEther("1"), // init funding rate 1
     priceSourceList[0].address, // mark price source
     "BTC20x", // name
     true, // register
@@ -112,7 +112,7 @@ export async function basicContext(): Promise<Context> {
     utils.parseEther("0.01"), // 1% price offset
     // utils.parseEther("1000"), // 1000ETH max
     utils.parseEther("0.01"), // 1% insurance fee
-    utils.parseEther("1"), // init funding ratio 1
+    utils.parseEther("1"), // init funding rate 1
     priceSourceList[1].address, // mark price source
     "ETH10x", // name
     true, // register
@@ -125,7 +125,7 @@ export async function basicContext(): Promise<Context> {
     utils.parseEther("0.03"), // 3% price offset
     // utils.parseEther("1000"), // 1000AR max
     utils.parseEther("0.02"), // 2% insurance fee
-    utils.parseEther("1"), // init funding ratio 1
+    utils.parseEther("1"), // init funding rate 1
     priceSourceList[2].address, // mark price source
     "AR5x", // name
     true, // register

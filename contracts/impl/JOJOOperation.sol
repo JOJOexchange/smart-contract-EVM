@@ -24,10 +24,10 @@ contract JOJOOperation is JOJOStorage {
 
     event HandleBadDebt(address indexed liquidatedTrader);
 
-    event UpdateFundingRatio(
+    event UpdateFundingRate(
         address indexed perp,
-        int256 oldRatio,
-        int256 newRatio
+        int256 oldRate,
+        int256 newRate
     );
 
     event UpdatePerpRiskParams(address indexed perp, Types.RiskParams param);
@@ -63,15 +63,15 @@ contract JOJOOperation is JOJOStorage {
         emit HandleBadDebt(liquidatedTrader);
     }
 
-    function updateFundingRatio(
+    function updateFundingRate(
         address[] calldata perpList,
-        int256[] calldata ratioList
+        int256[] calldata rateList
     ) external onlyOwner {
         for (uint256 i = 0; i < perpList.length; i++) {
             Types.RiskParams storage param = state.perpRiskParams[perpList[i]];
-            int256 oldRatio = param.fundingRatio;
-            param.fundingRatio = ratioList[i];
-            emit UpdateFundingRatio(perpList[i], oldRatio, ratioList[i]);
+            int256 oldRate = param.fundingRate;
+            param.fundingRate = rateList[i];
+            emit UpdateFundingRate(perpList[i], oldRate, rateList[i]);
         }
     }
 

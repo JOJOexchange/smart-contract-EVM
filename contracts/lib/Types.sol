@@ -56,7 +56,7 @@ library Types {
         uint256 liquidationPriceOff;
         // uint256 maxPositionSize; // count in paper amount
         uint256 insuranceFeeRate;
-        int256 fundingRatio;
+        int256 fundingRate;
         address markPriceSource;
         string name;
         bool isRegistered;

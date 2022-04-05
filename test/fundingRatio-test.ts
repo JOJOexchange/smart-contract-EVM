@@ -11,14 +11,14 @@ import { checkBalance } from "./utils/checkers";
 
 /*
   Test cases list
-  - work when ratio = 0
-  - work when ratio > 0
-  - work when ratio < 0
-  - ratio increase
-  - ratio decrease
+  - work when rate = 0
+  - work when rate > 0
+  - work when rate < 0
+  - rate increase
+  - rate decrease
 */
 
-describe("Funding ratio", () => {
+describe("Funding rate", () => {
   let context: Context;
   let trader1: Wallet;
   let trader2: Wallet;
@@ -39,13 +39,13 @@ describe("Funding ratio", () => {
     orderEnv = await getDefaultOrderEnv(context.dealer);
   });
 
-  it("ratio=0", async () => {
-    await context.dealer.updateFundingRatio(
+  it("rate=0", async () => {
+    await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("0")]
     );
     expect(
-      await context.dealer.getFundingRatio(context.perpList[0].address)
+      await context.dealer.getFundingRate(context.perpList[0].address)
     ).to.equal(utils.parseEther("0"));
     await openPosition(
       trader1,
@@ -59,13 +59,13 @@ describe("Funding ratio", () => {
     await checkBalance(context.perpList[0], trader2.address, "-1", "29997");
   });
 
-  it("ratio>0", async () => {
-    await context.dealer.updateFundingRatio(
+  it("rate>0", async () => {
+    await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("1")]
     );
     expect(
-        await context.dealer.getFundingRatio(context.perpList[0].address)
+        await context.dealer.getFundingRate(context.perpList[0].address)
       ).to.equal(utils.parseEther("1"));
     await openPosition(
       trader1,
@@ -79,13 +79,13 @@ describe("Funding ratio", () => {
     await checkBalance(context.perpList[0], trader2.address, "-1", "29997");
   });
 
-  it("ratio<0", async () => {
-    await context.dealer.updateFundingRatio(
+  it("rate<0", async () => {
+    await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("-1")]
     );
     expect(
-        await context.dealer.getFundingRatio(context.perpList[0].address)
+        await context.dealer.getFundingRate(context.perpList[0].address)
       ).to.equal(utils.parseEther("-1"));
     await openPosition(
       trader1,
@@ -99,8 +99,8 @@ describe("Funding ratio", () => {
     await checkBalance(context.perpList[0], trader2.address, "-1", "29997");
   });
 
-  it("ratio increase", async () => {
-    await context.dealer.updateFundingRatio(
+  it("rate increase", async () => {
+    await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("-1")]
     );
@@ -112,13 +112,13 @@ describe("Funding ratio", () => {
       context.perpList[0],
       orderEnv
     );
-    await context.dealer.updateFundingRatio(
+    await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("-0.5")]
     );
     await checkBalance(context.perpList[0], trader1.address, "1", "-30014.5");
     await checkBalance(context.perpList[0], trader2.address, "-1", "29996.5");
-    await context.dealer.updateFundingRatio(
+    await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("0.5")]
     );
@@ -126,8 +126,8 @@ describe("Funding ratio", () => {
     await checkBalance(context.perpList[0], trader2.address, "-1", "29995.5");
   });
 
-  it("ratio decrease", async () => {
-    await context.dealer.updateFundingRatio(
+  it("rate decrease", async () => {
+    await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("1")]
       );
@@ -139,13 +139,13 @@ describe("Funding ratio", () => {
         context.perpList[0],
         orderEnv
       );
-      await context.dealer.updateFundingRatio(
+      await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("0.5")]
       );
       await checkBalance(context.perpList[0], trader1.address, "1", "-30015.5");
       await checkBalance(context.perpList[0], trader2.address, "-1", "29997.5");
-      await context.dealer.updateFundingRatio(
+      await context.dealer.updateFundingRate(
         [context.perpList[0].address],
         [utils.parseEther("-0.5")]
       );

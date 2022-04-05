@@ -16,6 +16,8 @@ import "../lib/Liquidation.sol";
 contract JOJOOperation is JOJOStorage {
     using SafeERC20 for IERC20;
 
+    // ========== events ==========
+
     event SetVirtualCredit(
         address indexed trader,
         uint256 oldVirtualCredit,
@@ -38,6 +40,8 @@ contract JOJOOperation is JOJOStorage {
         uint256 oldWithdrawTimeLock,
         uint256 newWithdrawTimeLock
     );
+
+    // ========== balance related ==========
 
     function setVirtualCredit(address trader, uint256 amount)
         external
@@ -62,6 +66,8 @@ contract JOJOOperation is JOJOStorage {
         state.virtualCredit[liquidatedTrader] = 0;
         emit HandleBadDebt(liquidatedTrader);
     }
+
+    // ========== params updates ==========
 
     function updateFundingRate(
         address[] calldata perpList,

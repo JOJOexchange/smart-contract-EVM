@@ -16,6 +16,8 @@ import "../lib/Trading.sol";
 contract JOJOExternal is JOJOStorage {
     using SafeERC20 for IERC20;
 
+    // ========== fund related ==========
+
     function deposit(uint256 amount, address to) external nonReentrant {
         Funding._deposit(state, amount, to);
     }
@@ -27,6 +29,8 @@ contract JOJOExternal is JOJOStorage {
     function withdrawPendingFund(address to) external nonReentrant {
         Funding._withdrawPendingFund(state, to);
     }
+
+    // ========== registered perpetual only ==========
 
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
@@ -48,44 +52,6 @@ contract JOJOExternal is JOJOStorage {
         );
     }
 
-    function isSafe(address trader) external view returns (bool safe) {
-        return Liquidation._isSafe(state, trader);
-    }
-
-    function isPositionSafe(address trader, address perp)
-        external
-        view
-        returns (bool safe)
-    {
-        (int256 paper, ) = IPerpetual(perp).balanceOf(trader);
-        if (paper == 0) {
-            return true;
-        }
-        return Liquidation._isPositionSafe(state, trader, perp);
-    }
-
-    // view version for requestLiquidate
-    function getLiquidationCost(
-        address perp,
-        address liquidatedTrader,
-        uint256 requestPaperAmount
-    )
-        external
-        view
-        returns (int256 liquidatorPaperChange, int256 liquidatorCreditChange)
-    {
-        (int256 ltPaperChange, int256 ltCreditChange, ) = Liquidation
-            ._getLiquidateCreditAmount(
-                state,
-                perp,
-                liquidatedTrader,
-                requestPaperAmount
-            );
-        liquidatorPaperChange = ltPaperChange * -1;
-        liquidatorCreditChange = ltCreditChange * -1;
-    }
-
-    // perp only
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,

@@ -14,9 +14,12 @@ import "../utils/SignedDecimalMath.sol";
 contract Perpetual is Ownable, IPerpetual {
     using SignedDecimalMath for int256;
 
-    // storage
+    // ========== storage ==========
+
     mapping(address => int256) public paperAmountMap;
     mapping(address => int256) public reducedCreditMap;
+
+    // ========== events ==========
 
     event BalanceChange(
         address indexed trader,
@@ -24,14 +27,14 @@ contract Perpetual is Ownable, IPerpetual {
         int256 creditChange
     );
 
-    // modifier
+    // ========== constructor ==========
 
-    // constructor
     constructor(address _owner) Ownable() {
         transferOwnership(_owner);
     }
 
-    // function
+    // ========== balance related ==========
+
     function creditOf(address trader) public view returns (int256 credit) {
         credit =
             paperAmountMap[trader].decimalMul(
@@ -49,6 +52,8 @@ contract Perpetual is Ownable, IPerpetual {
         credit = creditOf(trader);
     }
 
+    // ========== trade ==========
+
     function trade(bytes calldata tradeData) external {
         (
             address[] memory traderList,
@@ -65,7 +70,8 @@ contract Perpetual is Ownable, IPerpetual {
         }
     }
 
-    // when you liquidate a long position, liqudatePaperAmount < 0 and liquidateCreditAmount > 0
+    // ========== liquidation ==========
+
     function liquidate(address liquidatedTrader, uint256 requestPaperAmount)
         external
     {
@@ -90,6 +96,14 @@ contract Perpetual is Ownable, IPerpetual {
         require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
     }
 
+    // ========== owner only adjustment ==========
+
+    function changeCredit(address trader, int256 amount) external onlyOwner {
+        reducedCreditMap[trader] += amount;
+    }
+
+    // ========== settlement ==========
+
     function _settle(
         address trader,
         int256 rate,
@@ -107,10 +121,6 @@ contract Perpetual is Ownable, IPerpetual {
         if (paperAmountMap[trader] == 0) {
             IDealer(owner()).positionClear(trader);
         }
-    }
-    
-    function changeCredit(address trader, int256 amount) external onlyOwner {
-        reducedCreditMap[trader] += amount;
     }
 }
 

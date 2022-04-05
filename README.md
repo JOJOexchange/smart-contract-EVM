@@ -16,11 +16,11 @@ There are only two core smart contracts: [Perpetual.sol](./contracts/impl/Perpet
 
 - `Perpetual.sol` is the core book of a certain perpetual contract market.
 - `JOJODealer.sol` is the owner of `Perpetual.sol`. One `JOJODealer.sol` may have several `Perpetual.sol` at the same time.
-- `JOJODealer.sol` is seperated into [JOJOView.sol](./contracts/impl/JOJOView.sol) [JOJOOperation.sol](./contracts/impl/JOJOOperation.sol) and [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol).
+- `JOJODealer.sol` is seperated into [JOJOView.sol](./contracts/impl/JOJOView.sol), [JOJOOperation.sol](./contracts/impl/JOJOOperation.sol) and [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol).
 - `JOJOView.sol` contains all view functions of `JOJODealer.sol`.
 - `JOJOOperation.sol` contains all "onlyOwner" functions of `JOJODealer.sol`.
 - `JOJOExternal.sol` contains all "external" functions of `JOJODealer.sol`.
-- `JOJOStorage.sol` is where all data stored.
+- [JOJOStorage.sol](./contracts/impl/JOJOStorage.sol) is where all data stored.
 
 # Perpetual.sol: The core book
 
@@ -102,3 +102,60 @@ The dealer has three main responsibilities:
 1. Maintaining funding rate
 2. Trading
 2. Liquidation
+
+The Dealer can be designed in various ways, and JOJODealer is just one of the solutions proposed by the JOJO team.
+
+The functions realized by JOJODealer can be summarized as
+- Off-chain matching, on-chain settlement
+- Corss model
+- Fixed discount liquidation
+- Deposit margin
+
+
+## Trading: Off-chain matching, on-chain settlement
+JOJODealer uses the orderbook model to provide liquidity. Orders are placed, canceled and mathced off-chain, while final settlement occurs on-chain. This architecture is similar to 0xProtocol, which allows for an excellent trading experience while keeping the system decentralized enough.
+
+It is implemented by users signing orders and sending them to JOJO's server. Whenever orders are matched, JOJO's server submits these orders to the blockchain and immediately notifies the user on the front end.
+
+The only centralized thing is: JOJO server need to delete order info and signature after the user cancels an order. But users may choose to sign orders with very short expiration to reduce the need for trust.
+
+In addition, anyone can match orders, and whoever submit the matching result to blockchain receives trading fees.
+
+See `approveTrade` in [JOJOExternal.sol](. /contracts/impl/JOJOExternal.sol).
+
+## Cross mode
+JOJODealer only offers a cross position mode, where positions under different markets share margin. Positions under either market will affect the account net value and global exposure.
+
+See `getTraderRisk` in [JOJOView.sol](./contracts/impl/JOJOView.sol).
+
+If you want to use the isolated mode, you can just switch wallets or create sub-accounts.
+
+## Fixed discount liquidation
+For accounts with low margin rates, JOJODealer will sell their positions at a fixed discount. Anyone can take as many positions as they want until the position is cleared or the account margin rate returns to a healthy state.
+
+See `getLiquidationCost` in [JOJOView.sol](./contracts/impl/JOJOView.sol).
+
+## Deposit margin
+
+JOJODealer only accepts a single ERC20 token as margin. Deposits and with withdrawals do not require the permission of the JOJO server.
+
+### Pending withdraw
+In order to save time for the matching engine to cancel orders when users withdraw. User withdrawals need to be submitted in two steps, with a waiting period in between (no more than 1 minute).
+
+### Virtual credit
+JOJO can grant credit to some accounts to temporarily obtain more margin. This design has two main purpose:
+- Supporting multi-margin feature in the future
+- Matching funds to market makers in exchange for better liquidity
+
+
+# Other questions
+## Index price & Mark price
+Index price and mark price are both provided by 3rd party's price oracle. 
+
+## Subaccount
+This feature is implemented by peripheral smart contracts [subaccount](./contracts/subaccount/).
+Subaccount can help you seperate positions and risks. You can also give trading access to others and let a professional team trade for you.
+
+## Insurance
+For each liquidation, an insurance fee is charged. When there is a bad debt, it will be covered by insurance fund. 
+If the insurance account is not sufficient to cover the bad debt, it will remain in a negative balance until it is paid off.

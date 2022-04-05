@@ -12,13 +12,7 @@ import "../lib/Liquidation.sol";
 import "../utils/Errors.sol";
 
 contract JOJOView is JOJOStorage {
-    function getPositions(address trader)
-        external
-        view
-        returns (address[] memory)
-    {
-        return state.openPositions[trader];
-    }
+    // ========== simple read state ==========
 
     function getRiskParams(address perpetualAddress)
         external
@@ -40,6 +34,14 @@ contract JOJOView is JOJOStorage {
         return state.registeredPerp;
     }
 
+    function getPositions(address trader)
+        external
+        view
+        returns (address[] memory)
+    {
+        return state.openPositions[trader];
+    }
+
     function getCreditOf(address trader)
         external
         view
@@ -53,6 +55,74 @@ contract JOJOView is JOJOStorage {
         virtualCredit = state.virtualCredit[trader];
         pendingWithdraw = state.pendingWithdraw[trader];
     }
+
+    // ========== risk related ==========
+
+    function isSafe(address trader) external view returns (bool safe) {
+        return Liquidation._isSafe(state, trader);
+    }
+
+    function isPositionSafe(address trader, address perp)
+        external
+        view
+        returns (bool safe)
+    {
+        (int256 paper, ) = IPerpetual(perp).balanceOf(trader);
+        if (paper == 0) {
+            return true;
+        }
+        return Liquidation._isPositionSafe(state, trader, perp);
+    }
+
+    function getTraderRisk(address trader)
+        external
+        view
+        returns (int256 netValue, uint256 exposure)
+    {
+        int256 positionNetValue;
+        (positionNetValue, exposure, ) = Liquidation._getTotalExposure(
+            state,
+            trader
+        );
+        netValue =
+            positionNetValue +
+            state.trueCredit[trader] +
+            int256(state.virtualCredit[trader]);
+    }
+
+    // ========== liquidation related ==========
+
+    function getLiquidationPrice(address trader, address perp)
+        external
+        view
+        returns (uint256 liquidationPrice)
+    {
+        // return 0 if the trader can not be liquidated
+        return Liquidation._getLiquidationPrice(state, trader, perp);
+    }
+
+    function getLiquidationCost(
+        address perp,
+        address liquidatedTrader,
+        uint256 requestPaperAmount
+    )
+        external
+        view
+        returns (int256 liquidatorPaperChange, int256 liquidatorCreditChange)
+    {
+        // view version for requestLiquidate
+        (int256 ltPaperChange, int256 ltCreditChange, ) = Liquidation
+            ._getLiquidateCreditAmount(
+                state,
+                perp,
+                liquidatedTrader,
+                requestPaperAmount
+            );
+        liquidatorPaperChange = ltPaperChange * -1;
+        liquidatorCreditChange = ltCreditChange * -1;
+    }
+
+    // ========== utils ==========
 
     function getOrderHash(Types.Order memory order)
         external
@@ -77,30 +147,5 @@ contract JOJOView is JOJOStorage {
             )
         );
         return orderHash;
-    }
-
-    function getTraderRisk(address trader)
-        external
-        view
-        returns (int256 netValue, uint256 exposure)
-    {
-        int256 positionNetValue;
-        (positionNetValue, exposure, ) = Liquidation._getTotalExposure(
-            state,
-            trader
-        );
-        netValue =
-            positionNetValue +
-            state.trueCredit[trader] +
-            int256(state.virtualCredit[trader]);
-    }
-
-    // return 0 if the trader can not be liquidated
-    function getLiquidationPrice(address trader, address perp)
-        external
-        view
-        returns (uint256 liquidationPrice)
-    {
-        return Liquidation._getLiquidationPrice(state, trader, perp);
     }
 }

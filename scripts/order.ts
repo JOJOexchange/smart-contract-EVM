@@ -3,28 +3,22 @@ import { BigNumber } from "bignumber.js";
 import { Contract, Wallet, utils } from "ethers";
 import { Context } from "./context";
 
-let ORDER_STRUCTRUE = [
+let ORDER_STRUCTURE = [
   { name: "perp", type: "address" },
-  { name: "paperAmount", type: "int256" },
-  { name: "creditAmount", type: "int256" },
-  { name: "makerFeeRate", type: "int128" },
-  { name: "takerFeeRate", type: "int128" },
   { name: "signer", type: "address" },
   { name: "orderSender", type: "address" },
-  { name: "expiration", type: "uint256" },
-  { name: "nonce", type: "uint256" },
+  { name: "paperAmount", type: "int128" },
+  { name: "creditAmount", type: "int128" },
+  { name: "info", type: "bytes32" },
 ];
 
 export interface Order {
   perp: string;
-  paperAmount: string;
-  creditAmount: string;
-  makerFeeRate: string;
-  takerFeeRate: string;
   signer: string;
   orderSender: string;
-  expiration: string;
-  nonce: string;
+  paperAmount: string;
+  creditAmount: string;
+  info: string;
 }
 
 export interface OrderEnv {
@@ -53,7 +47,7 @@ export async function buildOrder(
   paperAmount: string,
   creditAmount: string,
   signer: Wallet,
-  subaccount?:string,
+  subaccount?: string
 ): Promise<{ order: Order; hash: string; signature: string }> {
   let chainid = await signer.getChainId();
   let domain = {
@@ -62,26 +56,33 @@ export async function buildOrder(
     chainId: chainid,
     verifyingContract: orderEnv.dealerAddress,
   };
-  
+
+  const infoBytes = ethers.utils.solidityPack(
+    ["int64", "int64", "uint64", "uint64"],
+    [
+      orderEnv.makerFeeRate,
+      orderEnv.takerFeeRate,
+      Math.floor(new Date().getTime() / 1000 + 1000).toFixed(0),
+      Math.round(new Date().getTime() / 1000) + "",
+    ]
+  );
+
   let order: Order = {
     perp: perpAddress,
-    paperAmount: paperAmount,
-    creditAmount: creditAmount,
-    makerFeeRate: orderEnv.makerFeeRate,
-    takerFeeRate: orderEnv.takerFeeRate,
     signer: signer.address,
     orderSender: orderEnv.orderSender,
-    expiration: Math.floor(
-      new Date().getTime() / 1000 + 1000
-    ).toFixed(0),
-    nonce: Math.round(new Date().getTime() / 1000) + "",
+    paperAmount: paperAmount,
+    creditAmount: creditAmount,
+    info: infoBytes,
   };
-  if (subaccount){
-    order.signer = subaccount
+  if (subaccount) {
+    order.signer = subaccount;
   }
   let types = {
-    Order: ORDER_STRUCTRUE,
+    Order: ORDER_STRUCTURE,
   };
+
+  // console.log("struct", utils._TypedDataEncoder.from(types).hash(order))
 
   const hash = ethers.utils._TypedDataEncoder.hash(domain, types, order);
   const signature = await signer._signTypedData(domain, types, order);
@@ -97,7 +98,7 @@ export function encodeTradeData(
   let abiCoder = new ethers.utils.AbiCoder();
   return abiCoder.encode(
     [
-      "tuple(address perp, int256 paperAmount, int256 creditAmount, int128 makerFeeRate, int128 takerFeeRate, address signer, address orderSender, uint256 expiration, uint256 nonce)[]",
+      "tuple(address perp, address signer, address orderSender, int128 paperAmount, int128 creditAmount, bytes32 info)[]",
       "bytes[]",
       "uint256[]",
     ],

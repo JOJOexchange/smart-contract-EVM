@@ -71,7 +71,7 @@ library Trading {
             state.filledPaperAmount[orderHashList[i]] += matchPaperAmount[i];
             require(
                 state.filledPaperAmount[orderHashList[i]] <=
-                    orderList[i].paperAmount.abs(),
+                    int256(orderList[i].paperAmount).abs(),
                 Errors.ORDER_FILLED_OVERFLOW
             );
             _addPosition(state, result.perp, orderList[i].signer);
@@ -122,7 +122,7 @@ library Trading {
                 int256 creditChange = (paperChange *
                     orderList[i].creditAmount) / orderList[i].paperAmount;
                 int256 fee = int256(creditChange.abs()).decimalMul(
-                    orderList[i].makerFeeRate
+                    _info2MakerFeeRate(orderList[i].info)
                 );
                 uint256 serialNum = state.positionSerialNum[
                     orderList[i].signer
@@ -147,7 +147,7 @@ library Trading {
         // trading fee related
         {
             int256 takerFee = int256(result.creditChangeList[0].abs())
-                .decimalMul(orderList[0].takerFeeRate);
+                .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
             state.trueCredit[orderSender] += result.orderSenderFee;
@@ -181,22 +181,21 @@ library Trading {
         // makercredit * takerpaper <= takercredit * makerpaper
         // if takerPaper < 0
         // makercredit * takerpaper >= takercredit * makerpaper
+
+        // let temp1 = makercredit * takerpaper
+        // let temp2 = takercredit * makerpaper
+        int256 temp1 = int256(makerOrder.creditAmount) *
+            int256(takerOrder.paperAmount);
+        int256 temp2 = int256(takerOrder.creditAmount) *
+            int256(makerOrder.paperAmount);
         if (takerOrder.paperAmount > 0) {
             // taker open long, tradePaperAmount > 0
             require(makerOrder.paperAmount < 0, Errors.ORDER_PRICE_NOT_MATCH);
-            require(
-                makerOrder.creditAmount * takerOrder.paperAmount <=
-                    takerOrder.creditAmount * makerOrder.paperAmount,
-                Errors.ORDER_PRICE_NOT_MATCH
-            );
+            require(temp1 <= temp2, Errors.ORDER_PRICE_NOT_MATCH);
         } else {
             // taker open short, tradePaperAmount < 0
             require(makerOrder.paperAmount > 0, Errors.ORDER_PRICE_NOT_MATCH);
-            require(
-                makerOrder.creditAmount * takerOrder.paperAmount >=
-                    takerOrder.creditAmount * makerOrder.paperAmount,
-                Errors.ORDER_PRICE_NOT_MATCH
-            );
+            require(temp1 >= temp2, Errors.ORDER_PRICE_NOT_MATCH);
         }
     }
 
@@ -211,6 +210,49 @@ library Trading {
         }
     }
 
+    function _structHash(Types.Order memory order)
+        public
+        pure
+        returns (bytes32 structHash)
+    {
+        /*
+         *keccak256(
+         *    abi.encode(
+         *        Types.ORDER_TYPEHASH,
+         *        order.perp,
+         *        order.signer,
+         *        order.orderSender,
+         *        order.paperAmount,
+         *        order.creditAmount,
+         *        order.info
+         *    )
+         *)
+         */
+
+        bytes32 orderTypeHash = Types.ORDER_TYPEHASH;
+        assembly {
+            let start := sub(order, 32)
+            let tmp := mload(start)
+            // 224 = (1 + 6) * 32
+            // [0...32)   bytes: EIP712_ORDER_TYPE
+            // [32...224) bytes: order
+            mstore(start, orderTypeHash)
+            structHash := keccak256(start, 224)
+            mstore(start, tmp)
+        }
+    }
+
+    function _getOrderHash(bytes32 domainSeparator, Types.Order memory order)
+        public
+        pure
+        returns (bytes32 orderHash)
+    {
+        orderHash = EIP712._hashTypedDataV4(
+            domainSeparator,
+            _structHash(order)
+        );
+    }
+
     function _validateOrder(
         bytes32 domainSeparator,
         Types.Order memory order,
@@ -218,20 +260,7 @@ library Trading {
     ) public returns (bytes32 orderHash) {
         orderHash = EIP712._hashTypedDataV4(
             domainSeparator,
-            keccak256(
-                abi.encode(
-                    Types.ORDER_TYPEHASH,
-                    order.perp,
-                    order.paperAmount,
-                    order.creditAmount,
-                    order.makerFeeRate,
-                    order.takerFeeRate,
-                    order.signer,
-                    order.orderSender,
-                    order.expiration,
-                    order.nonce
-                )
-            )
+            _structHash(order)
         );
         if (Address.isContract(order.signer)) {
             require(
@@ -246,11 +275,45 @@ library Trading {
                 Errors.INVALID_ORDER_SIGNATURE
             );
         }
-        require(order.expiration >= block.timestamp, Errors.ORDER_EXPIRED);
+        require(
+            _info2Expiration(order.info) >= block.timestamp,
+            Errors.ORDER_EXPIRED
+        );
         require(
             (order.paperAmount < 0 && order.creditAmount > 0) ||
                 (order.paperAmount > 0 && order.creditAmount < 0),
             Errors.ORDER_PRICE_NEGATIVE
         );
+    }
+
+    function _info2MakerFeeRate(bytes32 info) private pure returns (int256) {
+        bytes8 value = bytes8(info >> 192);
+        int64 makerFee;
+        assembly {
+            makerFee := value
+        }
+        return int256(makerFee);
+    }
+
+    function _info2TakerFeeRate(bytes32 info)
+        private
+        pure
+        returns (int256 takerFeeRate)
+    {
+        bytes8 value = bytes8(info >> 128);
+        int64 takerFee;
+        assembly {
+            takerFee := value
+        }
+        return int256(takerFee);
+    }
+
+    function _info2Expiration(bytes32 info) private pure returns (uint256) {
+        bytes8 value = bytes8(info >> 64);
+        uint64 expiration;
+        assembly {
+            expiration := value
+        }
+        return uint256(expiration);
     }
 }

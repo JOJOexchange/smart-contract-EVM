@@ -34,19 +34,26 @@ library Types {
 
     struct Order {
         address perp;
-        int256 paperAmount;
-        int256 creditAmount;
-        int128 makerFeeRate;
-        int128 takerFeeRate;
         address signer;
         address orderSender;
-        uint256 expiration;
-        uint256 nonce;
+        int128 paperAmount;
+        int128 creditAmount;
+        /*
+        * ╔═══════════════════╤═════════╗
+        * ║ info component    │ type    ║
+        * ╟───────────────────┼─────────╢
+        * ║ makerFeeRate      │ int64   ║
+        * ║ takerFeeRate      │ int64   ║
+        * ║ expiration        │ uint64  ║
+        * ║ nonce             │ uint64  ║
+        * ╚═══════════════════╧═════════╝
+        */
+        bytes32 info;
     }
 
     bytes32 public constant ORDER_TYPEHASH =
         keccak256(
-            "Order(address perp,int256 paperAmount,int256 creditAmount,int128 makerFeeRate,int128 takerFeeRate,address signer,address orderSender,uint256 expiration,uint256 nonce)"
+            "Order(address perp,address signer,address orderSender,int128 paperAmount,int128 creditAmount,bytes32 info)"
         );
 
     struct RiskParams {

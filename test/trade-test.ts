@@ -1,4 +1,4 @@
-import "./utils/hooks"
+import "./utils/hooks";
 import { Wallet, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
@@ -417,15 +417,16 @@ describe("Trade", () => {
       );
 
       // 9. order expired
-      await timeJump(1000)
-      expect( context.perpList[0].trade(data5)
-      ).to.be.revertedWith("JOJO_ORDER_EXPIRED");
+      await timeJump(1000);
+      expect(context.perpList[0].trade(data5)).to.be.revertedWith(
+        "JOJO_ORDER_EXPIRED"
+      );
     });
 
     // order sender not safe
-    it("order sender not safe",async () => {
-      orderEnv.makerFeeRate = utils.parseEther("-0.5").toString()
-      orderEnv.takerFeeRate = utils.parseEther("-0.5").toString()
+    it("order sender not safe", async () => {
+      orderEnv.makerFeeRate = utils.parseEther("-0.5").toString();
+      orderEnv.takerFeeRate = utils.parseEther("-0.5").toString();
       let makerO = await buildOrder(
         orderEnv,
         context.perpList[0].address,
@@ -433,7 +434,7 @@ describe("Trade", () => {
         utils.parseEther("30000").toString(),
         context.traderList[0]
       );
-      let takerO= await buildOrder(
+      let takerO = await buildOrder(
         orderEnv,
         context.perpList[0].address,
         utils.parseEther("1").toString(),
@@ -448,6 +449,6 @@ describe("Trade", () => {
       expect(context.perpList[0].trade(data)).to.be.revertedWith(
         "JOJO_ORDER_SENDER_NOT_SAFE"
       );
-    })
+    });
   });
 });

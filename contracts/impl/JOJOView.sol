@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
 import "../lib/Liquidation.sol";
+import "../lib/Trading.sol";
 import "../utils/Errors.sol";
 
 contract JOJOView is JOJOStorage {
@@ -129,23 +130,6 @@ contract JOJOView is JOJOStorage {
         view
         returns (bytes32 orderHash)
     {
-        orderHash = EIP712._hashTypedDataV4(
-            state.domainSeparator,
-            keccak256(
-                abi.encode(
-                    Types.ORDER_TYPEHASH,
-                    order.perp,
-                    order.paperAmount,
-                    order.creditAmount,
-                    order.makerFeeRate,
-                    order.takerFeeRate,
-                    order.signer,
-                    order.orderSender,
-                    order.expiration,
-                    order.nonce
-                )
-            )
-        );
-        return orderHash;
+        orderHash = Trading._getOrderHash(state.domainSeparator, order);
     }
 }

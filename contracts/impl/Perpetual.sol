@@ -16,8 +16,11 @@ contract Perpetual is Ownable, IPerpetual {
 
     // ========== storage ==========
 
-    mapping(address => int256) public paperAmountMap;
-    mapping(address => int256) public reducedCreditMap;
+    struct balance {
+        int128 paper;
+        int128 reducedCredit;
+    }
+    mapping(address => balance) public balanceMap;
 
     // ========== events ==========
 
@@ -37,19 +40,21 @@ contract Perpetual is Ownable, IPerpetual {
 
     function creditOf(address trader) public view returns (int256 credit) {
         credit =
-            paperAmountMap[trader].decimalMul(
+            int256(balanceMap[trader].paper).decimalMul(
                 IDealer(owner()).getFundingRate(address(this))
             ) +
-            reducedCreditMap[trader];
+            int256(balanceMap[trader].reducedCredit);
     }
 
     function balanceOf(address trader)
         public
         view
-        returns (int256 paperAmount, int256 credit)
+        returns (int256 paper, int256 credit)
     {
-        paperAmount = paperAmountMap[trader];
-        credit = creditOf(trader);
+        paper = int256(balanceMap[trader].paper);
+        credit =
+            paper.decimalMul(IDealer(owner()).getFundingRate(address(this))) +
+            int256(balanceMap[trader].reducedCredit);
     }
 
     // ========== trade ==========
@@ -99,7 +104,7 @@ contract Perpetual is Ownable, IPerpetual {
     // ========== owner only adjustment ==========
 
     function changeCredit(address trader, int256 amount) external onlyOwner {
-        reducedCreditMap[trader] += amount;
+        balanceMap[trader].reducedCredit += int128(amount);
     }
 
     // ========== settlement ==========
@@ -110,15 +115,17 @@ contract Perpetual is Ownable, IPerpetual {
         int256 paperChange,
         int256 creditChange
     ) internal {
-        int256 credit = paperAmountMap[trader].decimalMul(rate) +
-            reducedCreditMap[trader] +
+        int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
+            int256(balanceMap[trader].reducedCredit) +
             creditChange;
-        paperAmountMap[trader] += paperChange;
-        reducedCreditMap[trader] =
-            credit -
-            paperAmountMap[trader].decimalMul(rate);
+        int128 newPaper = balanceMap[trader].paper + int128(paperChange);
+        int128 newReducedCredkt = int128(
+            credit - int256(newPaper).decimalMul(rate)
+        );
+        balanceMap[trader].paper = newPaper;
+        balanceMap[trader].reducedCredit = newReducedCredkt;
         emit BalanceChange(trader, paperChange, creditChange);
-        if (paperAmountMap[trader] == 0) {
+        if (balanceMap[trader].paper == 0) {
             IDealer(owner()).positionClear(trader);
         }
     }

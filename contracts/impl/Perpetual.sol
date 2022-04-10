@@ -16,6 +16,16 @@ contract Perpetual is Ownable, IPerpetual {
 
     // ========== storage ==========
 
+    /*
+        We use int128 to store paper and reduced credit.
+        So we could store balance in a single slot.
+        This can help us save gas.
+
+        int128 can support size of 1.7E38, which is enough for most cases.
+        But other than here, we use int256 to get higher accuracy of calculation.
+        Devs should keep in mind that even int256 is allowed in some places, 
+        you should not pass in a value exceed int128.
+    */
     struct balance {
         int128 paper;
         int128 reducedCredit;
@@ -38,6 +48,22 @@ contract Perpetual is Ownable, IPerpetual {
 
     // ========== balance related ==========
 
+    /*
+        To update all credit after funding rate updated,
+        we store "reducedCredit" instead of credit itself.
+        
+        credit = (paper * fundingRate) + reducedCredit
+
+        FundingRate here is a little different from what it means at CEX.
+        FundingRate is a cumulative value, its absolute size has no meaning, 
+        only the absolute value that increases or decreases with each update 
+        has meaning.
+
+        e.g. If the fundingRate increases by 5 at a certain update, 
+        then you will receive 5 credit for every paper you long.
+        And conversely, you will be charged 5credit for every paper you short.
+    */
+
     function creditOf(address trader) public view returns (int256 credit) {
         credit =
             int256(balanceMap[trader].paper).decimalMul(
@@ -46,6 +72,7 @@ contract Perpetual is Ownable, IPerpetual {
             int256(balanceMap[trader].reducedCredit);
     }
 
+    /// @inheritdoc IPerpetual
     function balanceOf(address trader)
         public
         view
@@ -59,6 +86,7 @@ contract Perpetual is Ownable, IPerpetual {
 
     // ========== trade ==========
 
+    /// @inheritdoc IPerpetual
     function trade(bytes calldata tradeData) external {
         (
             address[] memory traderList,
@@ -77,37 +105,67 @@ contract Perpetual is Ownable, IPerpetual {
 
     // ========== liquidation ==========
 
-    function liquidate(address liquidatedTrader, uint256 requestPaperAmount)
-        external
-    {
+    /// @inheritdoc IPerpetual
+    function liquidate(
+        address liquidatedTrader,
+        int256 requestPaper,
+        int256 expectCredit
+    ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange) {
+        // lt => liquidated trader, who holds dangerous position
+        // ld => liquidator, who takerover the dangerous position
+        int256 liqedPaperChange;
+        int256 liqedCreditChange;
         (
-            int256 liquidatorPaperChange,
-            int256 liquidatorCreditChange,
-            int256 ltPaperChange,
-            int256 ltCreditChange
+            liqtorPaperChange,
+            liqtorCreditChange,
+            liqedPaperChange,
+            liqedCreditChange
         ) = IDealer(owner()).requestLiquidate(
-                msg.sender,
-                liquidatedTrader,
-                requestPaperAmount
-            );
-        int256 rate = IDealer(owner()).getFundingRate(address(this));
-        _settle(liquidatedTrader, rate, ltPaperChange, ltCreditChange);
-        _settle(
             msg.sender,
-            rate,
-            liquidatorPaperChange,
-            liquidatorCreditChange
+            liquidatedTrader,
+            requestPaper
         );
+
+        // expect price = expectCredit/requestPaper * -1
+        // price = liqtorCreditChange/liqtorPaperChange * -1
+        if (liqtorPaperChange < 0) {
+            // open short, price >= expect price
+            // liqtorCreditChange/liqtorPaperChange * -1 >= expectCredit/requestPaper * -1
+            // liqtorCreditChange/liqtorPaperChange <= expectCredit/requestPaper
+            require(liqtorCreditChange * requestPaper <= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
+        } else {
+            // open long, price <= expect price
+            // liqtorCreditChange/liqtorPaperChange * -1 <= expectCredit/requestPaper * -1
+            // liqtorCreditChange/liqtorPaperChange >= expectCredit/requestPaper
+            require(liqtorCreditChange * requestPaper >= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
+        }
+
+        int256 rate = IDealer(owner()).getFundingRate(address(this));
+        _settle(liquidatedTrader, rate, liqedPaperChange, liqedCreditChange);
+        _settle(msg.sender, rate, liqtorPaperChange, liqtorCreditChange);
         require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
     }
 
     // ========== owner only adjustment ==========
 
+    /// @inheritdoc IPerpetual
     function changeCredit(address trader, int256 amount) external onlyOwner {
         balanceMap[trader].reducedCredit += int128(amount);
+        emit BalanceChange(trader, 0, amount);
     }
 
     // ========== settlement ==========
+
+    /*
+        Remember the fomular?
+        credit = (paper * fundingRate) + reducedCredit
+
+        So we have...
+        reducedCredit = credit - (paper * fundingRate)
+
+        When changing balances, you need to calculate the credit first.
+        And then calculated the reducedCredit that should be stored.
+    */
 
     function _settle(
         address trader,
@@ -130,27 +188,3 @@ contract Perpetual is Ownable, IPerpetual {
         }
     }
 }
-
-// credit = （paper * rate）+ reducedCredit
-// reducedCredit = credit - (paper * rate)
-
-// paper = 10
-// rate = -2
-// reducedCredit = -1000
-
-// credit = -1020
-
-// =》
-
-// open 1 long with price 200
-// paper -> 11
-// rate = -2
-// reducedCredit = -1198
-
-// credit -> -1220
-
-// swapPaperAmount
-// swapCreditAmount
-// counterparty
-// if counterparty is contract => allowPerpetualSwap(counterparty, swapPaperAmount, swapCreditAmount) reutrns (bool)
-// if counterparty is EOA => signature

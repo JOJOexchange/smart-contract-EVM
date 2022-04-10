@@ -11,6 +11,7 @@ import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Types.sol";
+
 // import "hardhat/console.sol";
 
 library Liquidation {
@@ -31,6 +32,12 @@ library Liquidation {
         int256 paperChange,
         int256 creditChange,
         uint256 positionSerialNum
+    );
+
+    event InsuranceChange(
+        address indexed perp,
+        address indexed liquidatedTrader,
+        int256 creditChange
     );
 
     // For reference only
@@ -96,7 +103,7 @@ library Liquidation {
                 : 10**18 + params.liquidationThreshold
         );
         // console.logInt(temp2);
-        if (temp2.decimalMul(paperAmount)==0){
+        if (temp2.decimalMul(paperAmount) == 0) {
             return 0;
         }
         int256 liqPrice = temp1.decimalDiv(temp2.decimalMul(paperAmount));
@@ -200,49 +207,47 @@ library Liquidation {
         Types.State storage state,
         address perp,
         address liquidatedTrader,
-        uint256 requestPaperAmount
+        int256 requestPaperAmount
     )
         external
         view
         returns (
-            int256 ltPaperChange,
-            int256 ltCreditChange,
+            int256 liqtorPaperChange,
+            int256 liqtorCreditChange,
             uint256 insuranceFee
         )
     {
-        // get price
-        Types.RiskParams memory params = state.perpRiskParams[perp];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
         require(
             !_isPositionSafe(state, liquidatedTrader, perp),
             Errors.ACCOUNT_IS_SAFE
         );
 
-        uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
-        uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
-
-        // calculate trade
+        // calculate paper change
         (int256 brokenPaperAmount, ) = IPerpetual(perp).balanceOf(
             liquidatedTrader
         );
         require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);
+        require(
+            requestPaperAmount * brokenPaperAmount >= 0,
+            Errors.LIQUIDATION_REQUEST_AMOUNT_WRONG
+        );
+        liqtorPaperChange = requestPaperAmount.abs() > brokenPaperAmount.abs()
+            ? brokenPaperAmount
+            : requestPaperAmount;
 
-        if (brokenPaperAmount > 0) {
-            // close long
-            price = price - priceOffset;
-            ltPaperChange = brokenPaperAmount.abs() > requestPaperAmount
-                ? -1 * int256(requestPaperAmount)
-                : -1 * brokenPaperAmount;
-        } else {
-            // close short
-            price = price + priceOffset;
-            ltPaperChange = brokenPaperAmount.abs() > requestPaperAmount
-                ? int256(requestPaperAmount)
-                : -1 * brokenPaperAmount;
-        }
-        ltCreditChange = -1 * ltPaperChange.decimalMul(int256(price));
+        // get price
+        Types.RiskParams memory params = state.perpRiskParams[perp];
+        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
+        uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
+        uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
+        price = liqtorPaperChange > 0
+            ? price - priceOffset
+            : price + priceOffset;
+
+        // calculate credit change
+        liqtorCreditChange = -1 * liqtorPaperChange.decimalMul(int256(price));
         insuranceFee =
-            (ltCreditChange.abs() * params.insuranceFeeRate) /
+            (liqtorCreditChange.abs() * params.insuranceFeeRate) /
             10**18;
     }
 

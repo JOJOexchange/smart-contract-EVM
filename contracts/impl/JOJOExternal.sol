@@ -55,19 +55,19 @@ contract JOJOExternal is JOJOStorage {
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,
-        uint256 requestPaperAmount
+        int256 requestPaperAmount
     )
         external
         returns (
-            int256 liquidatorPaperChange,
-            int256 liquidatorCreditChange,
-            int256 ltPaperChange,
-            int256 ltCreditChange
+            int256 liqtorPaperChange,
+            int256 liqtorCreditChange,
+            int256 liqedPaperChange,
+            int256 liqedCreditChange
         )
     {
         address perp = msg.sender;
         uint256 insuranceFee;
-        (ltPaperChange, ltCreditChange, insuranceFee) = Liquidation
+        (liqtorPaperChange, liqtorCreditChange, insuranceFee) = Liquidation
             ._getLiquidateCreditAmount(
                 state,
                 perp,
@@ -75,25 +75,33 @@ contract JOJOExternal is JOJOStorage {
                 requestPaperAmount
             );
         state.trueCredit[state.insurance] += int256(insuranceFee);
-        liquidatorCreditChange = ltCreditChange * -1;
-        liquidatorPaperChange = ltPaperChange * -1;
-        ltCreditChange -= int256(insuranceFee);
+
+        // liquidated trader balance change
+        liqedCreditChange = liqtorCreditChange * -1 - int256(insuranceFee);
+        liqedPaperChange = liqtorPaperChange * -1;
+
+        // events
         uint256 ltSN = state.positionSerialNum[liquidatedTrader][perp];
         uint256 liquidatorSN = state.positionSerialNum[liquidator][perp];
         emit Liquidation.BeingLiquidated(
             perp,
             liquidatedTrader,
-            liquidatorPaperChange,
-            liquidatorCreditChange,
+            liqtorPaperChange,
+            liqtorCreditChange,
             ltSN
         );
         emit Liquidation.JoinLiquidation(
             perp,
             liquidator,
             liquidatedTrader,
-            liquidatorPaperChange,
-            liquidatorCreditChange,
+            liqtorPaperChange,
+            liqtorCreditChange,
             liquidatorSN
+        );
+        emit Liquidation.InsuranceChange(
+            perp,
+            liquidatedTrader,
+            int256(insuranceFee)
         );
     }
 

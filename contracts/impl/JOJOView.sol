@@ -105,22 +105,20 @@ contract JOJOView is JOJOStorage {
     function getLiquidationCost(
         address perp,
         address liquidatedTrader,
-        uint256 requestPaperAmount
+        int256 requestPaperAmount
     )
         external
         view
-        returns (int256 liquidatorPaperChange, int256 liquidatorCreditChange)
+        returns (int256 liqtorPaperChange, int256 liqtorCreditChange)
     {
         // view version for requestLiquidate
-        (int256 ltPaperChange, int256 ltCreditChange, ) = Liquidation
+        (liqtorPaperChange, liqtorCreditChange, ) = Liquidation
             ._getLiquidateCreditAmount(
                 state,
                 perp,
                 liquidatedTrader,
                 requestPaperAmount
             );
-        liquidatorPaperChange = ltPaperChange * -1;
-        liquidatorCreditChange = ltCreditChange * -1;
     }
 
     // ========== utils ==========

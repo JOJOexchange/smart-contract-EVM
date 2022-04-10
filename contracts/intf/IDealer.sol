@@ -39,14 +39,14 @@ interface IDealer {
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,
-        uint256 requestPaperAmount
+        int256 requestPaperAmount
     )
         external
         returns (
-            int256 liquidatorPaperChange,
-            int256 liquidatorCreditChange,
-            int256 ltPaperChange,
-            int256 ltCreditChange
+            int256 liqtorPaperChange,
+            int256 liqtorCreditChange,
+            int256 liqedPaperChange,
+            int256 liqedCreditChange
         );
 
     function positionClear(address trader) external;

@@ -111,8 +111,8 @@ contract Perpetual is Ownable, IPerpetual {
         int256 requestPaper,
         int256 expectCredit
     ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange) {
-        // lt => liquidated trader, who holds dangerous position
-        // ld => liquidator, who takerover the dangerous position
+        // liqed => liquidated trader, who holds dangerous position
+        // liqtor => liquidator, who takerover the dangerous position
         int256 liqedPaperChange;
         int256 liqedCreditChange;
         (

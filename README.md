@@ -75,6 +75,7 @@ function balanceOf(address trader)
 Essentially this is the liquidity problem. We need to answer two questions: 
 - How is liquidity supplied? 
 - How is liquidity consumed? 
+
 These two questions are more complex than the *fundingRate*, but the good news is that operationally the transaction is simple, just a few columns of modifications to *paper* and *reducedCredit*. Let's put aside the concrete calculations for now and just leave the abstract interface.
 
 ```javascript
@@ -121,7 +122,7 @@ The only centralized thing is: JOJO server need to delete order info and signatu
 
 In addition, anyone can match orders, and whoever submit the matching result to blockchain receives trading fees.
 
-See `approveTrade` in [JOJOExternal.sol](. /contracts/impl/JOJOExternal.sol).
+See `approveTrade` in [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol).
 
 ## Cross mode
 JOJODealer only offers a cross position mode, where positions under different markets share margin. Positions under either market will affect the account net value and global exposure.

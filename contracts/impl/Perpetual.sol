@@ -17,14 +17,18 @@ contract Perpetual is Ownable, IPerpetual {
     // ========== storage ==========
 
     /*
-        We use int128 to store paper and reduced credit.
-        So we could store balance in a single slot.
+        We use int128 to store paper and reduced credit, 
+        so that we could store balance in a single slot.
         This can help us save gas.
 
-        int128 can support size of 1.7E38, which is enough for most cases.
-        But other than here, we use int256 to get higher accuracy of calculation.
-        Devs should keep in mind that even int256 is allowed in some places, 
-        you should not pass in a value exceed int128.
+        int128 can support size of 1.7E38, which is enough 
+        for most transactions. But other than storing paper 
+        and reduced credit values, we use int256 to achieve 
+        higher accuracy of calculation.
+        
+        Please keep in mind that even int256 is allowed in 
+        some places, you should not pass in a value exceed 
+        int128 when storing paper and reduced credit values.
     */
     struct balance {
         int128 paper;
@@ -49,19 +53,19 @@ contract Perpetual is Ownable, IPerpetual {
     // ========== balance related ==========
 
     /*
-        To update all credit after funding rate updated,
-        we store "reducedCredit" instead of credit itself.
+        We store "reducedCredit" instead of credit itself.
+        So that after funding rate is updated, the credit values will be
+        updated without any extra storage write.
         
         credit = (paper * fundingRate) + reducedCredit
 
         FundingRate here is a little different from what it means at CEX.
-        FundingRate is a cumulative value, its absolute size has no meaning, 
-        only the absolute value that increases or decreases with each update 
-        has meaning.
+        FundingRate is a cumulative value. Its absolute value doesn't mean 
+        anything and only the changes (due to funding updates) matter.
 
         e.g. If the fundingRate increases by 5 at a certain update, 
         then you will receive 5 credit for every paper you long.
-        And conversely, you will be charged 5credit for every paper you short.
+        Conversely, you will be charged 5 credit for every paper you short.
     */
 
     function creditOf(address trader) public view returns (int256 credit) {
@@ -111,8 +115,8 @@ contract Perpetual is Ownable, IPerpetual {
         int256 requestPaper,
         int256 expectCredit
     ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange) {
-        // liqed => liquidated trader, who holds dangerous position
-        // liqtor => liquidator, who takerover the dangerous position
+        // liqed => liquidated trader, who faces the risk of liquidation. 
+        // liqtor => liquidator, who takes over the trader's position.
         int256 liqedPaperChange;
         int256 liqedCreditChange;
         (
@@ -126,15 +130,15 @@ contract Perpetual is Ownable, IPerpetual {
             requestPaper
         );
 
-        // expect price = expectCredit/requestPaper * -1
-        // price = liqtorCreditChange/liqtorPaperChange * -1
+        // expected price = expectCredit/requestPaper * -1
+        // execute price = liqtorCreditChange/liqtorPaperChange * -1
         if (liqtorPaperChange < 0) {
-            // open short, price >= expect price
+            // open short, execute price >= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 >= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange <= expectCredit/requestPaper
             require(liqtorCreditChange * requestPaper <= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
         } else {
-            // open long, price <= expect price
+            // open long, execute price <= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 <= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange >= expectCredit/requestPaper
             require(liqtorCreditChange * requestPaper >= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
@@ -157,14 +161,14 @@ contract Perpetual is Ownable, IPerpetual {
     // ========== settlement ==========
 
     /*
-        Remember the fomular?
+        Remember the fomula?
         credit = (paper * fundingRate) + reducedCredit
 
         So we have...
         reducedCredit = credit - (paper * fundingRate)
 
-        When changing balances, you need to calculate the credit first.
-        And then calculated the reducedCredit that should be stored.
+        When you update the balance, you need to first calculate the credit, 
+        and then calculate and store the reducedCredit.
     */
 
     function _settle(
@@ -184,6 +188,7 @@ contract Perpetual is Ownable, IPerpetual {
         balanceMap[trader].reducedCredit = newReducedCredkt;
         emit BalanceChange(trader, paperChange, creditChange);
         if (balanceMap[trader].paper == 0) {
+            // realize PNL
             IDealer(owner()).positionClear(trader);
         }
     }

@@ -7,6 +7,8 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 library Types {
+
+    /// @notice storage of dealer
     struct State {
         // underlying asset
         address underlyingAsset; // IERC20
@@ -33,42 +35,77 @@ library Types {
     }
 
     struct Order {
+        // address of perpetual market, not the dealer
         address perp;
+        /*
+            Signer is the identity of trading behavior,
+            who's balance will be changed.
+            Normally it shoule be an EOA account and the 
+            order is valid only if signer signed it.
+            If the signer is a contract, it must implement
+            isValidPerpetualOperator(address) returns(bool).
+            The order is valid only if one of the valid operators
+            is an EOA account and signed the order.
+        */
         address signer;
+        /*
+            Only the orderSender can match this order. If
+            orderSender is 0x0, then everyone can match this order
+        */
         address orderSender;
+        // positive(negative) if you want to open long(short) position
         int128 paperAmount;
+        // negative(positive) if you want to open short(long) position
         int128 creditAmount;
         /*
-        * ╔═══════════════════╤═════════╗
-        * ║ info component    │ type    ║
-        * ╟───────────────────┼─────────╢
-        * ║ makerFeeRate      │ int64   ║
-        * ║ takerFeeRate      │ int64   ║
-        * ║ expiration        │ uint64  ║
-        * ║ nonce             │ uint64  ║
-        * ╚═══════════════════╧═════════╝
+            ╔═══════════════════╤═════════╗
+            ║ info component    │ type    ║
+            ╟───────────────────┼─────────╢
+            ║ makerFeeRate      │ int64   ║
+            ║ takerFeeRate      │ int64   ║
+            ║ expiration        │ uint64  ║
+            ║ nonce             │ uint64  ║
+            ╚═══════════════════╧═════════╝
         */
         bytes32 info;
     }
 
+    // EIP712 component
     bytes32 public constant ORDER_TYPEHASH =
         keccak256(
             "Order(address perp,address signer,address orderSender,int128 paperAmount,int128 creditAmount,bytes32 info)"
         );
 
+    /// @notice risk params of a perpetual market
     struct RiskParams {
-        // liquidate when netValue/exposure < liquidationThreshold
-        // the lower liquidationThreshold, leverage multiplier higher
+        /*
+            Liquidation will happens when 
+            netValue/exposure < liquidationThreshold.
+            The lower liquidationThreshold, the higher leverage multiplier.
+            1E18 based decimal.
+        */
         uint256 liquidationThreshold;
+        /*
+            discount rate in liquidation. 1E18 based decimal
+            markPrice * (1 - liquidationPriceOff) when liquidate long position
+            markPrice * (1 + liquidationPriceOff) when liquidate short position
+            1E18 based decimal.
+        */
         uint256 liquidationPriceOff;
-        // uint256 maxPositionSize; // count in paper amount
+        // insurance fee rate. 1E18 based decimal.
         uint256 insuranceFeeRate;
+        // funding rate
         int256 fundingRate;
+        // price source of mark price
         address markPriceSource;
+        // perpetual market name
         string name;
+        // the market is available if true
         bool isRegistered;
     }
 
+    /// @notice Match result obtained by parsing and validating tradeData.
+    /// Contains an array of balance change.
     struct MatchResult {
         address perp;
         address[] traderList;

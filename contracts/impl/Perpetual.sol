@@ -53,8 +53,9 @@ contract Perpetual is Ownable, IPerpetual {
     // ========== balance related ==========
 
     /*
-        After funding rate is updated, we store "reducedCredit" instead 
-        of credit itself to update credit values.
+        We store "reducedCredit" instead of credit itself.
+        So that after funding rate is updated, the credit values will be
+        updated without any extra storage write.
         
         credit = (paper * fundingRate) + reducedCredit
 
@@ -64,7 +65,7 @@ contract Perpetual is Ownable, IPerpetual {
 
         e.g. If the fundingRate increases by 5 at a certain update, 
         then you will receive 5 credit for every paper you long.
-        Conversely, you will be charged 5credit for every paper you short.
+        Conversely, you will be charged 5 credit for every paper you short.
     */
 
     function creditOf(address trader) public view returns (int256 credit) {
@@ -130,14 +131,14 @@ contract Perpetual is Ownable, IPerpetual {
         );
 
         // expected price = expectCredit/requestPaper * -1
-        // price = liqtorCreditChange/liqtorPaperChange * -1
+        // execute price = liqtorCreditChange/liqtorPaperChange * -1
         if (liqtorPaperChange < 0) {
-            // open short, price >= expected price
+            // open short, execute price >= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 >= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange <= expectCredit/requestPaper
             require(liqtorCreditChange * requestPaper <= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
         } else {
-            // open long, price <= expected price
+            // open long, execute price <= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 <= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange >= expectCredit/requestPaper
             require(liqtorCreditChange * requestPaper >= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
@@ -166,8 +167,8 @@ contract Perpetual is Ownable, IPerpetual {
         So we have...
         reducedCredit = credit - (paper * fundingRate)
 
-        When you update the balance, you need to first calculate the credit, and 
-        then calculate and store the reducedCredit.
+        When you update the balance, you need to first calculate the credit, 
+        and then calculate and store the reducedCredit.
     */
 
     function _settle(
@@ -187,6 +188,7 @@ contract Perpetual is Ownable, IPerpetual {
         balanceMap[trader].reducedCredit = newReducedCredkt;
         emit BalanceChange(trader, paperChange, creditChange);
         if (balanceMap[trader].paper == 0) {
+            // realize PNL
             IDealer(owner()).positionClear(trader);
         }
     }

@@ -2,7 +2,6 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: Apache-2.0
 */
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Subaccount.sol";
 
@@ -10,18 +9,32 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 contract SubaccountFactory {
+
+    // ========== storage ==========
+
+    // Subaccount template that will be cloned
     address immutable template;
+
+    // Subaccount can only be added.
     mapping(address => address[]) subaccountRegistry;
 
-    event NewSubaccount(address indexed master, uint256 index);
+    // ========== event ==========
+
+    event NewSubaccount(address indexed master, uint256 subaccountIndex);
+
+    // ========== constructor ==========
 
     constructor() {
         template = address(new Subaccount());
         Subaccount(template).init(address(this));
     }
 
+    // ========== functions ==========
+
+    /// @notice Using https://eips.ethereum.org/EIPS/eip-1167[EIP 1167] 
+    /// is a standard for deploying minimal proxy contracts, 
+    /// also known as "clones".
     function newSubaccount() external returns (address subaccount) {
-        require(!Address.isContract(msg.sender), "ONLY EOA CAN CREATE SUBACCOUNT");
         subaccount = Clones.clone(template);
         Subaccount(subaccount).init(msg.sender);
         subaccountRegistry[msg.sender].push(subaccount);

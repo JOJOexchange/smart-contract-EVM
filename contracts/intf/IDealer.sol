@@ -13,9 +13,9 @@ pragma solidity 0.8.9;
 
 interface IDealer {
 
-    function withdraw(uint256 amount, address to) external;
+    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount) external;
 
-    function withdrawPendingFund(address to) external;
+    function executeWithdraw(address to) external;
 
     function approveTrade(address orderSender, bytes calldata tradeData)
         external

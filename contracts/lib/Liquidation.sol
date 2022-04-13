@@ -65,8 +65,8 @@ library Liquidation {
         // remove perp paper influence
         exposure -= (paperAmount.abs() * markPrice) / 10**18;
         int256 netValue = positionNetValue +
-            state.trueCredit[trader] +
-            int256(state.virtualCredit[trader]) -
+            state.primaryCredit[trader] +
+            int256(state.secondaryCredit[trader]) -
             paperAmount.decimalMul(int256(markPrice));
         // console.logInt(positionNetValue);
         // console.log(exposure);
@@ -149,8 +149,8 @@ library Liquidation {
         }
     }
 
-    // don't count virtual credit
-    // check overall safe
+    // not only safe, but also require
+    // netPositionValue + primaryCredit >= 0
     function _isSolidSafe(Types.State storage state, address trader)
         public
         view
@@ -162,7 +162,10 @@ library Liquidation {
             uint256 strictLiqThreshold
         ) = _getTotalExposure(state, trader);
         return
-            netPositionValue + state.trueCredit[trader] >=
+            netPositionValue + state.primaryCredit[trader] >= 0 &&
+            netPositionValue +
+                state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) >=
             int256((exposure * strictLiqThreshold) / 10**18);
     }
 
@@ -180,8 +183,8 @@ library Liquidation {
 
         return
             netPositionValue +
-                state.trueCredit[trader] +
-                int256(state.virtualCredit[trader]) >=
+                state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) >=
             int256((exposure * strictLiqThreshold) / 10**18);
     }
 
@@ -198,8 +201,8 @@ library Liquidation {
         uint256 liqThreshold = state.perpRiskParams[perp].liquidationThreshold;
         return
             netPositionValue +
-                state.trueCredit[trader] +
-                int256(state.virtualCredit[trader]) >=
+                state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) >=
             int256((exposure * liqThreshold) / 10**18);
     }
 
@@ -259,7 +262,7 @@ library Liquidation {
 
         (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
         IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
-        state.trueCredit[trader] += creditAmount;
+        state.primaryCredit[trader] += creditAmount;
         state.positionSerialNum[trader][msg.sender] += 1;
 
         state.hasPosition[trader][msg.sender] = false;

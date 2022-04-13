@@ -1,4 +1,4 @@
-import "./utils/hooks"
+import "./utils/hooks";
 import { expect } from "chai";
 import { Contract, utils, Wallet } from "ethers";
 import { ethers } from "hardhat";
@@ -9,7 +9,12 @@ import {
   getDefaultOrderEnv,
   OrderEnv,
 } from "../scripts/order";
-import { checkBalance, checkCredit, checkUnderlyingAsset } from "./utils/checkers";
+import {
+  checkBalance,
+  checkCredit,
+  checkPrimaryAsset,
+  checkSecondaryAsset,
+} from "./utils/checkers";
 import { timeJump } from "./utils/timemachine";
 
 /*
@@ -83,42 +88,35 @@ describe("Subaccount", () => {
   });
 
   it("withdraw", async () => {
-    // no time lock
     await context.dealer
       .connect(trader1)
-      .deposit(utils.parseEther("10"), trader1Sub.address);
+      .deposit(
+        utils.parseEther("10"),
+        utils.parseEther("20"),
+        trader1Sub.address
+      );
     checkCredit(
       context,
       trader1Sub.address,
       utils.parseEther("10").toString(),
-      "0"
+      utils.parseEther("20").toString()
     );
 
     await trader1Sub
       .connect(trader1)
-      .withdraw(context.dealer.address, utils.parseEther("10"));
+      .requestWithdraw(
+        context.dealer.address,
+        utils.parseEther("10"),
+        utils.parseEther("20")
+      );
+    await trader1Sub.connect(trader1).executeWithdraw(context.dealer.address);
     checkCredit(context, trader1Sub.address, "0", "0");
-    checkUnderlyingAsset(
+    checkPrimaryAsset(
       context,
       trader1.address,
       utils.parseEther("1000000").toString()
     );
-
-    // with time lock
-    await context.dealer.setWithdrawTimeLock("100");
-    await context.dealer
-      .connect(trader1)
-      .deposit(utils.parseEther("10"), trader1Sub.address);
-    await trader1Sub
-      .connect(trader1)
-      .withdraw(context.dealer.address, utils.parseEther("10"));
-    await timeJump(101);
-    await trader1Sub
-      .connect(trader1)
-      .withdrawPendingFund(context.dealer.address);
-
-    checkCredit(context, trader1Sub.address, "0", "0");
-    checkUnderlyingAsset(
+    checkSecondaryAsset(
       context,
       trader1.address,
       utils.parseEther("1000000").toString()
@@ -128,10 +126,18 @@ describe("Subaccount", () => {
   it("trade", async () => {
     await context.dealer
       .connect(trader1)
-      .deposit(utils.parseEther("10000"), trader1Sub.address);
+      .deposit(
+        utils.parseEther("10000"),
+        utils.parseEther("0"),
+        trader1Sub.address
+      );
     await context.dealer
       .connect(trader2)
-      .deposit(utils.parseEther("10000"), trader2Sub.address);
+      .deposit(
+        utils.parseEther("10000"),
+        utils.parseEther("0"),
+        trader2Sub.address
+      );
     let o1 = await buildOrder(
       orderEnv,
       context.perpList[0].address,
@@ -166,13 +172,13 @@ describe("Subaccount", () => {
       trader1Sub.connect(trader2).setOperator(trader2.address, true)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     expect(
-      trader1Sub.connect(trader2).withdraw(trader2.address, "10")
+      trader1Sub.connect(trader2).requestWithdraw(trader2.address, "10")
     ).to.be.revertedWith("Ownable: caller is not the owner");
     expect(
-      trader1Sub.connect(trader2).withdrawPendingFund(trader2.address)
+      trader1Sub.connect(trader2).executeWithdraw(trader2.address)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     expect(
       trader1Sub.connect(trader1).init(trader2.address)
-    ).to.be.revertedWith("ALREADY INITIALIZED")
+    ).to.be.revertedWith("ALREADY INITIALIZED");
   });
 });

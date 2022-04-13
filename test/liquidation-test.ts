@@ -51,24 +51,17 @@ describe("Liquidation", () => {
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
     liquidator = context.traderList[2];
-    await context.dealer.setVirtualCredit(
-      trader1.address,
-      utils.parseEther("5000")
-    );
-    await context.dealer.setVirtualCredit(
-      trader2.address,
-      utils.parseEther("5000")
-    );
-    await context.dealer.setVirtualCredit(
-      liquidator.address,
-      utils.parseEther("5000")
+    await context.dealer.connect(trader1).deposit(
+      utils.parseEther("0"),
+      utils.parseEther("5000"),
+      liquidator.address
     );
     await context.dealer
       .connect(trader1)
-      .deposit(utils.parseEther("5000"), trader1.address);
+      .deposit(utils.parseEther("5000"), utils.parseEther("5000"), trader1.address);
     await context.dealer
       .connect(trader2)
-      .deposit(utils.parseEther("5000"), trader2.address);
+      .deposit(utils.parseEther("5000"), utils.parseEther("5000"), trader2.address);
     orderEnv = await getDefaultOrderEnv(context.dealer);
     insurance = await context.insurance.getAddress();
     perp0 = context.perpList[0];
@@ -437,7 +430,7 @@ describe("Liquidation", () => {
         await context.dealer.isPositionSafe(trader1.address, perp0.address)
       ).to.be.true;
       await context.dealer.handleBadDebt(trader1.address);
-      await checkCredit(context, insurance, "-6205", "0");
+      await checkCredit(context, insurance, "-6205", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
     });
 
@@ -473,10 +466,8 @@ describe("Liquidation", () => {
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
       });
       it("liquidator not safe", async () => {
-        await context.dealer.setVirtualCredit(
-          liquidator.address,
-          utils.parseEther("0")
-        );
+        await context.dealer.connect(liquidator).requestWithdraw(utils.parseEther("0"), utils.parseEther("5000"))
+        await context.dealer.connect(liquidator).executeWithdraw(liquidator.address)
         expect(
           perp0
             .connect(liquidator)

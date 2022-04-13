@@ -7,29 +7,31 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 library Types {
-
     /// @notice storage of dealer
     struct State {
-        // underlying asset
-        address underlyingAsset; // IERC20
-        // insurance account
-        address insurance;
+        // primary underlying asset, ERC20
+        address primaryAsset;
+        // secondary underlying asset, ERC20
+        address secondaryAsset;
+        // withdraw control
+        uint256 withdrawTimeLock;
+        mapping(address => uint256) pendingPrimaryWithdraw;
+        mapping(address => uint256) pendingSecondaryWithdraw;
+        mapping(address => uint256) withdrawExecutionTimestamp;
+        // credit
+        mapping(address => int256) primaryCredit; // created by deposit funding, can be converted to funding
+        mapping(address => uint256) secondaryCredit; // for market maker, can not converted to any asset, only for trading
         // perpetual contract register
         mapping(address => Types.RiskParams) perpRiskParams;
         address[] registeredPerp;
-        // credit
-        mapping(address => int256) trueCredit; // created by deposit funding, can be converted to funding
-        mapping(address => uint256) virtualCredit; // for market maker, can not converted to any asset, only for trading
         // account position register
         mapping(address => address[]) openPositions; // all user's open positions, for liquidation check
         mapping(address => mapping(address => bool)) hasPosition; // user => perp => hasPosition
         mapping(address => mapping(address => uint256)) positionSerialNum; // user => perp => serial Num increase whenever last position cleared
-        // withdraw control
-        uint256 withdrawTimeLock;
-        mapping(address => uint256) pendingWithdraw;
-        mapping(address => uint256) requestWithdrawTimestamp;
         // order state
-        mapping(bytes32 => uint256) filledPaperAmount;
+        mapping(bytes32 => uint256) orderFilledPaperAmount;
+        // insurance account
+        address insurance;
         // EIP712 domain separator
         bytes32 domainSeparator;
     }

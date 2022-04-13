@@ -7,7 +7,6 @@ dist/
 artifacts/
 cache/
 node_modules/
-coverage/
 
 # VIM
 *.swo

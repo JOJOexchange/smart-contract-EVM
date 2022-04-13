@@ -17,66 +17,114 @@ import "./Types.sol";
 library Funding {
     using SafeERC20 for IERC20;
 
-    event Deposit(address indexed to, address indexed payer, uint256 amount);
+    event Deposit(
+        address indexed to,
+        address indexed payer,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    );
 
-    event Withdraw(address indexed to, address indexed payer, uint256 amount);
+    event Withdraw(
+        address indexed to,
+        address indexed payer,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    );
 
-    event PendingWithdraw(address indexed payer, uint256 amount);
+    event RequestWithdraw(
+        address indexed payer,
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
+        uint256 executionTimestamp
+    );
 
     function _deposit(
         Types.State storage state,
-        uint256 amount,
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
         address to
     ) public {
-        IERC20(state.underlyingAsset).safeTransferFrom(
+        if (primaryAmount > 0) {
+            IERC20(state.primaryAsset).safeTransferFrom(
+                msg.sender,
+                address(this),
+                primaryAmount
+            );
+            state.primaryCredit[to] += int256(primaryAmount);
+        }
+        if (secondaryAmount > 0) {
+            IERC20(state.secondaryAsset).safeTransferFrom(
+                msg.sender,
+                address(this),
+                secondaryAmount
+            );
+            state.secondaryCredit[to] += secondaryAmount;
+        }
+        emit Deposit(to, msg.sender, primaryAmount, secondaryAmount);
+    }
+
+    function _requestWithdraw(
+        Types.State storage state,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    ) public {
+        if (primaryAmount > 0) {
+            state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
+        }
+        if (secondaryAmount > 0) {
+            state.pendingSecondaryWithdraw[msg.sender] = secondaryAmount;
+        }
+        state.withdrawExecutionTimestamp[msg.sender] =
+            block.timestamp +
+            state.withdrawTimeLock;
+        emit RequestWithdraw(
             msg.sender,
-            address(this),
-            amount
+            primaryAmount,
+            secondaryAmount,
+            state.withdrawExecutionTimestamp[msg.sender]
         );
-        state.trueCredit[to] += int256(amount);
-        emit Deposit(to, msg.sender, amount);
+    }
+
+    function _executeWithdraw(Types.State storage state, address to) public {
+        require(
+            state.withdrawExecutionTimestamp[msg.sender] <= block.timestamp,
+            Errors.WITHDRAW_PENDING
+        );
+        uint256 primaryAmount = state.pendingPrimaryWithdraw[msg.sender];
+        uint256 secondaryAmount = state.pendingSecondaryWithdraw[msg.sender];
+        state.pendingPrimaryWithdraw[msg.sender] = 0;
+        state.pendingSecondaryWithdraw[msg.sender] = 0;
+        _withdraw(state, msg.sender, to, primaryAmount, secondaryAmount);
     }
 
     function _withdraw(
         Types.State storage state,
-        uint256 amount,
-        address to
-    ) public {
-        if (state.withdrawTimeLock == 0) {
-            _settleWithdraw(state, msg.sender, to, amount);
-        } else {
-            state.pendingWithdraw[msg.sender] = amount;
-            state.requestWithdrawTimestamp[msg.sender] = block.timestamp;
-            emit PendingWithdraw(msg.sender, amount);
-        }
-    }
-
-    function _withdrawPendingFund(Types.State storage state, address to)
-        public
-    {
-        require(
-            state.requestWithdrawTimestamp[msg.sender] +
-                state.withdrawTimeLock <=
-                block.timestamp,
-            Errors.WITHDRAW_PENDING
-        );
-        uint256 amount = state.requestWithdrawTimestamp[msg.sender];
-        state.pendingWithdraw[msg.sender] = 0;
-        _settleWithdraw(state, msg.sender, to, amount);
-    }
-
-    function _settleWithdraw(
-        Types.State storage state,
         address payer,
         address to,
-        uint256 amount
+        uint256 primaryAmount,
+        uint256 secondaryAmount
     ) private {
-        state.trueCredit[payer] -= int256(amount);
-        IERC20(state.underlyingAsset).safeTransfer(to, amount);
-        require(
-            Liquidation._isSolidSafe(state, payer),
-            Errors.ACCOUNT_NOT_SAFE
-        );
-        emit Withdraw(to, payer, amount);
+        if (primaryAmount > 0) {
+            state.primaryCredit[payer] -= int256(primaryAmount);
+            IERC20(state.primaryAsset).safeTransfer(to, primaryAmount);
+        }
+        if(secondaryAmount>0){
+            state.secondaryCredit[payer] -= secondaryAmount;
+            IERC20(state.secondaryAsset).safeTransfer(to, secondaryAmount);
+        }
+
+        if(primaryAmount>0){
+            require(
+                Liquidation._isSolidSafe(state, payer),
+                Errors.ACCOUNT_NOT_SAFE
+            );
+        } else {
+            require(
+                Liquidation._isSafe(state, payer),
+                Errors.ACCOUNT_NOT_SAFE
+            );
+        }
+
+        emit Withdraw(to, payer, primaryAmount, secondaryAmount);
     }
 }

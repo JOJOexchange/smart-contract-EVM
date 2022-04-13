@@ -12,8 +12,8 @@ import "./JOJOOperation.sol";
 import "../lib/EIP712.sol";
 
 contract JOJODealer is JOJOView, JOJOExternal, JOJOOperation {
-    constructor(address _underlyingAsset) Ownable() {
-        state.underlyingAsset = _underlyingAsset;
+    constructor(address _primaryAsset) Ownable() {
+        state.primaryAsset = _primaryAsset;
         state.domainSeparator = EIP712._buildDomainSeparator(
             "JOJO",
             "1",

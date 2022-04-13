@@ -58,13 +58,16 @@ contract Subaccount {
 
     /// @param dealer As the subaccount can be used with more than one dealer,
     /// you need to pass this address in.
-    function withdraw(address dealer, uint256 amount) external onlyOwner {
-        IDealer(dealer).withdraw(amount, owner);
+    /// @param primaryAmount The amount of primary asset you want to withdraw
+    /// @param secondaryAmount The amount of secondary asset you want to withdraw
+    function requestWithdraw(address dealer, uint256 primaryAmount, uint256 secondaryAmount) external onlyOwner {
+        IDealer(dealer).requestWithdraw(primaryAmount, secondaryAmount);
     }
 
+    /// @notice Always withdraw to owner, no matter who fund this subaccount
     /// @param dealer As the subaccount can be used with more than one dealer,
     /// you need to pass this address in. 
-    function withdrawPendingFund(address dealer) external onlyOwner {
-        IDealer(dealer).withdrawPendingFund(owner);
+    function executeWithdraw(address dealer) external onlyOwner {
+        IDealer(dealer).executeWithdraw(owner);
     }
 }

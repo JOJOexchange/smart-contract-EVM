@@ -18,16 +18,23 @@ contract JOJOExternal is JOJOStorage {
 
     // ========== fund related ==========
 
-    function deposit(uint256 amount, address to) external nonReentrant {
-        Funding._deposit(state, amount, to);
+    function deposit(
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
+        address to
+    ) external nonReentrant {
+        Funding._deposit(state, primaryAmount, secondaryAmount, to);
     }
 
-    function withdraw(uint256 amount, address to) external nonReentrant {
-        Funding._withdraw(state, amount, to);
+    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
+        external
+        nonReentrant
+    {
+        Funding._requestWithdraw(state, primaryAmount, secondaryAmount);
     }
 
-    function withdrawPendingFund(address to) external nonReentrant {
-        Funding._withdrawPendingFund(state, to);
+    function executeWithdraw(address to) external nonReentrant {
+        Funding._executeWithdraw(state, to);
     }
 
     // ========== registered perpetual only ==========
@@ -74,7 +81,7 @@ contract JOJOExternal is JOJOStorage {
                 liquidatedTrader,
                 requestPaperAmount
             );
-        state.trueCredit[state.insurance] += int256(insuranceFee);
+        state.primaryCredit[state.insurance] += int256(insuranceFee);
 
         // liquidated trader balance change
         liqedCreditChange = liqtorCreditChange * -1 - int256(insuranceFee);

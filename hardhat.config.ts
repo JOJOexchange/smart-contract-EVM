@@ -33,6 +33,6 @@ export default {
     }
   },
   gasReporter: {
-    enabled: true
+    enabled: false
   }
 };

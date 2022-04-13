@@ -28,13 +28,15 @@ describe("Funding rate", () => {
     context = await basicContext();
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
-    await context.dealer.setVirtualCredit(
-      trader1.address,
-      utils.parseEther("1000000")
+    await context.dealer.connect(trader1).deposit(
+      utils.parseEther("0"),
+      utils.parseEther("1000000"),
+      trader1.address
     );
-    await context.dealer.setVirtualCredit(
-      trader2.address,
-      utils.parseEther("1000000")
+    await context.dealer.connect(trader2).deposit(
+      utils.parseEther("0"),
+      utils.parseEther("1000000"),
+      trader2.address
     );
     orderEnv = await getDefaultOrderEnv(context.dealer);
   });

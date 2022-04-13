@@ -1,6 +1,6 @@
 import "./utils/hooks";
 import { Wallet, utils } from "ethers";
-import { expect } from "chai";
+import { expect, util } from "chai";
 import { basicContext, Context } from "../scripts/context";
 import {
   buildOrder,
@@ -53,17 +53,20 @@ describe("Trade", () => {
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
     trader3 = context.traderList[2];
-    await context.dealer.setVirtualCredit(
-      trader1.address,
-      utils.parseEther("1000000")
+    await context.dealer.connect(trader1).deposit(
+      utils.parseEther("0"),
+      utils.parseEther("1000000"),
+      trader1.address
     );
-    await context.dealer.setVirtualCredit(
-      trader2.address,
-      utils.parseEther("1000000")
+    await context.dealer.connect(trader2).deposit(
+      utils.parseEther("0"),
+      utils.parseEther("1000000"),
+      trader2.address
     );
-    await context.dealer.setVirtualCredit(
-      trader3.address,
-      utils.parseEther("1000000")
+    await context.dealer.connect(trader3).deposit(
+      utils.parseEther("0"),
+      utils.parseEther("1000000"),
+      trader3.address
     );
     orderEnv = await getDefaultOrderEnv(context.dealer);
     baseOrder = await buildOrder(
@@ -171,6 +174,9 @@ describe("Trade", () => {
           utils.parseEther("2"),
           utils.parseEther("-100016")
         );
+      
+      const o1Filled = await context.dealer.getOrderFilledAmount(o1.hash)
+      expect(o1Filled).to.be.equal(utils.parseEther("2"))
 
       await checkBalance(context.perpList[0], trader1.address, "-2", "99950");
       await checkBalance(context.perpList[0], trader2.address, "2", "-100016");
@@ -403,9 +409,11 @@ describe("Trade", () => {
         utils.parseEther("30000").toString(),
         context.traderList[2]
       );
-      await context.dealer.setVirtualCredit(
-        trader3.address,
-        utils.parseEther("10")
+      await context.secondaryAsset.mint([trader3.address], [utils.parseEther("10")]);
+      await context.dealer.connect(trader3).deposit(
+        utils.parseEther("0"),
+        utils.parseEther("10"),
+        trader3.address
       );
       let data10 = encodeTradeData(
         [baseOrder.order, o8.order],

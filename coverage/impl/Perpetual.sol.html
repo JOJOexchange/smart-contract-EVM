@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for impl/Perpetual.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">impl/</a> Perpetual.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>29/29</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">66.67% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>8/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>6/6</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>29/29</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">369×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">324×</span>
+<span class="cline-any cline-yes">324×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">67×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">54×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">54×</span>
+<span class="cline-any cline-yes">110×</span>
+<span class="cline-any cline-yes">110×</span>
+<span class="cline-any cline-yes">110×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-yes">126×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
+    Copyright 2022 JOJO Exchange
+    SPDX-License-Identifier: Apache-2.0
+*/
+&nbsp;
+pragma solidity 0.8.9;
+pragma experimental ABIEncoderV2;
+&nbsp;
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "../intf/IDealer.sol";
+import "../intf/IPerpetual.sol";
+import "../utils/SignedDecimalMath.sol";
+&nbsp;
+contract Perpetual is Ownable, IPerpetual {
+    using SignedDecimalMath for int256;
+&nbsp;
+    // ========== storage ==========
+&nbsp;
+    /*
+        We use int128 to store paper and reduced credit, 
+        so that we could store balance in a single slot.
+        This can help us save gas.
+&nbsp;
+        int128 can support size of 1.7E38, which is enough 
+        for most transactions. But other than storing paper 
+        and reduced credit values, we use int256 to achieve 
+        higher accuracy of calculation.
+        
+        Please keep in mind that even int256 is allowed in 
+        some places, you should not pass in a value exceed 
+        int128 when storing paper and reduced credit values.
+    */
+    struct balance {
+        int128 paper;
+        int128 reducedCredit;
+    }
+    mapping(address =&gt; balance) public balanceMap;
+&nbsp;
+    // ========== events ==========
+&nbsp;
+    event BalanceChange(
+        address indexed trader,
+        int256 paperChange,
+        int256 creditChange
+    );
+&nbsp;
+    // ========== constructor ==========
+&nbsp;
+    constructor(address _owner) Ownable() {
+        transferOwnership(_owner);
+    }
+&nbsp;
+    // ========== balance related ==========
+&nbsp;
+    /*
+        We store "reducedCredit" instead of credit itself.
+        So that after funding rate is updated, the credit values will be
+        updated without any extra storage write.
+        
+        credit = (paper * fundingRate) + reducedCredit
+&nbsp;
+        FundingRate here is a little different from what it means at CEX.
+        FundingRate is a cumulative value. Its absolute value doesn't mean 
+        anything and only the changes (due to funding updates) matter.
+&nbsp;
+        e.g. If the fundingRate increases by 5 at a certain update, 
+        then you will receive 5 credit for every paper you long.
+        Conversely, you will be charged 5 credit for every paper you short.
+    */
+&nbsp;
+    /// @inheritdoc IPerpetual
+    function balanceOf(address trader)
+        public
+        view
+        returns (int256 paper, int256 credit)
+    {
+        paper = int256(balanceMap[trader].paper);
+        credit =
+            paper.decimalMul(IDealer(owner()).getFundingRate(address(this))) +
+            int256(balanceMap[trader].reducedCredit);
+    }
+&nbsp;
+    // ========== trade ==========
+&nbsp;
+    /// @inheritdoc IPerpetual
+    function trade(bytes calldata tradeData) external {
+        (
+            address[] memory traderList,
+            int256[] memory paperChangeList,
+            int256[] memory creditChangeList
+        ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
+&nbsp;
+        int256 rate = IDealer(owner()).getFundingRate(address(this));
+&nbsp;
+        for (uint256 i = 0; i &lt; traderList.length; i++) {
+            address trader = traderList[i];
+            _settle(trader, rate, paperChangeList[i], creditChangeList[i]);
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(IDealer(owner()).isSafe(trader), "TRADER_NOT_SAFE");
+        }
+    }
+&nbsp;
+    // ========== liquidation ==========
+&nbsp;
+    /// @inheritdoc IPerpetual
+    function liquidate(
+        address liquidatedTrader,
+        int256 requestPaper,
+        int256 expectCredit
+    ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange) {
+        // liqed =&gt; liquidated trader, who faces the risk of liquidation.
+        // liqtor =&gt; liquidator, who takes over the trader's position.
+        int256 liqedPaperChange;
+        int256 liqedCreditChange;
+        (
+            liqtorPaperChange,
+            liqtorCreditChange,
+            liqedPaperChange,
+            liqedCreditChange
+        ) = IDealer(owner()).requestLiquidate(
+            msg.sender,
+            liquidatedTrader,
+            requestPaper
+        );
+&nbsp;
+        // expected price = expectCredit/requestPaper * -1
+        // execute price = liqtorCreditChange/liqtorPaperChange * -1
+        if (liqtorPaperChange &lt; 0) {
+            // open short, execute price &gt;= expected price
+            // liqtorCreditChange/liqtorPaperChange * -1 &gt;= expectCredit/requestPaper * -1
+            // liqtorCreditChange/liqtorPaperChange &lt;= expectCredit/requestPaper
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(
+                liqtorCreditChange * requestPaper &lt;=
+                    expectCredit * liqtorPaperChange,
+                "LIQUIDATION_PRICE_PROTECTION"
+            );
+        } else {
+            // open long, execute price &lt;= expected price
+            // liqtorCreditChange/liqtorPaperChange * -1 &lt;= expectCredit/requestPaper * -1
+            // liqtorCreditChange/liqtorPaperChange &gt;= expectCredit/requestPaper
+            <span class="missing-if-branch" title="else path not taken" >E</span>require(
+                liqtorCreditChange * requestPaper &gt;=
+                    expectCredit * liqtorPaperChange,
+                "LIQUIDATION_PRICE_PROTECTION"
+            );
+        }
+&nbsp;
+        int256 rate = IDealer(owner()).getFundingRate(address(this));
+        _settle(liquidatedTrader, rate, liqedPaperChange, liqedCreditChange);
+        _settle(msg.sender, rate, liqtorPaperChange, liqtorCreditChange);
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
+    }
+&nbsp;
+    // ========== owner only adjustment ==========
+&nbsp;
+    /// @inheritdoc IPerpetual
+    function changeCredit(address trader, int256 amount) external onlyOwner {
+        balanceMap[trader].reducedCredit += int128(amount);
+        emit BalanceChange(trader, 0, amount);
+    }
+&nbsp;
+    // ========== settlement ==========
+&nbsp;
+    /*
+        Remember the fomula?
+        credit = (paper * fundingRate) + reducedCredit
+&nbsp;
+        So we have...
+        reducedCredit = credit - (paper * fundingRate)
+&nbsp;
+        When you update the balance, you need to first calculate the credit, 
+        and then calculate and store the reducedCredit.
+    */
+&nbsp;
+    function _settle(
+        address trader,
+        int256 rate,
+        int256 paperChange,
+        int256 creditChange
+    ) internal {
+        int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
+            int256(balanceMap[trader].reducedCredit) +
+            creditChange;
+        int128 newPaper = balanceMap[trader].paper + int128(paperChange);
+        int128 newReducedCredkt = int128(
+            credit - int256(newPaper).decimalMul(rate)
+        );
+        balanceMap[trader].paper = newPaper;
+        balanceMap[trader].reducedCredit = newReducedCredkt;
+        emit BalanceChange(trader, paperChange, creditChange);
+        if (balanceMap[trader].paper == 0) {
+            // realize PNL
+            IDealer(owner()).positionClear(trader);
+        }
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 14 2022 00:32:15 GMT+0800 (China Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

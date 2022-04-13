@@ -68,14 +68,6 @@ contract Perpetual is Ownable, IPerpetual {
         Conversely, you will be charged 5 credit for every paper you short.
     */
 
-    function creditOf(address trader) public view returns (int256 credit) {
-        credit =
-            int256(balanceMap[trader].paper).decimalMul(
-                IDealer(owner()).getFundingRate(address(this))
-            ) +
-            int256(balanceMap[trader].reducedCredit);
-    }
-
     /// @inheritdoc IPerpetual
     function balanceOf(address trader)
         public
@@ -115,7 +107,7 @@ contract Perpetual is Ownable, IPerpetual {
         int256 requestPaper,
         int256 expectCredit
     ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange) {
-        // liqed => liquidated trader, who faces the risk of liquidation. 
+        // liqed => liquidated trader, who faces the risk of liquidation.
         // liqtor => liquidator, who takes over the trader's position.
         int256 liqedPaperChange;
         int256 liqedCreditChange;
@@ -136,12 +128,20 @@ contract Perpetual is Ownable, IPerpetual {
             // open short, execute price >= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 >= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange <= expectCredit/requestPaper
-            require(liqtorCreditChange * requestPaper <= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
+            require(
+                liqtorCreditChange * requestPaper <=
+                    expectCredit * liqtorPaperChange,
+                "LIQUIDATION_PRICE_PROTECTION"
+            );
         } else {
             // open long, execute price <= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 <= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange >= expectCredit/requestPaper
-            require(liqtorCreditChange * requestPaper >= expectCredit * liqtorPaperChange, "LIQUIDATION_PRICE_PROTECTION");
+            require(
+                liqtorCreditChange * requestPaper >=
+                    expectCredit * liqtorPaperChange,
+                "LIQUIDATION_PRICE_PROTECTION"
+            );
         }
 
         int256 rate = IDealer(owner()).getFundingRate(address(this));

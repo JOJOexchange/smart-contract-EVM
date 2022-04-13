@@ -20,14 +20,14 @@ library Trading {
     using SignedDecimalMath for int256;
     using Math for uint256;
 
-    // if the order is long, filledPaperAmount>0 and filledCreditAmount<0
+    // if the order is long, orderFilledPaperAmount>0 and filledCreditAmount<0
     // if sender charge fee from this order, fee>0
     // if sender provide rebate to this order, fee<0
     event OrderFilled(
         bytes32 indexed orderHash,
         address indexed trader,
         address indexed perp,
-        int256 filledPaperAmount,
+        int256 orderFilledPaperAmount,
         int256 filledCreditAmount,
         uint256 positionSerialNum
     );
@@ -68,9 +68,9 @@ library Trading {
                     orderList[i].orderSender == address(0),
                 Errors.INVALID_ORDER_SENDER
             );
-            state.filledPaperAmount[orderHashList[i]] += matchPaperAmount[i];
+            state.orderFilledPaperAmount[orderHashList[i]] += matchPaperAmount[i];
             require(
-                state.filledPaperAmount[orderHashList[i]] <=
+                state.orderFilledPaperAmount[orderHashList[i]] <=
                     int256(orderList[i].paperAmount).abs(),
                 Errors.ORDER_FILLED_OVERFLOW
             );
@@ -150,7 +150,7 @@ library Trading {
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
-            state.trueCredit[orderSender] += result.orderSenderFee;
+            state.primaryCredit[orderSender] += result.orderSenderFee;
             if (result.orderSenderFee < 0) {
                 require(
                     Liquidation._isSafe(state, orderSender),

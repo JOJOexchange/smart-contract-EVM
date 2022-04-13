@@ -15,6 +15,18 @@ import "../utils/Errors.sol";
 contract JOJOView is JOJOStorage {
     // ========== simple read state ==========
 
+    function getPrimaryAsset() external view returns (address primaryAsset) {
+        primaryAsset = state.primaryAsset;
+    }
+
+    function getSecondaryAsset()
+        external
+        view
+        returns (address secondaryAsset)
+    {
+        secondaryAsset = state.secondaryAsset;
+    }
+
     function getRiskParams(address perpetualAddress)
         external
         view
@@ -47,14 +59,18 @@ contract JOJOView is JOJOStorage {
         external
         view
         returns (
-            int256 trueCredit,
-            uint256 virtualCredit,
-            uint256 pendingWithdraw
+            int256 primaryCredit,
+            uint256 secondaryCredit,
+            uint256 pendingPrimaryWithdraw,
+            uint256 pendingSecondaryWithdraw,
+            uint256 executionTimestamp
         )
     {
-        trueCredit = state.trueCredit[trader];
-        virtualCredit = state.virtualCredit[trader];
-        pendingWithdraw = state.pendingWithdraw[trader];
+        primaryCredit = state.primaryCredit[trader];
+        secondaryCredit = state.secondaryCredit[trader];
+        pendingPrimaryWithdraw = state.pendingPrimaryWithdraw[trader];
+        pendingSecondaryWithdraw = state.pendingSecondaryWithdraw[trader];
+        executionTimestamp = state.withdrawExecutionTimestamp[trader];
     }
 
     // ========== risk related ==========
@@ -87,8 +103,8 @@ contract JOJOView is JOJOStorage {
         );
         netValue =
             positionNetValue +
-            state.trueCredit[trader] +
-            int256(state.virtualCredit[trader]);
+            state.primaryCredit[trader] +
+            int256(state.secondaryCredit[trader]);
     }
 
     // ========== liquidation related ==========
@@ -121,7 +137,7 @@ contract JOJOView is JOJOStorage {
             );
     }
 
-    // ========== utils ==========
+    // ========== order related ==========
 
     function getOrderHash(Types.Order memory order)
         external
@@ -129,5 +145,13 @@ contract JOJOView is JOJOStorage {
         returns (bytes32 orderHash)
     {
         orderHash = Trading._getOrderHash(state.domainSeparator, order);
+    }
+
+    function getOrderFilledAmount(bytes32 orderHash)
+        external
+        view
+        returns (uint256 filledAmount)
+    {
+        filledAmount = state.orderFilledPaperAmount[orderHash];
     }
 }

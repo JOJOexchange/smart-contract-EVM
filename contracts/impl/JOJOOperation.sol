@@ -18,12 +18,6 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== events ==========
 
-    event SetVirtualCredit(
-        address indexed trader,
-        uint256 oldVirtualCredit,
-        uint256 newVirtualCredit
-    );
-
     event HandleBadDebt(address indexed liquidatedTrader);
 
     event UpdateFundingRate(
@@ -43,15 +37,6 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== balance related ==========
 
-    function setVirtualCredit(address trader, uint256 amount)
-        external
-        onlyOwner
-    {
-        uint256 oldVirtualCredit = state.virtualCredit[trader];
-        state.virtualCredit[trader] = amount;
-        emit SetVirtualCredit(trader, oldVirtualCredit, amount);
-    }
-
     function handleBadDebt(address liquidatedTrader) external onlyOwner {
         require(
             !Liquidation._isSafe(state, liquidatedTrader),
@@ -61,9 +46,10 @@ contract JOJOOperation is JOJOStorage {
             state.openPositions[liquidatedTrader].length == 0,
             Errors.TRADER_STILL_IN_LIQUIDATION
         );
-        state.trueCredit[state.insurance] += state.trueCredit[liquidatedTrader];
-        state.trueCredit[liquidatedTrader] = 0;
-        state.virtualCredit[liquidatedTrader] = 0;
+        state.primaryCredit[state.insurance] += state.primaryCredit[liquidatedTrader];
+        state.secondaryCredit[state.insurance] += state.secondaryCredit[liquidatedTrader];
+        state.primaryCredit[liquidatedTrader] = 0;
+        state.secondaryCredit[liquidatedTrader] = 0;
         emit HandleBadDebt(liquidatedTrader);
     }
 
@@ -123,5 +109,10 @@ contract JOJOOperation is JOJOStorage {
         uint256 oldWithdrawTimeLock = state.withdrawTimeLock;
         state.withdrawTimeLock = newWithdrawTimeLock;
         emit SetWithdrawTimeLock(oldWithdrawTimeLock, newWithdrawTimeLock);
+    }
+
+    function setSecondaryAsset(address _secondaryAsset) external onlyOwner {
+        require(state.secondaryAsset==address(0), Errors.SECONDARY_ASSET_ALREASY_EXIST);
+        state.secondaryAsset = _secondaryAsset;
     }
 }

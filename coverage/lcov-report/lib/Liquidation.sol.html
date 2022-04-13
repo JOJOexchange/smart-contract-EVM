@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for lib/Liquidation.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">lib/</a> Liquidation.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>62/62</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">70% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>14/20</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>7/7</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>63/63</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">196×</span>
+<span class="cline-any cline-yes">196×</span>
+<span class="cline-any cline-yes">196×</span>
+<span class="cline-any cline-yes">196×</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-yes">232×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">153×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">153×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32×</span>
+<span class="cline-any cline-yes">32×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">16×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
+    Copyright 2022 JOJO Exchange
+    SPDX-License-Identifier: Apache-2.0
+*/
+&nbsp;
+pragma solidity 0.8.9;
+pragma experimental ABIEncoderV2;
+&nbsp;
+import "../intf/IPerpetual.sol";
+import "../intf/IMarkPriceSource.sol";
+import "../utils/SignedDecimalMath.sol";
+import "../utils/Errors.sol";
+import "./Types.sol";
+&nbsp;
+// import "hardhat/console.sol";
+&nbsp;
+library Liquidation {
+    using SignedDecimalMath for int256;
+&nbsp;
+    event BeingLiquidated(
+        address indexed perp,
+        address indexed liquidatedTrader,
+        int256 paperChange,
+        int256 creditChange,
+        uint256 positionSerialNum
+    );
+&nbsp;
+    event JoinLiquidation(
+        address indexed perp,
+        address indexed liquidator,
+        address indexed liquidatedTrader,
+        int256 paperChange,
+        int256 creditChange,
+        uint256 positionSerialNum
+    );
+&nbsp;
+    event InsuranceChange(
+        address indexed perp,
+        address indexed liquidatedTrader,
+        int256 creditChange
+    );
+&nbsp;
+    // For reference only
+    // has accuracy problems, usually less than 10 wei
+    // return 0 if can not calculate liquidation price
+    function _getLiquidationPrice(
+        Types.State storage state,
+        address trader,
+        address perp
+    ) public view returns (uint256 liquidationPrice) {
+        (int256 paperAmount, ) = IPerpetual(perp).balanceOf(trader);
+        if (paperAmount == 0) {
+            return 0;
+        }
+&nbsp;
+        (int256 positionNetValue, uint256 exposure, ) = _getTotalExposure(
+            state,
+            trader
+        );
+&nbsp;
+        Types.RiskParams memory params = state.perpRiskParams[perp];
+        uint256 markPrice = IMarkPriceSource(params.markPriceSource)
+            .getMarkPrice();
+&nbsp;
+        // remove perp paper influence
+        exposure -= (paperAmount.abs() * markPrice) / 10**18;
+        int256 netValue = positionNetValue +
+            state.primaryCredit[trader] +
+            int256(state.secondaryCredit[trader]) -
+            paperAmount.decimalMul(int256(markPrice));
+        // console.logInt(positionNetValue);
+        // console.log(exposure);
+        // console.logInt(netValue);
+&nbsp;
+        /*
+            exposure * liquidationThreshold &lt;= netValue
+&nbsp;
+            if paperAmount &gt; 0
+            (exposure + paperAmount * price) * liqThreshold &lt;= netValue + paperAmount * price
+            exposure * liqThreshold - netValue &lt;= paperAmount * price * (1-liqThreshold)
+            price &gt;= (exposure * liqThreshold - netValue) / paperAmount / (1-liqThreshold)
+                &gt;&gt; if paperAmount=0, no liqPrice
+                &gt;&gt; if the right side is less than zero, the account is super safe, no liqPrice
+&nbsp;
+            if paperAmount &lt; 0
+            (exposure - paperAmount * price) * liqThreshold &lt;= netValue + paperAmount * price
+            exposure * liqThreshold - netValue &lt;= paperAmount * price * (1+liqThreshold)
+            price &lt;= (exposure * liqThreshold - netValue) / paperAmount / (1+liqThreshold)
+                &gt;&gt; if paperAmount=0, no liqPrice
+                &gt;&gt; if the right side is less than zero, the position must already be liquidated, no liqPrice
+&nbsp;
+            let temp1 = exposure * liqThreshold - netValue
+            let temp2 = 1-liqThreshold or 1+liqThreshold
+            then liqPrice = temp1/paperAmount/temp2
+        */
+        int256 temp1 = int256(
+            (exposure * params.liquidationThreshold) / 10**18
+        ) - netValue;
+        // console.logInt(temp1);
+        int256 temp2 = int256(
+            paperAmount &gt; 0
+                ? 10**18 - params.liquidationThreshold
+                : 10**18 + params.liquidationThreshold
+        );
+        // console.logInt(temp2);
+        if (temp2.decimalMul(paperAmount) == 0) {
+            return 0;
+        }
+        int256 liqPrice = temp1.decimalDiv(temp2.decimalMul(paperAmount));
+        if (liqPrice &lt; 0) {
+            return 0;
+        } else {
+            liquidationPrice = uint256(liqPrice);
+        }
+    }
+&nbsp;
+    function _getTotalExposure(Types.State storage state, address trader)
+        public
+        view
+        returns (
+            int256 netPositionValue,
+            uint256 exposure,
+            uint256 strictLiqThreshold
+        )
+    {
+        int256 netValueDelta;
+        uint256 exposureDelta;
+        uint256 threshold;
+        for (uint256 i = 0; i &lt; state.openPositions[trader].length; i++) {
+            (int256 paperAmount, int256 credit) = IPerpetual(
+                state.openPositions[trader][i]
+            ).balanceOf(trader);
+            Types.RiskParams memory params = state.perpRiskParams[
+                state.openPositions[trader][i]
+            ];
+            uint256 price = IMarkPriceSource(params.markPriceSource)
+                .getMarkPrice();
+            int256 signedExposure = paperAmount.decimalMul(int256(price));
+&nbsp;
+            netValueDelta = signedExposure + credit;
+            exposureDelta = signedExposure.abs();
+            threshold = params.liquidationThreshold;
+&nbsp;
+            netPositionValue += netValueDelta;
+            exposure += exposureDelta;
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (threshold &gt; strictLiqThreshold) {
+                strictLiqThreshold = threshold;
+            }
+        }
+    }
+&nbsp;
+    // not only safe, but also require
+    // netPositionValue + primaryCredit &gt;= 0
+    function _isSolidSafe(Types.State storage state, address trader)
+        public
+        view
+        returns (bool)
+    {
+        (
+            int256 netPositionValue,
+            uint256 exposure,
+            uint256 strictLiqThreshold
+        ) = _getTotalExposure(state, trader);
+        return
+            netPositionValue + state.primaryCredit[trader] &gt;= 0 &amp;&amp;
+            netPositionValue +
+                state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) &gt;=
+            int256((exposure * strictLiqThreshold) / 10**18);
+    }
+&nbsp;
+    // check overall safe
+    function _isSafe(Types.State storage state, address trader)
+        public
+        view
+        returns (bool)
+    {
+        (
+            int256 netPositionValue,
+            uint256 exposure,
+            uint256 strictLiqThreshold
+        ) = _getTotalExposure(state, trader);
+&nbsp;
+        return
+            netPositionValue +
+                state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) &gt;=
+            int256((exposure * strictLiqThreshold) / 10**18);
+    }
+&nbsp;
+    // check if a single position safe
+    function _isPositionSafe(
+        Types.State storage state,
+        address trader,
+        address perp
+    ) public view returns (bool) {
+        (int256 netPositionValue, uint256 exposure, ) = _getTotalExposure(
+            state,
+            trader
+        );
+        uint256 liqThreshold = state.perpRiskParams[perp].liquidationThreshold;
+        return
+            netPositionValue +
+                state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) &gt;=
+            int256((exposure * liqThreshold) / 10**18);
+    }
+&nbsp;
+    function _getLiquidateCreditAmount(
+        Types.State storage state,
+        address perp,
+        address liquidatedTrader,
+        int256 requestPaperAmount
+    )
+        external
+        view
+        returns (
+            int256 liqtorPaperChange,
+            int256 liqtorCreditChange,
+            uint256 insuranceFee
+        )
+    {
+        require(
+            !_isPositionSafe(state, liquidatedTrader, perp),
+            Errors.ACCOUNT_IS_SAFE
+        );
+&nbsp;
+        // calculate paper change
+        (int256 brokenPaperAmount, ) = IPerpetual(perp).balanceOf(
+            liquidatedTrader
+        );
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            requestPaperAmount * brokenPaperAmount &gt;= 0,
+            Errors.LIQUIDATION_REQUEST_AMOUNT_WRONG
+        );
+        liqtorPaperChange = requestPaperAmount.abs() &gt; brokenPaperAmount.abs()
+            ? brokenPaperAmount
+            : requestPaperAmount;
+&nbsp;
+        // get price
+        Types.RiskParams memory params = state.perpRiskParams[perp];
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
+        uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
+        uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
+        price = liqtorPaperChange &gt; 0
+            ? price - priceOffset
+            : price + priceOffset;
+&nbsp;
+        // calculate credit change
+        liqtorCreditChange = -1 * liqtorPaperChange.decimalMul(int256(price));
+        insuranceFee =
+            (liqtorCreditChange.abs() * params.insuranceFeeRate) /
+            10**18;
+    }
+&nbsp;
+    function _positionClear(Types.State storage state, address trader)
+        external
+    {
+        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
+&nbsp;
+        (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
+        IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
+        state.primaryCredit[trader] += creditAmount;
+        state.positionSerialNum[trader][msg.sender] += 1;
+&nbsp;
+        state.hasPosition[trader][msg.sender] = false;
+        address[] storage positionList = state.openPositions[trader];
+        for (uint256 i = 0; i &lt; positionList.length; i++) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (positionList[i] == msg.sender) {
+                positionList[i] = positionList[positionList.length - 1];
+                positionList.pop();
+                break;
+            }
+        }
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 14 2022 00:32:15 GMT+0800 (China Standard Time)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

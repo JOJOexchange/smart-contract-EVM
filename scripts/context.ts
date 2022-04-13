@@ -18,7 +18,8 @@ import { Contract, Wallet, Signer, utils } from "ethers";
 */
 
 export interface Context {
-  underlyingAsset: Contract;
+  primaryAsset: Contract;
+  secondaryAsset: Contract;
   dealer: Contract;
   perpList: Contract[];
   priceSourceList: Contract[];
@@ -67,9 +68,12 @@ export async function basicContext(): Promise<Context> {
   ).deploy();
 
   // deploy core contracts
-  let underlyingAsset: Contract = await (
+  let primaryAsset: Contract = await (
     await ethers.getContractFactory("TestERC20")
   ).deploy("USDT", "USDT");
+  let secondaryAsset: Contract = await (
+    await ethers.getContractFactory("TestERC20")
+  ).deploy("USDJ", "USDJ");
   let dealer = await (
     await ethers.getContractFactory("JOJODealer", {
       libraries: {
@@ -79,7 +83,8 @@ export async function basicContext(): Promise<Context> {
         Trading: TradingLib.address,
       },
     })
-  ).deploy(underlyingAsset.address);
+  ).deploy(primaryAsset.address);
+  await dealer.setSecondaryAsset(secondaryAsset.address)
   await dealer.setInsurance(insuranceAddress);
 
   let perpList: Contract[] = [];
@@ -134,15 +139,21 @@ export async function basicContext(): Promise<Context> {
 
   for (let index = 0; index < traders.length; index++) {
     let trader = traders[index];
-    // 1M for each trader
-    await underlyingAsset
+    // 1M primary token for each trader
+    await primaryAsset
       .connect(trader)
-      .approve(dealer.address, utils.parseEther("1000000"));
-    await underlyingAsset.mint([trader.address], [utils.parseEther("1000000")]);
+      .approve(dealer.address, utils.parseEther("10000000"));
+    await primaryAsset.mint([trader.address], [utils.parseEther("1000000")]);
+    // 1M secondary token for each trader
+    await secondaryAsset
+      .connect(trader)
+      .approve(dealer.address, utils.parseEther("10000000"));
+    await secondaryAsset.mint([trader.address], [utils.parseEther("1000000")]);
   }
 
   return {
-    underlyingAsset: underlyingAsset,
+    primaryAsset: primaryAsset,
+    secondaryAsset: secondaryAsset,
     dealer: dealer,
     perpList: perpList,
     priceSourceList: priceSourceList,
@@ -158,7 +169,7 @@ export async function fundTrader(context: Context) {
   for (let i = 0; i < 3; i++) {
     await context.dealer
       .connect(context.traderList[i])
-      .deposit(utils.parseEther("1000000"), context.traderList[i].address);
+      .deposit(utils.parseEther("1000000"), utils.parseEther("0"), context.traderList[i].address);
   }
 }
 

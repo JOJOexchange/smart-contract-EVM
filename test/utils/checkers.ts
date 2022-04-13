@@ -5,12 +5,12 @@ import { Context } from "../../scripts/context";
 export async function checkCredit(
   context: Context,
   trader: string,
-  trueCredit: string,
-  virtualCredit: string
+  primaryCredit: string,
+  secondaryCredit: string
 ) {
   const credit = await context.dealer.getCreditOf(trader);
-  expect(credit.trueCredit).to.equal(utils.parseEther(trueCredit));
-  expect(credit.virtualCredit).to.equal(utils.parseEther(virtualCredit));
+  expect(credit.primaryCredit).to.equal(utils.parseEther(primaryCredit));
+  expect(credit.secondaryCredit).to.equal(utils.parseEther(secondaryCredit));
 }
 
 export async function checkBalance(
@@ -24,11 +24,20 @@ export async function checkBalance(
     expect(balance[1]).to.equal(utils.parseEther(credit))
 }
 
-export async function checkUnderlyingAsset(
+export async function checkPrimaryAsset(
   context: Context,
   account: string,
   expectedBalance: string
 ) {
-  const balance = await context.underlyingAsset.balanceOf(account);
+  const balance = await context.primaryAsset.balanceOf(account);
+  expect(balance).to.equal(utils.parseEther(expectedBalance));
+}
+
+export async function checkSecondaryAsset(
+  context: Context,
+  account: string,
+  expectedBalance: string
+) {
+  const balance = await context.secondaryAsset.balanceOf(account);
   expect(balance).to.equal(utils.parseEther(expectedBalance));
 }

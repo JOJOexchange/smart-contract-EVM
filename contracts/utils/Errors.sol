@@ -5,6 +5,7 @@
 
 pragma solidity 0.8.9;
 
+/// @notice Error messages
 library Errors {
     string constant PERP_MISMATCH = "JOJO_PERP_MISMATCH";
     string constant PERP_NOT_REGISTERED = "JOJO_PERP_NOT_REGISTERED";

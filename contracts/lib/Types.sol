@@ -13,22 +13,30 @@ library Types {
         address primaryAsset;
         // secondary underlying asset, ERC20
         address secondaryAsset;
-        // withdraw control
+        // credit, gained by deposit asset
+        mapping(address => int256) primaryCredit;
+        mapping(address => uint256) secondaryCredit;
+        // withdraw request time lock
         uint256 withdrawTimeLock;
+        // pending primary asset withdrawal amount
         mapping(address => uint256) pendingPrimaryWithdraw;
+        // pending secondary asset withdrawal amount
         mapping(address => uint256) pendingSecondaryWithdraw;
+        // withdrawal request executable timestamp
         mapping(address => uint256) withdrawExecutionTimestamp;
-        // credit
-        mapping(address => int256) primaryCredit; // created by deposit funding, can be converted to funding
-        mapping(address => uint256) secondaryCredit; // for market maker, can not converted to any asset, only for trading
-        // perpetual contract register
+        // perpetual contract risk parameters
         mapping(address => Types.RiskParams) perpRiskParams;
+        // perpetual contract register
         address[] registeredPerp;
-        // account position register
-        mapping(address => address[]) openPositions; // all user's open positions, for liquidation check
-        mapping(address => mapping(address => bool)) hasPosition; // user => perp => hasPosition
-        mapping(address => mapping(address => uint256)) positionSerialNum; // user => perp => serial Num increase whenever last position cleared
-        // order state
+        // all open positions of a trader
+        mapping(address => address[]) openPositions;
+        // for quick search if a trader has open position
+        // trader => perpetual contract address => hasPosition
+        mapping(address => mapping(address => bool)) hasPosition;
+        // for offchain pnl calculate, serial number +1 whenever position cleared
+        // trader => perpetual contract address => current serial Num
+        mapping(address => mapping(address => uint256)) positionSerialNum;
+        // filled amount of order
         mapping(bytes32 => uint256) orderFilledPaperAmount;
         // insurance account
         address insurance;

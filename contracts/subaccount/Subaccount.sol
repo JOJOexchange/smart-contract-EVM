@@ -3,16 +3,16 @@
     SPDX-License-Identifier: Apache-2.0
 */
 import "../intf/IDealer.sol";
+import "../intf/ISubaccount.sol";
 
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 /// @notice Subaccount can help its owner manage risk and positions.
 /// You can open orders with isolated positions via Subaccount.
-/// You can also let others trade for you by setting them as authorized 
+/// You can also let others trade for you by setting them as authorized
 /// operators. Operatiors have no access to fund transfer.
-contract Subaccount {
-    
+contract Subaccount is ISubaccount {
     // ========== storage ==========
 
     /*
@@ -42,12 +42,19 @@ contract Subaccount {
         owner = _owner;
     }
 
-    function isValidPerpetualOperator(address o) external view returns (bool) {
-        return o == owner || validOperator[o];
+    /// @inheritdoc ISubaccount
+    function isValidPerpetualOperator(address operator)
+        external
+        view
+        returns (bool)
+    {
+        return operator == owner || validOperator[operator];
     }
 
-    function setOperator(address o, bool isValid) external onlyOwner {
-        validOperator[o] = isValid;
+    /// @param isValid authorize operator if value is true
+    /// unauthorize operator if value is false
+    function setOperator(address operator, bool isValid) external onlyOwner {
+        validOperator[operator] = isValid;
     }
 
     /*
@@ -60,13 +67,17 @@ contract Subaccount {
     /// you need to pass this address in.
     /// @param primaryAmount The amount of primary asset you want to withdraw
     /// @param secondaryAmount The amount of secondary asset you want to withdraw
-    function requestWithdraw(address dealer, uint256 primaryAmount, uint256 secondaryAmount) external onlyOwner {
+    function requestWithdraw(
+        address dealer,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    ) external onlyOwner {
         IDealer(dealer).requestWithdraw(primaryAmount, secondaryAmount);
     }
 
     /// @notice Always withdraw to owner, no matter who fund this subaccount
     /// @param dealer As the subaccount can be used with more than one dealer,
-    /// you need to pass this address in. 
+    /// you need to pass this address in.
     function executeWithdraw(address dealer) external onlyOwner {
         IDealer(dealer).executeWithdraw(owner);
     }

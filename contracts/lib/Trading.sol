@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../intf/IPerpetual.sol";
-import "../intf/ITradingProxy.sol";
+import "../intf/ISubaccount.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Liquidation.sol";
@@ -264,7 +264,7 @@ library Trading {
         );
         if (Address.isContract(order.signer)) {
             require(
-                ITradingProxy(order.signer).isValidPerpetualOperator(
+                ISubaccount(order.signer).isValidPerpetualOperator(
                     ECDSA.recover(orderHash, signature)
                 ),
                 Errors.INVALID_ORDER_SIGNATURE

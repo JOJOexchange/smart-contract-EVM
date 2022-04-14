@@ -6,7 +6,6 @@
 pragma solidity 0.8.9;
 
 interface IPerpetual {
-
     /// @notice This is the paper amount and credit amount of a certain trader
     /// @return paper value is positive when the trader holds a long position and
     /// negative when the trader holds a short position.
@@ -22,7 +21,7 @@ interface IPerpetual {
     function trade(bytes calldata tradeData) external;
 
     /// @notice Submit the paper amount you want to liquidate.
-    /// Because the liquidation is public, there is no guarantee that 
+    /// Because the liquidation is public, there is no guarantee that
     /// your request will be executed. Your request will not be executed or partially executed if:
     /// 1) someone else submitted a liquidation request before you, or
     /// 2) the trader deposited enough margin in time, or

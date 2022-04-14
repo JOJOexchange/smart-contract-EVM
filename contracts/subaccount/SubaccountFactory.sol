@@ -12,7 +12,7 @@ contract SubaccountFactory {
 
     // ========== storage ==========
 
-    // Subaccount template that will be cloned
+    // Subaccount template that can be cloned
     address immutable template;
 
     // Subaccount can only be added.
@@ -31,8 +31,8 @@ contract SubaccountFactory {
 
     // ========== functions ==========
 
-    /// @notice Using https://eips.ethereum.org/EIPS/eip-1167[EIP 1167] 
-    /// is a standard for deploying minimal proxy contracts, 
+    /// @notice https://eips.ethereum.org/EIPS/eip-1167[EIP 1167] 
+    /// is a standard protocol for deploying minimal proxy contracts, 
     /// also known as "clones".
     function newSubaccount() external returns (address subaccount) {
         subaccount = Clones.clone(template);

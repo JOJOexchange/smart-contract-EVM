@@ -8,23 +8,23 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 /// @notice Subaccount can help its owner manage risk and positions.
-/// You can achieve isolated positions via Subaccount.
-/// You can also let others trade for you by setting them as valid 
-/// operators. Operatiors has no access to the fund.
+/// You can open orders with isolated positions via Subaccount.
+/// You can also let others trade for you by setting them as authorized 
+/// operators. Operatiors have no access to fund transfer.
 contract Subaccount {
     
     // ========== storage ==========
 
     /*
        This is not a standard ownable contract because the ownership
-       can not be transferred. And the contract is designed to be
+       can not be transferred. This contract is designed to be
        initializable to better support clone, which is a low gas
        deployment solution.
     */
     address public owner;
     bool public initialized;
 
-    // Operator white list. The operator can delegate trading if true.
+    // Operator white list. The operator can delegate trading when the value is true.
     mapping(address => bool) validOperator;
 
     // ========== modifier ==========
@@ -51,9 +51,9 @@ contract Subaccount {
     }
 
     /*
-        Subaccount can only withdraw asset to its owner.
-        No deposit related function because the owner can
-        deposit to subaccount directly in Dealer. 
+        Subaccount can only withdraw asset to its owner account.
+        No deposit related function is supported in subaccount because the owner can
+        transfer fund to subaccount directly in the Dealer contract. 
     */
 
     /// @param dealer As the subaccount can be used with more than one dealer,

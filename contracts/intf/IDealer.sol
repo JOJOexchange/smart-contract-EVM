@@ -13,12 +13,12 @@ interface IDealer {
         external;
 
     /// @notice execute the withdrawal request.
-    /// @param Be careful if you pass in others' addresses,
+    /// @param to Be careful if you pass in others' addresses,
     /// because the fund will be transferred to this address directly.
     function executeWithdraw(address to) external;
 
     /// @notice help perpetual contract parse tradeData and return
-    /// the types of balance changes should be made to each trader.
+    /// the balance changes should be made to each trader.
     /// @dev only perpetual contract can call this function
     /// @param orderSender is the one who submit tradeData.
     /// @param tradeData data contain orders, signatures and match info.
@@ -33,7 +33,7 @@ interface IDealer {
     /// @notice check if the trader's cross margin ratio is safe.
     /// At lease one of the trader's open positions will be liquidated
     /// if return false, but we don't know which one.
-    /// Normally, this function is used internally. If you want to monitor
+    /// @dev Normally, this function is used internally. If you want to monitor
     /// a certain position, please use isPositionSafe.
     function isSafe(address trader) external view returns (bool);
 

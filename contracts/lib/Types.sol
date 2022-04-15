@@ -96,7 +96,7 @@ library Types {
         */
         uint256 liquidationThreshold;
         /*
-            This is the discount rate for the liquidation, which is a 1E18 based decimal.
+            This is the discount rate for the liquidation, which is a 1e18 based decimal.
             markPrice * (1 - liquidationPriceOff) when liquidate long position
             markPrice * (1 + liquidationPriceOff) when liquidate short position
             1E18 based decimal.

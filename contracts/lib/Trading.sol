@@ -174,7 +174,7 @@ library Trading {
         Types.Order memory makerOrder
     ) private pure {
         require(takerOrder.perp == makerOrder.perp, Errors.PERP_MISMATCH);
-        // require
+        // Requirements:
         // takercredit * abs(makerpaper) / abs(takerpaper) + makercredit <= 0
         // makercredit - takercredit * makerpaper / takerpaper <= 0
         // if takerPaper > 0
@@ -189,11 +189,11 @@ library Trading {
         int256 temp2 = int256(takerOrder.creditAmount) *
             int256(makerOrder.paperAmount);
         if (takerOrder.paperAmount > 0) {
-            // taker open long, tradePaperAmount > 0
+            // If the taker opens long, tradePaperAmount > 0
             require(makerOrder.paperAmount < 0, Errors.ORDER_PRICE_NOT_MATCH);
             require(temp1 <= temp2, Errors.ORDER_PRICE_NOT_MATCH);
         } else {
-            // taker open short, tradePaperAmount < 0
+            // If the taker opens short, tradePaperAmount < 0
             require(makerOrder.paperAmount > 0, Errors.ORDER_PRICE_NOT_MATCH);
             require(temp1 >= temp2, Errors.ORDER_PRICE_NOT_MATCH);
         }

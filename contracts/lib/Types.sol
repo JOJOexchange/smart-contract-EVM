@@ -16,7 +16,7 @@ library Types {
         // credit, gained by deposit asset
         mapping(address => int256) primaryCredit;
         mapping(address => uint256) secondaryCredit;
-        // withdraw request time lock
+        // withdrawal request time lock
         uint256 withdrawTimeLock;
         // pending primary asset withdrawal amount
         mapping(address => uint256) pendingPrimaryWithdraw;
@@ -30,10 +30,10 @@ library Types {
         address[] registeredPerp;
         // all open positions of a trader
         mapping(address => address[]) openPositions;
-        // for quick search if a trader has open position
+        // To quickly search if a trader has open position:
         // trader => perpetual contract address => hasPosition
         mapping(address => mapping(address => bool)) hasPosition;
-        // for offchain pnl calculate, serial number +1 whenever position cleared
+        // For offchain pnl calculation, serial number +1 whenever position cleared
         // trader => perpetual contract address => current serial Num
         mapping(address => mapping(address => uint256)) positionSerialNum;
         // filled amount of order
@@ -49,9 +49,9 @@ library Types {
         address perp;
         /*
             Signer is the identity of trading behavior,
-            who's balance will be changed.
+            whose balance will be changed.
             Normally it shoule be an EOA account and the 
-            order is valid only if signer signed it.
+            order is valid only if the signer signed it.
             If the signer is a contract, it must implement
             isValidPerpetualOperator(address) returns(bool).
             The order is valid only if one of the valid operators
@@ -60,7 +60,7 @@ library Types {
         address signer;
         /*
             Only the orderSender can match this order. If
-            orderSender is 0x0, then everyone can match this order
+            orderSender is 0x0, then everyone can match this order.
         */
         address orderSender;
         // positive(negative) if you want to open long(short) position
@@ -96,7 +96,7 @@ library Types {
         */
         uint256 liquidationThreshold;
         /*
-            discount rate in liquidation. 1E18 based decimal
+            This is the discount rate for the liquidation, which is a 1e18 based decimal.
             markPrice * (1 - liquidationPriceOff) when liquidate long position
             markPrice * (1 + liquidationPriceOff) when liquidate short position
             1E18 based decimal.

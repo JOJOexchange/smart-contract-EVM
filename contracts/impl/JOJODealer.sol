@@ -11,6 +11,10 @@ import "./JOJOExternal.sol";
 import "./JOJOOperation.sol";
 import "../lib/EIP712.sol";
 
+/// @notice Top entrance. For specific function implementation:
+/// view functions -> JOJOView
+/// external calls -> JOJOExternal
+/// only owner methods -> JOJOOperation
 contract JOJODealer is JOJOView, JOJOExternal, JOJOOperation {
     constructor(address _primaryAsset) Ownable() {
         state.primaryAsset = _primaryAsset;

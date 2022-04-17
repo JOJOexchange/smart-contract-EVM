@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../lib/EIP712.sol";
 import "../lib/Types.sol";
 
+/// @notice All storage variables of JOJODealer
 contract JOJOStorage is Ownable, ReentrancyGuard {
     Types.State public state;
 }

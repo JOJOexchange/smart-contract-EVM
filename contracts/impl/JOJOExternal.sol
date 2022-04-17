@@ -9,15 +9,21 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
 import "../utils/Errors.sol";
+import "../intf/IDealer.sol";
 import "../lib/Liquidation.sol";
 import "../lib/Funding.sol";
 import "../lib/Trading.sol";
 
-contract JOJOExternal is JOJOStorage {
+abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
 
     // ========== fund related ==========
 
+    /// @notice Deposit fund to get credit for trading
+    /// @param primaryAmount is the amount of primary asset you want to withdraw.
+    /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
+    /// @param to Be careful if you pass in others' addresses,
+    /// because the credit will be added to this address directly.
     function deposit(
         uint256 primaryAmount,
         uint256 secondaryAmount,
@@ -26,6 +32,7 @@ contract JOJOExternal is JOJOStorage {
         Funding._deposit(state, primaryAmount, secondaryAmount, to);
     }
 
+    /// @inheritdoc IDealer
     function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
         external
         nonReentrant
@@ -33,12 +40,14 @@ contract JOJOExternal is JOJOStorage {
         Funding._requestWithdraw(state, primaryAmount, secondaryAmount);
     }
 
+    /// @inheritdoc IDealer
     function executeWithdraw(address to) external nonReentrant {
         Funding._executeWithdraw(state, to);
     }
 
     // ========== registered perpetual only ==========
 
+    /// @inheritdoc IDealer
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (
@@ -59,6 +68,7 @@ contract JOJOExternal is JOJOStorage {
         );
     }
 
+    /// @inheritdoc IDealer
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,
@@ -112,6 +122,7 @@ contract JOJOExternal is JOJOStorage {
         );
     }
 
+    /// @inheritdoc IDealer
     function positionClear(address trader) external {
         Liquidation._positionClear(state, trader);
     }

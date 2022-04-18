@@ -12,7 +12,7 @@ import "../utils/Errors.sol";
 import "../lib/Types.sol";
 import "../lib/Liquidation.sol";
 
-// ONLY OWNER FUNCTIONS
+/// @notice Owner-only functions
 contract JOJOOperation is JOJOStorage {
     using SafeERC20 for IERC20;
 
@@ -37,6 +37,8 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== balance related ==========
 
+    /// @notice transfer all bad debt to insurance account, including
+    /// primary and secondary balance.
     function handleBadDebt(address liquidatedTrader) external onlyOwner {
         require(
             !Liquidation._isSafe(state, liquidatedTrader),
@@ -46,8 +48,12 @@ contract JOJOOperation is JOJOStorage {
             state.openPositions[liquidatedTrader].length == 0,
             Errors.TRADER_STILL_IN_LIQUIDATION
         );
-        state.primaryCredit[state.insurance] += state.primaryCredit[liquidatedTrader];
-        state.secondaryCredit[state.insurance] += state.secondaryCredit[liquidatedTrader];
+        state.primaryCredit[state.insurance] += state.primaryCredit[
+            liquidatedTrader
+        ];
+        state.secondaryCredit[state.insurance] += state.secondaryCredit[
+            liquidatedTrader
+        ];
         state.primaryCredit[liquidatedTrader] = 0;
         state.secondaryCredit[liquidatedTrader] = 0;
         emit HandleBadDebt(liquidatedTrader);
@@ -67,6 +73,9 @@ contract JOJOOperation is JOJOStorage {
         }
     }
 
+    /// @notice set risk parameters for a perpetual market.
+    /// @param param market will be ready to trade if param.isRegistered value is true.
+    /// market will not open if param.isRegistered value is false.
     function setPerpRiskParams(address perp, Types.RiskParams calldata param)
         external
         onlyOwner
@@ -111,8 +120,12 @@ contract JOJOOperation is JOJOStorage {
         emit SetWithdrawTimeLock(oldWithdrawTimeLock, newWithdrawTimeLock);
     }
 
+    /// @notice secondary asset can only be set once
     function setSecondaryAsset(address _secondaryAsset) external onlyOwner {
-        require(state.secondaryAsset==address(0), Errors.SECONDARY_ASSET_ALREASY_EXIST);
+        require(
+            state.secondaryAsset == address(0),
+            Errors.SECONDARY_ASSET_ALREASY_EXIST
+        );
         state.secondaryAsset = _secondaryAsset;
     }
 }

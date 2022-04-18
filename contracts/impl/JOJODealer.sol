@@ -10,7 +10,7 @@ import "./JOJOView.sol";
 import "./JOJOExternal.sol";
 import "./JOJOOperation.sol";
 import "../lib/EIP712.sol";
-s
+
 /// @notice Top entrance to contract. To implemnent specific functions:
 /// view functions -> JOJOView
 /// external calls -> JOJOExternal

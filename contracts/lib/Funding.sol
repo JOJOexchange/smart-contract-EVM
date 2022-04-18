@@ -17,6 +17,8 @@ import "./Types.sol";
 library Funding {
     using SafeERC20 for IERC20;
 
+    // ========== events ==========
+
     event Deposit(
         address indexed to,
         address indexed payer,
@@ -37,6 +39,8 @@ library Funding {
         uint256 secondaryAmount,
         uint256 executionTimestamp
     );
+
+    // ========== deposit ==========
 
     function _deposit(
         Types.State storage state,
@@ -62,6 +66,8 @@ library Funding {
         }
         emit Deposit(to, msg.sender, primaryAmount, secondaryAmount);
     }
+
+    // ========== withdraw ==========
 
     function _requestWithdraw(
         Types.State storage state,
@@ -94,6 +100,8 @@ library Funding {
         uint256 secondaryAmount = state.pendingSecondaryWithdraw[msg.sender];
         state.pendingPrimaryWithdraw[msg.sender] = 0;
         state.pendingSecondaryWithdraw[msg.sender] = 0;
+        // No need to change withdrawExecutionTimestamp, because we set pending
+        // withdraw amount to 0.
         _withdraw(state, msg.sender, to, primaryAmount, secondaryAmount);
     }
 
@@ -114,11 +122,13 @@ library Funding {
         }
 
         if(primaryAmount>0){
+            // if trader withdraw primary asset, we should check if solid safe
             require(
                 Liquidation._isSolidSafe(state, payer),
                 Errors.ACCOUNT_NOT_SAFE
             );
         } else {
+            // if trader didn't withdraw primary asset, normal safe check is enough
             require(
                 Liquidation._isSafe(state, payer),
                 Errors.ACCOUNT_NOT_SAFE

@@ -20,9 +20,13 @@ library Trading {
     using SignedDecimalMath for int256;
     using Math for uint256;
 
-    // if the order is long, orderFilledPaperAmount>0 and filledCreditAmount<0
-    // if sender charge fee from this order, fee>0
-    // if sender provide rebate to this order, fee<0
+    // ========== events ==========
+
+    /*
+        orderFilledPaperAmount>0 and filledCreditAmount<0 if the order open long,
+        and vice versa.
+        filledCreditAmount including fees.
+    */
     event OrderFilled(
         bytes32 indexed orderHash,
         address indexed trader,
@@ -32,8 +36,14 @@ library Trading {
         uint256 positionSerialNum
     );
 
+    // fee > 0 if trader pay relayer; fee < 0 if relayer pay trader as rebate.
     event RelayerFeeCollected(address indexed relayer, int256 fee);
 
+    // ========== matching[important] ==========
+
+    /// @notice parse tradeData and calculate balance changes for perpetual.sol
+    /// @dev can only be called by perpetual.sol. Every mathcing contains 1 taker
+    /// and at least 1 maker.
     function _approveTrade(
         Types.State storage state,
         address orderSender,
@@ -44,10 +54,12 @@ library Trading {
             state.perpRiskParams[result.perp].isRegistered,
             Errors.PERP_NOT_REGISTERED
         );
-        // first taker and following multiple makers
-        // orderList >= 2
-        // matchPaperAmount.length = orderList.length
-        // matchPaperAmount[0] = summary of the following
+
+        /*
+            parse tradeData
+            Pass in all orders and their signatures that need to be matched.
+            Also, pass in the amount you want to fill each order.
+        */
         (
             Types.Order[] memory orderList,
             bytes[] memory signatureList,
@@ -57,7 +69,7 @@ library Trading {
         // validate orders
         bytes32[] memory orderHashList = new bytes32[](orderList.length);
         for (uint256 i = 0; i < orderList.length; i++) {
-            orderHashList[i] = _validateOrder(
+            bytes32 orderHash = _validateOrder(
                 state.domainSeparator,
                 orderList[i],
                 signatureList[i]
@@ -68,54 +80,64 @@ library Trading {
                     orderList[i].orderSender == address(0),
                 Errors.INVALID_ORDER_SENDER
             );
-            state.orderFilledPaperAmount[orderHashList[i]] += matchPaperAmount[i];
+            state.orderFilledPaperAmount[orderHash] += matchPaperAmount[i];
             require(
-                state.orderFilledPaperAmount[orderHashList[i]] <=
+                state.orderFilledPaperAmount[orderHash] <=
                     int256(orderList[i].paperAmount).abs(),
                 Errors.ORDER_FILLED_OVERFLOW
             );
+            // register position for quick query
             _addPosition(state, result.perp, orderList[i].signer);
+            orderHashList[i] = orderHash;
         }
 
-        // de-duplicate trader to save gas
-        // traderList[0] is taker
-        // traderList[1] is maker
-        // traderList[2:] are other makers
+        /*
+            traderList[0] is taker
+            traderList[1:] are makers
+            If a maker has more than one order, you should align these orders
+            closely together. So that the function could merge orders to save
+            gas by reducing balances chagne operations.
+        */
         {
+            require(orderList.length >= 2, Errors.INVALID_TRADER_NUMBER);
+            // de-duplicated maker
             uint256 uniqueTraderNum = 2;
             uint256 totalMakerFilledPaper;
-
+            // start from the first maker
             for (uint256 i = 1; i < orderList.length; i++) {
                 if (i >= 2 && orderList[i].signer != orderList[i - 1].signer) {
                     uniqueTraderNum += 1;
                 }
                 totalMakerFilledPaper += matchPaperAmount[i];
             }
+            // taker match amount must equals summary of makers' match amount
             require(
                 matchPaperAmount[0] == totalMakerFilledPaper,
                 Errors.TAKER_TRADE_AMOUNT_WRONG
             );
-            require(uniqueTraderNum >= 2, Errors.INVALID_TRADER_NUMBER);
             result.traderList = new address[](uniqueTraderNum);
+            // traderList[0] is taker
             result.traderList[0] = orderList[0].signer;
         }
 
-        // validate maker order & merge paper amount
+        // merge maker orders
         result.paperChangeList = new int256[](result.traderList.length);
         result.creditChangeList = new int256[](result.traderList.length);
         {
+            // the taker's trader index is 0
+            // the first maker's trader index is 1
             uint256 currentTraderIndex = 1;
             result.traderList[1] = orderList[1].signer;
             for (uint256 i = 1; i < orderList.length; i++) {
                 _priceMatchCheck(orderList[0], orderList[i]);
 
-                // welcome new maker
+                // new maker, currentTraderIndex +1
                 if (i >= 2 && orderList[i].signer != orderList[i - 1].signer) {
                     currentTraderIndex += 1;
                     result.traderList[currentTraderIndex] = orderList[i].signer;
                 }
 
-                // matching result
+                // calculate matching result, use maker's price
                 int256 paperChange = orderList[i].paperAmount > 0
                     ? int256(matchPaperAmount[i])
                     : -1 * int256(matchPaperAmount[i]);
@@ -124,6 +146,7 @@ library Trading {
                 int256 fee = int256(creditChange.abs()).decimalMul(
                     _info2MakerFeeRate(orderList[i].info)
                 );
+                // serialNum is used for frontend level PNL calculation
                 uint256 serialNum = state.positionSerialNum[
                     orderList[i].signer
                 ][result.perp];
@@ -135,6 +158,7 @@ library Trading {
                     creditChange - fee,
                     serialNum
                 );
+                // store matching result, including fees
                 result.paperChangeList[currentTraderIndex] += paperChange;
                 result.creditChangeList[currentTraderIndex] += creditChange;
                 result.creditChangeList[currentTraderIndex] -= fee;
@@ -146,17 +170,23 @@ library Trading {
 
         // trading fee related
         {
+            // calculate takerFee based on taker's credit matching amount
             int256 takerFee = int256(result.creditChangeList[0].abs())
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
+
+            // charge fee
             state.primaryCredit[orderSender] += result.orderSenderFee;
+
+            // if orderSender pay traders, check if orderSender is safe
             if (result.orderSenderFee < 0) {
                 require(
-                    Liquidation._isSafe(state, orderSender),
+                    Liquidation._isSolidSafe(state, orderSender),
                     Errors.ORDER_SENDER_NOT_SAFE
                 );
             }
+
             emit RelayerFeeCollected(orderSender, result.orderSenderFee);
             emit OrderFilled(
                 orderHashList[0],
@@ -166,36 +196,6 @@ library Trading {
                 result.creditChangeList[0],
                 state.positionSerialNum[orderList[0].signer][result.perp]
             );
-        }
-    }
-
-    function _priceMatchCheck(
-        Types.Order memory takerOrder,
-        Types.Order memory makerOrder
-    ) private pure {
-        require(takerOrder.perp == makerOrder.perp, Errors.PERP_MISMATCH);
-        // Requirements:
-        // takercredit * abs(makerpaper) / abs(takerpaper) + makercredit <= 0
-        // makercredit - takercredit * makerpaper / takerpaper <= 0
-        // if takerPaper > 0
-        // makercredit * takerpaper <= takercredit * makerpaper
-        // if takerPaper < 0
-        // makercredit * takerpaper >= takercredit * makerpaper
-
-        // let temp1 = makercredit * takerpaper
-        // let temp2 = takercredit * makerpaper
-        int256 temp1 = int256(makerOrder.creditAmount) *
-            int256(takerOrder.paperAmount);
-        int256 temp2 = int256(takerOrder.creditAmount) *
-            int256(makerOrder.paperAmount);
-        if (takerOrder.paperAmount > 0) {
-            // If the taker opens long, tradePaperAmount > 0
-            require(makerOrder.paperAmount < 0, Errors.ORDER_PRICE_NOT_MATCH);
-            require(temp1 <= temp2, Errors.ORDER_PRICE_NOT_MATCH);
-        } else {
-            // If the taker opens short, tradePaperAmount < 0
-            require(makerOrder.paperAmount > 0, Errors.ORDER_PRICE_NOT_MATCH);
-            require(temp1 >= temp2, Errors.ORDER_PRICE_NOT_MATCH);
         }
     }
 
@@ -210,24 +210,65 @@ library Trading {
         }
     }
 
+    // ========== order check ==========
+
+    function _priceMatchCheck(
+        Types.Order memory takerOrder,
+        Types.Order memory makerOrder
+    ) private pure {
+        /*
+            Requirements:
+            takercredit * abs(makerpaper) / abs(takerpaper) + makercredit <= 0
+            makercredit - takercredit * makerpaper / takerpaper <= 0
+            if takerPaper > 0
+            makercredit * takerpaper <= takercredit * makerpaper
+            if takerPaper < 0
+            makercredit * takerpaper >= takercredit * makerpaper
+        */
+
+        // let temp1 = makercredit * takerpaper
+        // let temp2 = takercredit * makerpaper
+        int256 temp1 = int256(makerOrder.creditAmount) *
+            int256(takerOrder.paperAmount);
+        int256 temp2 = int256(takerOrder.creditAmount) *
+            int256(makerOrder.paperAmount);
+
+        if (takerOrder.paperAmount > 0) {
+            // maker order should be in the opposite direction of taker order
+            require(makerOrder.paperAmount < 0, Errors.ORDER_PRICE_NOT_MATCH);
+            require(temp1 <= temp2, Errors.ORDER_PRICE_NOT_MATCH);
+        } else {
+            // maker order should be in the opposite direction of taker order
+            require(makerOrder.paperAmount > 0, Errors.ORDER_PRICE_NOT_MATCH);
+            require(temp1 >= temp2, Errors.ORDER_PRICE_NOT_MATCH);
+        }
+    }
+
     function _structHash(Types.Order memory order)
         public
         pure
         returns (bytes32 structHash)
     {
         /*
-         *keccak256(
-         *    abi.encode(
-         *        Types.ORDER_TYPEHASH,
-         *        order.perp,
-         *        order.signer,
-         *        order.orderSender,
-         *        order.paperAmount,
-         *        order.creditAmount,
-         *        order.info
-         *    )
-         *)
-         */
+            To save gas, we use assembly to implement the function:
+
+            keccak256(
+                abi.encode(
+                    Types.ORDER_TYPEHASH,
+                    order.perp,
+                    order.signer,
+                    order.orderSender,
+                    order.paperAmount,
+                    order.creditAmount,
+                    order.info
+                )
+            )
+
+            Method:
+            Insert ORDER_TYPEHASH before order's memory head to construct the
+            required memory structure. Get the hash of this structure and then
+            restore it as is.
+        */
 
         bytes32 orderTypeHash = Types.ORDER_TYPEHASH;
         assembly {
@@ -262,6 +303,7 @@ library Trading {
             domainSeparator,
             _structHash(order)
         );
+        // contract as trader
         if (Address.isContract(order.signer)) {
             require(
                 ISubaccount(order.signer).isValidPerpetualOperator(
@@ -285,6 +327,8 @@ library Trading {
             Errors.ORDER_PRICE_NEGATIVE
         );
     }
+
+    // ========== data convert ==========
 
     function _info2MakerFeeRate(bytes32 info) private pure returns (int256) {
         bytes8 value = bytes8(info >> 192);

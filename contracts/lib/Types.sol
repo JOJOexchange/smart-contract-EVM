@@ -48,7 +48,7 @@ library Types {
         // address of perpetual market, not the dealer
         address perp;
         /*
-            Signer is the identity of trading behavior,
+            Signer is trader, the identity of trading behavior,
             whose balance will be changed.
             Normally it shoule be an EOA account and the 
             order is valid only if the signer signed it.

@@ -18,7 +18,11 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== events ==========
 
-    event HandleBadDebt(address indexed liquidatedTrader);
+    event HandleBadDebt(
+        address indexed liquidatedTrader,
+        int256 primaryCredit,
+        uint256 secondaryCredit
+    );
 
     event UpdateFundingRate(
         address indexed perp,
@@ -48,15 +52,13 @@ contract JOJOOperation is JOJOStorage {
             state.openPositions[liquidatedTrader].length == 0,
             Errors.TRADER_STILL_IN_LIQUIDATION
         );
-        state.primaryCredit[state.insurance] += state.primaryCredit[
-            liquidatedTrader
-        ];
-        state.secondaryCredit[state.insurance] += state.secondaryCredit[
-            liquidatedTrader
-        ];
+        int256 primaryCredit = state.primaryCredit[liquidatedTrader];
+        uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];
+        state.primaryCredit[state.insurance] += primaryCredit;
+        state.secondaryCredit[state.insurance] += secondaryCredit;
         state.primaryCredit[liquidatedTrader] = 0;
         state.secondaryCredit[liquidatedTrader] = 0;
-        emit HandleBadDebt(liquidatedTrader);
+        emit HandleBadDebt(liquidatedTrader, primaryCredit, secondaryCredit);
     }
 
     // ========== params updates ==========

@@ -124,6 +124,6 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
 
     /// @inheritdoc IDealer
     function positionClear(address trader) external {
-        Liquidation._positionClear(state, trader);
+        Trading._positionClear(state, trader);
     }
 }

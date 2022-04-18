@@ -199,6 +199,8 @@ library Trading {
         }
     }
 
+    // ========== position register ==========
+
     function _addPosition(
         Types.State storage state,
         address perp,
@@ -207,6 +209,28 @@ library Trading {
         if (!state.hasPosition[trader][perp]) {
             state.hasPosition[trader][perp] = true;
             state.openPositions[trader].push(perp);
+        }
+    }
+
+    function _positionClear(Types.State storage state, address trader)
+        external
+    {
+        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
+        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
+
+        (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
+        IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
+        state.primaryCredit[trader] += creditAmount;
+        state.positionSerialNum[trader][msg.sender] += 1;
+
+        state.hasPosition[trader][msg.sender] = false;
+        address[] storage positionList = state.openPositions[trader];
+        for (uint256 i = 0; i < positionList.length; i++) {
+            if (positionList[i] == msg.sender) {
+                positionList[i] = positionList[positionList.length - 1];
+                positionList.pop();
+                break;
+            }
         }
     }
 

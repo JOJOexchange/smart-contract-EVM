@@ -127,7 +127,6 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         view
         returns (uint256 liquidationPrice)
     {
-        // return 0 if the trader can not be liquidated
         return Liquidation._getLiquidationPrice(state, trader, perp);
     }
 

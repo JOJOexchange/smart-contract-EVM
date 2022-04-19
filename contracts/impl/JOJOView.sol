@@ -58,7 +58,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     /// @notice Return the credit details of a certain trader.
     /// You cannot use credit as net value or net margin of a trader.
-    /// The net value of positions would also be included.
+    /// The net value of positions would also be considered.
     function getCreditOf(address trader)
         external
         view

@@ -269,7 +269,7 @@ library Trading {
     }
 
     function _structHash(Types.Order memory order)
-        public
+        private
         pure
         returns (bytes32 structHash)
     {
@@ -322,7 +322,7 @@ library Trading {
         bytes32 domainSeparator,
         Types.Order memory order,
         bytes memory signature
-    ) public returns (bytes32 orderHash) {
+    ) private returns (bytes32 orderHash) {
         orderHash = EIP712._hashTypedDataV4(
             domainSeparator,
             _structHash(order)

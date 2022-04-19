@@ -14,7 +14,7 @@ library EIP712 {
         string memory name,
         string memory version,
         address verifyingContract
-    ) public view returns (bytes32) {
+    ) internal view returns (bytes32) {
         bytes32 hashedName = keccak256(bytes(name));
         bytes32 hashedVersion = keccak256(bytes(version));
         bytes32 typeHash = keccak256(
@@ -33,7 +33,7 @@ library EIP712 {
     }
 
     function _hashTypedDataV4(bytes32 domainSeparator, bytes32 structHash)
-        public
+        internal
         pure
         returns (bytes32)
     {

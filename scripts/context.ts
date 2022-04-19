@@ -28,6 +28,9 @@ export interface Context {
   insurance: Signer;
   insuranceAddress: string;
   traderList: Wallet[];
+  LiquidationLib:Contract;
+  FundingLib:Contract;
+  TradingLib:Contract;
 }
 
 export async function basicContext(): Promise<Context> {
@@ -49,7 +52,6 @@ export async function basicContext(): Promise<Context> {
   }
 
   // Deploy libraries
-  const EIP712Lib = await (await ethers.getContractFactory("EIP712")).deploy();
   const LiquidationLib = await (
     await ethers.getContractFactory("Liquidation")
   ).deploy();
@@ -61,7 +63,6 @@ export async function basicContext(): Promise<Context> {
   const TradingLib = await (
     await ethers.getContractFactory("Trading", {
       libraries: {
-        EIP712: EIP712Lib.address,
         Liquidation: LiquidationLib.address,
       },
     })
@@ -77,7 +78,6 @@ export async function basicContext(): Promise<Context> {
   let dealer = await (
     await ethers.getContractFactory("JOJODealer", {
       libraries: {
-        EIP712: EIP712Lib.address,
         Funding: FundingLib.address,
         Liquidation: LiquidationLib.address,
         Trading: TradingLib.address,
@@ -162,6 +162,9 @@ export async function basicContext(): Promise<Context> {
     insurance: insurance,
     insuranceAddress: insuranceAddress,
     traderList: traders,
+    LiquidationLib:LiquidationLib,
+    FundingLib:FundingLib,
+    TradingLib:TradingLib
   };
 }
 

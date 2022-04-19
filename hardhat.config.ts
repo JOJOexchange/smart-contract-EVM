@@ -3,6 +3,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "solidity-coverage";
 import "hardhat-gas-reporter"
+import "@tenderly/hardhat-tenderly"
 // import '@typechain/hardhat'
 // import '@nomiclabs/hardhat-ethers'
 // import '@nomiclabs/hardhat-waffle'
@@ -23,13 +24,17 @@ export default {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 10000,
+        runs: 100000,
       },
     },
   },
   networks:{
     hardhat:{
+      chainId:31337,
       gas:20000000,
+    },
+    localhost:{
+      chainId:31337,
     }
   },
   gasReporter: {

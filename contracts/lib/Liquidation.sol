@@ -83,7 +83,7 @@ library Liquidation {
 
     // check overall safety
     function _isSafe(Types.State storage state, address trader)
-        public
+        internal
         view
         returns (bool)
     {

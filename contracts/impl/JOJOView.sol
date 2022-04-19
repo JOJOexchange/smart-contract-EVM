@@ -42,12 +42,12 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.perpRiskParams[perp].fundingRate;
     }
 
-    /// @notice Return all registered perpetual contract market
+    /// @notice Return all registered perpetual contract market.
     function getRegisteredPerp() external view returns (address[] memory) {
         return state.registeredPerp;
     }
 
-    /// @notice Get all open positions of a certain trader
+    /// @notice Get all open positions of a certain trader.
     function getPositions(address trader)
         external
         view
@@ -56,9 +56,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.openPositions[trader];
     }
 
-    /// @notice Return a detailed credit info of a certain trader.
-    /// You can not use credit as net value or net margin of a trader.
-    /// The net value of positions should also be counted in.
+    /// @notice Return the credit details of a certain trader.
+    /// You cannot use credit as net value or net margin of a trader.
+    /// The net value of positions would also be included.
     function getCreditOf(address trader)
         external
         view
@@ -97,9 +97,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation._isPositionSafe(state, trader, perp);
     }
 
-    /// @notice get risk related data of trader
-    /// @return netValue net value of trader, count in credit
-    /// @return exposure open position value of trader among all markets
+    /// @notice Get the risk profile data of a trader.
+    /// @return netValue net value of trader including credit amount
+    /// @return exposure open position value of the trader across all markets
     function getTraderRisk(address trader)
         external
         view
@@ -118,9 +118,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     // ========== liquidation related ==========
 
-    /// @notice get liquidation price of a position
-    /// @dev this function should only be used as a reference. It has accuracy
-    /// problems, usually less than 10 wei. 
+    /// @notice Get liquidation price of a position.
+    /// @dev This function should only be used directionally because its accuracy is
+    /// usually less than 10 wei. 
     /// @return liquidationPrice equals 0 if there is no liquidation price.
     function getLiquidationPrice(address trader, address perp)
         external
@@ -130,8 +130,8 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation._getLiquidationPrice(state, trader, perp);
     }
 
-    /// @notice a view version of requestLiquidate, liquidators can use 
-    /// this function to check how much you have to pay in advance.
+    /// @notice A view version of requestLiquidate. Liquidators can use 
+    /// this function to check how much they have to pay in advance.
     function getLiquidationCost(
         address perp,
         address liquidatedTrader,
@@ -152,9 +152,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     // ========== order related ==========
 
-    /// @notice calculate order hash
-    /// @dev use this function to check if your script 
-    /// returns correct order hash
+    /// @notice Calculate order hash.
+    /// @dev Use this function to check if your script 
+    /// returns the correct order hash.
     function getOrderHash(Types.Order memory order)
         external
         view
@@ -163,8 +163,8 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         orderHash = Trading._getOrderHash(state.domainSeparator, order);
     }
 
-    /// @notice get filled paper amount of an order. Avoid duplicate matching.
-    /// @return filledAmount count in paper amount
+    /// @notice Get filled paper amount of an order to avoid double matching.
+    /// @return filledAmount includes paper amount
     function getOrderFilledAmount(bytes32 orderHash)
         external
         view

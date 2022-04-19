@@ -41,7 +41,7 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== balance related ==========
 
-    /// @notice transfer all bad debt to insurance account, including
+    /// @notice Transfer all bad debt to insurance account, including
     /// primary and secondary balance.
     function handleBadDebt(address liquidatedTrader) external onlyOwner {
         require(
@@ -75,9 +75,9 @@ contract JOJOOperation is JOJOStorage {
         }
     }
 
-    /// @notice set risk parameters for a perpetual market.
+    /// @notice Set risk parameters for a perpetual market.
     /// @param param market will be ready to trade if param.isRegistered value is true.
-    /// market will not open if param.isRegistered value is false.
+    /// This market will not be opened if param.isRegistered value is false.
     function setPerpRiskParams(address perp, Types.RiskParams calldata param)
         external
         onlyOwner
@@ -122,7 +122,7 @@ contract JOJOOperation is JOJOStorage {
         emit SetWithdrawTimeLock(oldWithdrawTimeLock, newWithdrawTimeLock);
     }
 
-    /// @notice secondary asset can only be set once
+    /// @notice Secondary asset can only be set once.
     function setSecondaryAsset(address _secondaryAsset) external onlyOwner {
         require(
             state.secondaryAsset == address(0),

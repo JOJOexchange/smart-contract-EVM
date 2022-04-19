@@ -226,4 +226,9 @@ describe("view-functions", async () => {
     positions = await context.dealer.getPositions(trader1.address);
     expect(positions.length).to.be.equal(0);
   });
+
+  it("get version", async () => {
+    let version = await context.dealer.version();
+    expect(version).to.be.equal("JOJODealer V1.0");
+  });
 });

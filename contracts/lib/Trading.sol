@@ -12,7 +12,6 @@ import "../intf/IPerpetual.sol";
 import "../intf/ISubaccount.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
-import "./Liquidation.sol";
 import "./EIP712.sol";
 import "./Types.sol";
 
@@ -36,9 +35,6 @@ library Trading {
         uint256 positionSerialNum
     );
 
-    // fee > 0 if trader pay relayer; fee < 0 if relayer pay trader as rebate.
-    event RelayerFeeCollected(address indexed relayer, int256 fee);
-
     // ========== matching[important] ==========
 
     /// @notice parse tradeData and calculate balance changes for perpetual.sol
@@ -48,7 +44,7 @@ library Trading {
         Types.State storage state,
         address orderSender,
         bytes calldata tradeData
-    ) public returns (Types.MatchResult memory result) {
+    ) internal returns (Types.MatchResult memory result) {
         result.perp = msg.sender;
         require(
             state.perpRiskParams[result.perp].isRegistered,
@@ -175,19 +171,6 @@ library Trading {
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
-
-            // charge fee
-            state.primaryCredit[orderSender] += result.orderSenderFee;
-
-            // if orderSender pay traders, check if orderSender is safe
-            if (result.orderSenderFee < 0) {
-                require(
-                    Liquidation._isSolidSafe(state, orderSender),
-                    Errors.ORDER_SENDER_NOT_SAFE
-                );
-            }
-
-            emit RelayerFeeCollected(orderSender, result.orderSenderFee);
             emit OrderFilled(
                 orderHashList[0],
                 orderList[0].signer,

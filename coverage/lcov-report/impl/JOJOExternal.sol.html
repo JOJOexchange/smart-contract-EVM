@@ -22,12 +22,12 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>17/17</span>
+        <span class='fraction'>20/20</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>0/0</span>
+        <span class='fraction'>4/4</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -37,7 +37,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>17/17</span>
+        <span class='fraction'>20/20</span>
       </div>
     </div>
   </div>
@@ -161,7 +161,29 @@
 116
 117
 118
-119</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -186,7 +208,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">103×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">105×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -197,7 +226,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -215,7 +246,19 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">54×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">56×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">56×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">55×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -269,6 +312,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -290,15 +334,21 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
 import "../utils/Errors.sol";
+import "../intf/IDealer.sol";
 import "../lib/Liquidation.sol";
 import "../lib/Funding.sol";
 import "../lib/Trading.sol";
 &nbsp;
-contract JOJOExternal is JOJOStorage {
+abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
 &nbsp;
     // ========== fund related ==========
 &nbsp;
+    /// @notice Deposit fund to get credit for trading
+    /// @param primaryAmount is the amount of primary asset you want to withdraw.
+    /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
+    /// @param to Please be careful. If you pass in others' addresses,
+    /// the credit will be added to that address directly.
     function deposit(
         uint256 primaryAmount,
         uint256 secondaryAmount,
@@ -307,6 +357,7 @@ contract JOJOExternal is JOJOStorage {
         Funding._deposit(state, primaryAmount, secondaryAmount, to);
     }
 &nbsp;
+    /// @inheritdoc IDealer
     function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
         external
         nonReentrant
@@ -314,12 +365,14 @@ contract JOJOExternal is JOJOStorage {
         Funding._requestWithdraw(state, primaryAmount, secondaryAmount);
     }
 &nbsp;
+    /// @inheritdoc IDealer
     function executeWithdraw(address to) external nonReentrant {
         Funding._executeWithdraw(state, to);
     }
 &nbsp;
     // ========== registered perpetual only ==========
 &nbsp;
+    /// @inheritdoc IDealer
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (
@@ -333,6 +386,17 @@ contract JOJOExternal is JOJOStorage {
             orderSender,
             tradeData
         );
+&nbsp;
+        // charge fee
+        state.primaryCredit[orderSender] += result.orderSenderFee;
+        // if orderSender pay traders, check if orderSender is safe
+        if (result.orderSenderFee &lt; 0) {
+            require(
+                Liquidation._isSolidSafe(state, orderSender),
+                Errors.ORDER_SENDER_NOT_SAFE
+            );
+        }
+&nbsp;
         return (
             result.traderList,
             result.paperChangeList,
@@ -340,6 +404,7 @@ contract JOJOExternal is JOJOStorage {
         );
     }
 &nbsp;
+    /// @inheritdoc IDealer
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,
@@ -393,8 +458,9 @@ contract JOJOExternal is JOJOStorage {
         );
     }
 &nbsp;
+    /// @inheritdoc IDealer
     function positionClear(address trader) external {
-        Liquidation._positionClear(state, trader);
+        Trading._positionClear(state, trader);
     }
 }
 &nbsp;</pre></td></tr>
@@ -403,7 +469,7 @@ contract JOJOExternal is JOJOStorage {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 14 2022 00:32:15 GMT+0800 (China Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 21 2022 00:43:53 GMT+0800 (China Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

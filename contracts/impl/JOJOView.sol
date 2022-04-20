@@ -47,6 +47,12 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.registeredPerp;
     }
 
+    /// @notice Return mark price of a perpetual market.
+    /// price is a 1e18 based decimal.
+    function getMarkPrice(address perp) external view returns (uint256){
+        return Liquidation._getMarkPrice(state, perp);
+    }
+
     /// @notice Get all open positions of a certain trader
     function getPositions(address trader)
         external

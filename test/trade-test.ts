@@ -53,21 +53,27 @@ describe("Trade", () => {
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
     trader3 = context.traderList[2];
-    await context.dealer.connect(trader1).deposit(
-      utils.parseEther("0"),
-      utils.parseEther("1000000"),
-      trader1.address
-    );
-    await context.dealer.connect(trader2).deposit(
-      utils.parseEther("0"),
-      utils.parseEther("1000000"),
-      trader2.address
-    );
-    await context.dealer.connect(trader3).deposit(
-      utils.parseEther("0"),
-      utils.parseEther("1000000"),
-      trader3.address
-    );
+    await context.dealer
+      .connect(trader1)
+      .deposit(
+        utils.parseEther("0"),
+        utils.parseEther("1000000"),
+        trader1.address
+      );
+    await context.dealer
+      .connect(trader2)
+      .deposit(
+        utils.parseEther("0"),
+        utils.parseEther("1000000"),
+        trader2.address
+      );
+    await context.dealer
+      .connect(trader3)
+      .deposit(
+        utils.parseEther("0"),
+        utils.parseEther("1000000"),
+        trader3.address
+      );
     orderEnv = await getDefaultOrderEnv(context.dealer);
     baseOrder = await buildOrder(
       orderEnv,
@@ -174,9 +180,9 @@ describe("Trade", () => {
           utils.parseEther("2"),
           utils.parseEther("-100016")
         );
-      
-      const o1Filled = await context.dealer.getOrderFilledAmount(o1.hash)
-      expect(o1Filled).to.be.equal(utils.parseEther("2"))
+
+      const o1Filled = await context.dealer.getOrderFilledAmount(o1.hash);
+      expect(o1Filled).to.be.equal(utils.parseEther("2"));
 
       await checkBalance(context.perpList[0], trader1.address, "-2", "99950");
       await checkBalance(context.perpList[0], trader2.address, "2", "-100016");
@@ -313,13 +319,13 @@ describe("Trade", () => {
         [baseOrder.signature, o3.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
-      expect(context.perpList[0].trade(data1)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data1)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NEGATIVE"
       );
-      expect(context.perpList[0].trade(data2)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data2)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NEGATIVE"
       );
-      expect(context.perpList[0].trade(data3)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data3)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NEGATIVE"
       );
 
@@ -336,7 +342,7 @@ describe("Trade", () => {
         [o4.signature, baseOrder.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
-      expect(context.perpList[0].trade(data4)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data4)).to.be.revertedWith(
         "JOJO_INVALID_ORDER_SIGNATURE"
       );
 
@@ -346,12 +352,12 @@ describe("Trade", () => {
         [baseOrder.signature, o4.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
-      expect(
+      await expect(
         context.perpList[0].connect(trader1).trade(data5)
       ).to.be.revertedWith("JOJO_INVALID_ORDER_SENDER");
 
       // 4. perp wrong
-      expect(context.perpList[1].trade(data5)).to.be.revertedWith(
+      await expect(context.perpList[1].trade(data5)).to.be.revertedWith(
         "JOJO_PERP_MISMATCH"
       );
 
@@ -361,7 +367,7 @@ describe("Trade", () => {
         [baseOrder.signature, o4.signature],
         [utils.parseEther("1").toString(), utils.parseEther("0.1").toString()]
       );
-      expect(context.perpList[0].trade(data6)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data6)).to.be.revertedWith(
         "JOJO_TAKER_TRADE_AMOUNT_WRONG"
       );
 
@@ -378,7 +384,7 @@ describe("Trade", () => {
         [baseOrder.signature, o7.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
-      expect(context.perpList[0].trade(data7)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data7)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NOT_MATCH"
       );
 
@@ -387,7 +393,7 @@ describe("Trade", () => {
         [o7.signature, baseOrder.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
-      expect(context.perpList[0].trade(data8)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data8)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NOT_MATCH"
       );
 
@@ -397,7 +403,7 @@ describe("Trade", () => {
         [baseOrder.signature, o4.signature],
         [utils.parseEther("10").toString(), utils.parseEther("1").toString()]
       );
-      expect(context.perpList[0].trade(data9)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data9)).to.be.revertedWith(
         "JOJO_ORDER_FILLED_OVERFLOW"
       );
 
@@ -405,34 +411,56 @@ describe("Trade", () => {
       let o8 = await buildOrder(
         orderEnv,
         context.perpList[0].address,
-        utils.parseEther("-1").toString(),
-        utils.parseEther("30000").toString(),
-        context.traderList[2]
+        utils.parseEther("-100").toString(),
+        utils.parseEther("1000000").toString(),
+        trader3
       );
-      await context.secondaryAsset.mint([trader3.address], [utils.parseEther("10")]);
-      await context.dealer.connect(trader3).deposit(
-        utils.parseEther("0"),
-        utils.parseEther("10"),
-        trader3.address
+      let o9 = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("100").toString(),
+        utils.parseEther("-3000000").toString(),
+        trader1
       );
       let data10 = encodeTradeData(
-        [baseOrder.order, o8.order],
-        [baseOrder.signature, o8.signature],
-        [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
+        [o9.order, o8.order],
+        [o9.signature, o8.signature],
+        [utils.parseEther("100").toString(), utils.parseEther("100").toString()]
       );
-      expect(context.perpList[0].trade(data10)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data10)).to.be.revertedWith(
         "TRADER_NOT_SAFE"
       );
 
       // 9. order expired
       await timeJump(1000);
-      expect(context.perpList[0].trade(data5)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data5)).to.be.revertedWith(
         "JOJO_ORDER_EXPIRED"
       );
     });
 
     // order sender not safe
     it("order sender not safe", async () => {
+      await context.primaryAsset.mint(
+        [orderEnv.orderSender],
+        [utils.parseEther("1000000")]
+      );
+      await context.secondaryAsset.mint(
+        [orderEnv.orderSender],
+        [utils.parseEther("1000000")]
+      );
+      await context.primaryAsset.approve(
+        orderEnv.dealerAddress,
+        utils.parseEther("1000000")
+      );
+      await context.secondaryAsset.approve(
+        orderEnv.dealerAddress,
+        utils.parseEther("1000000")
+      );
+      await context.dealer.deposit(
+        utils.parseEther("0"),
+        utils.parseEther("500000"),
+        orderEnv.orderSender
+      );
       orderEnv.makerFeeRate = utils.parseEther("-0.5").toString();
       orderEnv.takerFeeRate = utils.parseEther("-0.5").toString();
       let makerO = await buildOrder(
@@ -454,9 +482,16 @@ describe("Trade", () => {
         [makerO.signature, takerO.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
-      expect(context.perpList[0].trade(data)).to.be.revertedWith(
+      await expect(context.perpList[0].trade(data)).to.be.revertedWith(
         "JOJO_ORDER_SENDER_NOT_SAFE"
       );
+      await context.dealer.deposit(
+        utils.parseEther("500000"),
+        utils.parseEther("0"),
+        orderEnv.orderSender
+      );
+      await context.perpList[0].trade(data);
+      await checkCredit(context, orderEnv.orderSender, "470000", "500000");
     });
   });
 });

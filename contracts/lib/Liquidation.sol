@@ -107,7 +107,7 @@ library Liquidation {
         used when traders transfer out primary credit.
     */
     function _isSolidSafe(Types.State storage state, address trader)
-        public
+        internal
         view
         returns (bool)
     {
@@ -278,5 +278,14 @@ library Liquidation {
         insuranceFee =
             (liqtorCreditChange.abs() * params.insuranceFeeRate) /
             10**18;
+    }
+
+    function _getMarkPrice(Types.State storage state, address perp)
+        external
+        view
+        returns (uint256 price)
+    {
+        price = IMarkPriceSource(state.perpRiskParams[perp].markPriceSource)
+            .getMarkPrice();
     }
 }

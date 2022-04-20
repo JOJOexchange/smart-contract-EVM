@@ -231,4 +231,11 @@ describe("view-functions", async () => {
     let version = await context.dealer.version();
     expect(version).to.be.equal("JOJODealer V1.0");
   });
+
+  it("get mark price", async () => {
+    let markPrice = await context.dealer.getMarkPrice(
+      context.perpList[1].address
+    );
+    expect(markPrice).to.be.equal(utils.parseEther("2000"));
+  });
 });

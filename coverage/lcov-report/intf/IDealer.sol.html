@@ -96,7 +96,53 @@
 51
 52
 53
-54</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -156,18 +202,23 @@
 &nbsp;
 pragma solidity 0.8.9;
 &nbsp;
-// Dealer
-// 1. trade - approveTrade
-// 2. credit -  isSafe
-// 3. funding - getFundingRate
-// 4. liquidation - getLiquidateCreditAmount
-&nbsp;
 interface IDealer {
+    /// @notice Submit withdrawal request, which can be executed after the timelock.
+    /// @param primaryAmount is the amount of primary asset you want to withdraw.
+    /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
+    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
+        external;
 &nbsp;
-    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount) external;
-&nbsp;
+    /// @notice execute the withdrawal request.
+    /// @param to Be careful if you pass in others' addresses,
+    /// because the fund will be transferred to this address directly.
     function executeWithdraw(address to) external;
 &nbsp;
+    /// @notice help perpetual contract parse tradeData and return
+    /// the balance changes should be made to each trader.
+    /// @dev only perpetual contract can call this function
+    /// @param orderSender is the one who submit tradeData.
+    /// @param tradeData data contain orders, signatures and match info.
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
         returns (
@@ -176,17 +227,33 @@ interface IDealer {
             int256[] memory creditChangeList
         );
 &nbsp;
-    function isSafe(address trader) external returns (bool);
+    /// @notice check if the trader's cross margin ratio is safe.
+    /// At lease one of the trader's open positions will be liquidated
+    /// if return false, but we don't know which one.
+    /// @dev Normally, this function is used internally. If you want to monitor
+    /// a certain position, please use isPositionSafe.
+    function isSafe(address trader) external view returns (bool);
 &nbsp;
-    function isPositionSafe(address trader, address perp) external view returns (bool safe);
-&nbsp;
-    function getFundingRate(address perpetualAddress)
+    /// @notice check if a certain position is safe. The position will
+    /// be liquidated if return false.
+    /// @param perp please pass in address of Perpetual.sol.
+    /// This function will check the trader's position in this market.
+    function isPositionSafe(address trader, address perp)
         external
         view
-        returns (int256);
+        returns (bool);
 &nbsp;
-    // lt = liquidatedTrader who is broken
-    // liquidator is the one wants take over lt's position
+    /// @notice get funding rate of a perpetual market.
+    /// Funding rate is a 1e18 based decimal.
+    function getFundingRate(address perp) external view returns (int256);
+&nbsp;
+    /// @notice when someone calls liquidate function at perpetual.sol, it 
+    /// will call this function to know how to change balances.
+    /// @dev only perpetual contract can call this function.
+    /// liqtor is short for liquidator, liqed is short for liquidated trader.
+    /// @param liquidator is the one who will take over positions.
+    /// @param liquidatedTrader is the one who is being liquidated.
+    /// @param requestPaperAmount is the size that the liquidator wants to take.
     function requestLiquidate(
         address liquidator,
         address liquidatedTrader,
@@ -200,6 +267,8 @@ interface IDealer {
             int256 liqedCreditChange
         );
 &nbsp;
+    /// @notice accrual realized pnl
+    /// @dev only perpetual contract can call this function.
     function positionClear(address trader) external;
 }
 &nbsp;</pre></td></tr>
@@ -208,7 +277,7 @@ interface IDealer {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 14 2022 00:32:15 GMT+0800 (China Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 21 2022 00:43:53 GMT+0800 (China Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

@@ -22,7 +22,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>30/30</span>
+        <span class='fraction'>32/32</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">85.71% </span>
@@ -37,7 +37,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>30/30</span>
+        <span class='fraction'>32/32</span>
       </div>
     </div>
   </div>
@@ -161,7 +161,28 @@
 116
 117
 118
-119</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -214,6 +235,8 @@
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -234,7 +257,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">124×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">127×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-yes">2×</span>
@@ -245,24 +271,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">124×</span>
+<span class="cline-any cline-yes">127×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">123×</span>
+<span class="cline-any cline-yes">126×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">124×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">127×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">124×</span>
-<span class="cline-any cline-yes">124×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">127×</span>
+<span class="cline-any cline-yes">127×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">41×</span>
-<span class="cline-any cline-yes">41×</span>
-<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-yes">42×</span>
+<span class="cline-any cline-yes">42×</span>
+<span class="cline-any cline-yes">42×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -275,8 +301,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">41×</span>
-<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">42×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">42×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*
@@ -293,13 +323,17 @@ import "../utils/Errors.sol";
 import "../lib/Types.sol";
 import "../lib/Liquidation.sol";
 &nbsp;
-// ONLY OWNER FUNCTIONS
+/// @notice Owner-only functions
 contract JOJOOperation is JOJOStorage {
     using SafeERC20 for IERC20;
 &nbsp;
     // ========== events ==========
 &nbsp;
-    event HandleBadDebt(address indexed liquidatedTrader);
+    event HandleBadDebt(
+        address indexed liquidatedTrader,
+        int256 primaryCredit,
+        uint256 secondaryCredit
+    );
 &nbsp;
     event UpdateFundingRate(
         address indexed perp,
@@ -318,6 +352,8 @@ contract JOJOOperation is JOJOStorage {
 &nbsp;
     // ========== balance related ==========
 &nbsp;
+    /// @notice Transfer all bad debt to insurance account, including
+    /// primary and secondary balance.
     function handleBadDebt(address liquidatedTrader) external onlyOwner {
         require(
             !Liquidation._isSafe(state, liquidatedTrader),
@@ -327,11 +363,13 @@ contract JOJOOperation is JOJOStorage {
             state.openPositions[liquidatedTrader].length == 0,
             Errors.TRADER_STILL_IN_LIQUIDATION
         );
-        state.primaryCredit[state.insurance] += state.primaryCredit[liquidatedTrader];
-        state.secondaryCredit[state.insurance] += state.secondaryCredit[liquidatedTrader];
+        int256 primaryCredit = state.primaryCredit[liquidatedTrader];
+        uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];
+        state.primaryCredit[state.insurance] += primaryCredit;
+        state.secondaryCredit[state.insurance] += secondaryCredit;
         state.primaryCredit[liquidatedTrader] = 0;
         state.secondaryCredit[liquidatedTrader] = 0;
-        emit HandleBadDebt(liquidatedTrader);
+        emit HandleBadDebt(liquidatedTrader, primaryCredit, secondaryCredit);
     }
 &nbsp;
     // ========== params updates ==========
@@ -348,6 +386,9 @@ contract JOJOOperation is JOJOStorage {
         }
     }
 &nbsp;
+    /// @notice Set risk parameters for a perpetual market.
+    /// @param param market will be ready to trade if param.isRegistered value is true.
+    /// This market will not be opened if param.isRegistered value is false.
     function setPerpRiskParams(address perp, Types.RiskParams calldata param)
         external
         onlyOwner
@@ -392,8 +433,12 @@ contract JOJOOperation is JOJOStorage {
         emit SetWithdrawTimeLock(oldWithdrawTimeLock, newWithdrawTimeLock);
     }
 &nbsp;
+    /// @notice Secondary asset can only be set once.
     function setSecondaryAsset(address _secondaryAsset) external onlyOwner {
-        <span class="missing-if-branch" title="else path not taken" >E</span>require(state.secondaryAsset==address(0), Errors.SECONDARY_ASSET_ALREASY_EXIST);
+        <span class="missing-if-branch" title="else path not taken" >E</span>require(
+            state.secondaryAsset == address(0),
+            Errors.SECONDARY_ASSET_ALREASY_EXIST
+        );
         state.secondaryAsset = _secondaryAsset;
     }
 }
@@ -403,7 +448,7 @@ contract JOJOOperation is JOJOStorage {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 14 2022 00:32:15 GMT+0800 (China Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Thu Apr 21 2022 00:43:53 GMT+0800 (China Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

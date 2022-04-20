@@ -56,16 +56,10 @@ export async function basicContext(): Promise<Context> {
     await ethers.getContractFactory("Liquidation")
   ).deploy();
   const FundingLib = await (
-    await ethers.getContractFactory("Funding", {
-      libraries: { Liquidation: LiquidationLib.address },
-    })
+    await ethers.getContractFactory("Funding")
   ).deploy();
   const TradingLib = await (
-    await ethers.getContractFactory("Trading", {
-      libraries: {
-        Liquidation: LiquidationLib.address,
-      },
-    })
+    await ethers.getContractFactory("Trading")
   ).deploy();
 
   // deploy core contracts

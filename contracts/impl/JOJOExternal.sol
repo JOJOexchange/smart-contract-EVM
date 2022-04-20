@@ -61,6 +61,17 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             orderSender,
             tradeData
         );
+
+        // charge fee
+        state.primaryCredit[orderSender] += result.orderSenderFee;
+        // if orderSender pay traders, check if orderSender is safe
+        if (result.orderSenderFee < 0) {
+            require(
+                Liquidation._isSolidSafe(state, orderSender),
+                Errors.ORDER_SENDER_NOT_SAFE
+            );
+        }
+
         return (
             result.traderList,
             result.paperChangeList,

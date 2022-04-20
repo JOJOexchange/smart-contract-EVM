@@ -168,7 +168,7 @@ library Liquidation {
             .getMarkPrice();
 
         // remove perp paper influence
-        exposure -= (paperAmount.abs() * markPrice) / 10**18;
+        exposure -= paperAmount.decimalMul(int256(markPrice)).abs();
         int256 netValue = positionNetValue +
             state.primaryCredit[trader] +
             int256(state.secondaryCredit[trader]) -

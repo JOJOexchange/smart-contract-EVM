@@ -188,7 +188,7 @@ library Trading {
         Types.State storage state,
         address perp,
         address trader
-    ) private {
+    ) internal {
         if (!state.hasPosition[trader][perp]) {
             state.hasPosition[trader][perp] = true;
             state.openPositions[trader].push(perp);

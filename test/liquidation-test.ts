@@ -51,17 +51,27 @@ describe("Liquidation", () => {
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
     liquidator = context.traderList[2];
-    await context.dealer.connect(trader1).deposit(
-      utils.parseEther("0"),
-      utils.parseEther("5000"),
-      liquidator.address
-    );
     await context.dealer
       .connect(trader1)
-      .deposit(utils.parseEther("5000"), utils.parseEther("5000"), trader1.address);
+      .deposit(
+        utils.parseEther("0"),
+        utils.parseEther("5000"),
+        liquidator.address
+      );
+    await context.dealer
+      .connect(trader1)
+      .deposit(
+        utils.parseEther("5000"),
+        utils.parseEther("5000"),
+        trader1.address
+      );
     await context.dealer
       .connect(trader2)
-      .deposit(utils.parseEther("5000"), utils.parseEther("5000"), trader2.address);
+      .deposit(
+        utils.parseEther("5000"),
+        utils.parseEther("5000"),
+        trader2.address
+      );
     orderEnv = await getDefaultOrderEnv(context.dealer);
     insurance = await context.insurance.getAddress();
     perp0 = context.perpList[0];
@@ -315,6 +325,12 @@ describe("Liquidation", () => {
       await checkCredit(context, insurance, "203.94", "0");
       await checkCredit(context, trader1.address, "-4824.94", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
+      console.log(
+        await context.dealer.getLiquidationPrice(
+          liquidator.address,
+          perp0.address
+        )
+      );
     });
     it("single liquidation < total position", async () => {
       const liquidatorChange = await context.dealer.getLiquidationCost(
@@ -466,8 +482,12 @@ describe("Liquidation", () => {
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
       });
       it("liquidator not safe", async () => {
-        await context.dealer.connect(liquidator).requestWithdraw(utils.parseEther("0"), utils.parseEther("5000"))
-        await context.dealer.connect(liquidator).executeWithdraw(liquidator.address)
+        await context.dealer
+          .connect(liquidator)
+          .requestWithdraw(utils.parseEther("0"), utils.parseEther("5000"));
+        await context.dealer
+          .connect(liquidator)
+          .executeWithdraw(liquidator.address);
         expect(
           perp0
             .connect(liquidator)

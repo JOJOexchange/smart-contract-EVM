@@ -102,6 +102,10 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
                 liquidatedTrader,
                 requestPaperAmount
             );
+        if (liqtorPaperChange != 0) {
+            Trading._addPosition(state, perp, liquidator);
+        }
+
         state.primaryCredit[state.insurance] += int256(insuranceFee);
 
         // liquidated trader balance change

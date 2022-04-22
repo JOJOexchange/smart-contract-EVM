@@ -7,5 +7,5 @@ pragma solidity 0.8.9;
 
 interface ISubaccount {
     /// @notice return true if the operator isauthorized
-    function isValidPerpetualOperator(address operator) external returns (bool);
+    function isValidPerpetualOperator(address operator) view external returns (bool);
 }

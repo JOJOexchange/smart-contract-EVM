@@ -355,6 +355,10 @@ describe("Trade", () => {
       await expect(
         context.perpList[0].connect(trader1).trade(data5)
       ).to.be.revertedWith("JOJO_INVALID_ORDER_SENDER");
+      await context.dealer.setOrderSender(trader1.address, true);
+      await expect(
+        context.perpList[0].connect(trader1).trade(data5)
+      ).to.be.revertedWith("JOJO_INVALID_ORDER_SENDER");
 
       // 4. perp wrong
       await expect(context.perpList[1].trade(data5)).to.be.revertedWith(

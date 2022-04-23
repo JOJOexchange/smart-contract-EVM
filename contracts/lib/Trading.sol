@@ -50,6 +50,10 @@ library Trading {
             state.perpRiskParams[result.perp].isRegistered,
             Errors.PERP_NOT_REGISTERED
         );
+        require(
+            state.validOrderSender[orderSender],
+            Errors.INVALID_ORDER_SENDER
+        );
 
         /*
             parse tradeData

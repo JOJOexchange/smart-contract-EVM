@@ -22,7 +22,7 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>24/24</span>
+        <span class='fraction'>25/25</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -32,12 +32,12 @@
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>15/15</span>
+        <span class='fraction'>16/16</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>24/24</span>
+        <span class='fraction'>25/25</span>
       </div>
     </div>
   </div>
@@ -224,7 +224,11 @@
 179
 180
 181
-182</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+182
+183
+184
+185
+186</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -257,10 +261,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -307,6 +307,14 @@
 <span class="cline-any cline-yes">35×</span>
 <span class="cline-any cline-yes">35×</span>
 <span class="cline-any cline-yes">35×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -441,26 +449,22 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     }
 &nbsp;
     /// @inheritdoc IDealer
-    function getFundingRate(address perp)
-        external
-        view
-        returns (int256)
-    {
+    function getFundingRate(address perp) external view returns (int256) {
         return state.perpRiskParams[perp].fundingRate;
     }
 &nbsp;
-    /// @notice Return all registered perpetual contract market
+    /// @notice Return all registered perpetual contract market.
     function getRegisteredPerp() external view returns (address[] memory) {
         return state.registeredPerp;
     }
 &nbsp;
     /// @notice Return mark price of a perpetual market.
     /// price is a 1e18 based decimal.
-    function getMarkPrice(address perp) external view returns (uint256){
+    function getMarkPrice(address perp) external view returns (uint256) {
         return Liquidation._getMarkPrice(state, perp);
     }
 &nbsp;
-    /// @notice Get all open positions of a certain trader
+    /// @notice Get all open positions of a certain trader.
     function getPositions(address trader)
         external
         view
@@ -469,9 +473,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.openPositions[trader];
     }
 &nbsp;
-    /// @notice Return a detailed credit info of a certain trader.
-    /// You can not use credit as net value or net margin of a trader.
-    /// The net value of positions should also be counted in.
+    /// @notice Return the credit details of a certain trader.
+    /// You cannot use credit as net value or net margin of a trader.
+    /// The net value of positions would also be included.
     function getCreditOf(address trader)
         external
         view
@@ -488,6 +492,14 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         pendingPrimaryWithdraw = state.pendingPrimaryWithdraw[trader];
         pendingSecondaryWithdraw = state.pendingSecondaryWithdraw[trader];
         executionTimestamp = state.withdrawExecutionTimestamp[trader];
+    }
+&nbsp;
+    function isOrderSenderValid(address orderSender)
+        external
+        view
+        returns (bool)
+    {
+        return state.validOrderSender[orderSender];
     }
 &nbsp;
     // ========== risk related ==========
@@ -510,9 +522,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation._isPositionSafe(state, trader, perp);
     }
 &nbsp;
-    /// @notice get risk related data of trader
-    /// @return netValue net value of trader, count in credit
-    /// @return exposure open position value of trader among all markets
+    /// @notice Get the risk profile data of a trader.
+    /// @return netValue net value of trader including credit amount
+    /// @return exposure open position value of the trader across all markets
     function getTraderRisk(address trader)
         external
         view
@@ -531,9 +543,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 &nbsp;
     // ========== liquidation related ==========
 &nbsp;
-    /// @notice get liquidation price of a position
-    /// @dev this function should only be used as a reference. It has accuracy
-    /// problems, usually less than 10 wei. 
+    /// @notice Get liquidation price of a position
+    /// @dev This function is for directional use. The margin of error is typically
+    /// within 10 wei.
     /// @return liquidationPrice equals 0 if there is no liquidation price.
     function getLiquidationPrice(address trader, address perp)
         external
@@ -543,7 +555,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation._getLiquidationPrice(state, trader, perp);
     }
 &nbsp;
-    /// @notice a view version of requestLiquidate, liquidators can use 
+    /// @notice a view version of requestLiquidate, liquidators can use
     /// this function to check how much you have to pay in advance.
     function getLiquidationCost(
         address perp,
@@ -565,9 +577,9 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 &nbsp;
     // ========== order related ==========
 &nbsp;
-    /// @notice calculate order hash
-    /// @dev use this function to check if your script 
-    /// returns correct order hash
+    /// @notice Calculate order hash.
+    /// @dev Use this function to check if your script
+    /// returns the correct order hash.
     function getOrderHash(Types.Order memory order)
         external
         view
@@ -576,8 +588,8 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         orderHash = Trading._getOrderHash(state.domainSeparator, order);
     }
 &nbsp;
-    /// @notice get filled paper amount of an order. Avoid duplicate matching.
-    /// @return filledAmount count in paper amount
+    /// @notice Get filled paper amount of an order to avoid double matching.
+    /// @return filledAmount includes paper amount
     function getOrderFilledAmount(bytes32 orderHash)
         external
         view
@@ -592,7 +604,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Apr 24 2022 01:47:00 GMT+0800 (China Standard Time)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Apr 24 2022 03:07:59 GMT+0800 (China Standard Time)
 </div>
 </div>
 <script src="../prettify.js"></script>

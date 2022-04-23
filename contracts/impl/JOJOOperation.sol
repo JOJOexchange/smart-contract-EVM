@@ -39,6 +39,8 @@ contract JOJOOperation is JOJOStorage {
         uint256 newWithdrawTimeLock
     );
 
+    event SetOrderSender(address orderSender, bool isValid);
+
     // ========== balance related ==========
 
     /// @notice Transfer all bad debt to insurance account, including
@@ -120,6 +122,14 @@ contract JOJOOperation is JOJOStorage {
         uint256 oldWithdrawTimeLock = state.withdrawTimeLock;
         state.withdrawTimeLock = newWithdrawTimeLock;
         emit SetWithdrawTimeLock(oldWithdrawTimeLock, newWithdrawTimeLock);
+    }
+
+    function setOrderSender(address orderSender, bool isValid)
+        external
+        onlyOwner
+    {
+        state.validOrderSender[orderSender] = isValid;
+        emit SetOrderSender(orderSender, isValid);
     }
 
     /// @notice Secondary asset can only be set once.

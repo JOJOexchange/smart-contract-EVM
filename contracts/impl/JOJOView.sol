@@ -34,11 +34,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function getFundingRate(address perp)
-        external
-        view
-        returns (int256)
-    {
+    function getFundingRate(address perp) external view returns (int256) {
         return state.perpRiskParams[perp].fundingRate;
     }
 
@@ -49,7 +45,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     /// @notice Return mark price of a perpetual market.
     /// price is a 1e18 based decimal.
-    function getMarkPrice(address perp) external view returns (uint256){
+    function getMarkPrice(address perp) external view returns (uint256) {
         return Liquidation._getMarkPrice(state, perp);
     }
 
@@ -81,6 +77,14 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         pendingPrimaryWithdraw = state.pendingPrimaryWithdraw[trader];
         pendingSecondaryWithdraw = state.pendingSecondaryWithdraw[trader];
         executionTimestamp = state.withdrawExecutionTimestamp[trader];
+    }
+
+    function isOrderSenderValid(address orderSender)
+        external
+        view
+        returns (bool)
+    {
+        return state.validOrderSender[orderSender];
     }
 
     // ========== risk related ==========
@@ -126,7 +130,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     /// @notice Get liquidation price of a position
     /// @dev This function is for directional use. The margin of error is typically
-    /// within 10 wei. 
+    /// within 10 wei.
     /// @return liquidationPrice equals 0 if there is no liquidation price.
     function getLiquidationPrice(address trader, address perp)
         external
@@ -136,7 +140,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation._getLiquidationPrice(state, trader, perp);
     }
 
-    /// @notice a view version of requestLiquidate, liquidators can use 
+    /// @notice a view version of requestLiquidate, liquidators can use
     /// this function to check how much you have to pay in advance.
     function getLiquidationCost(
         address perp,
@@ -159,7 +163,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     // ========== order related ==========
 
     /// @notice Calculate order hash.
-    /// @dev Use this function to check if your script 
+    /// @dev Use this function to check if your script
     /// returns the correct order hash.
     function getOrderHash(Types.Order memory order)
         external

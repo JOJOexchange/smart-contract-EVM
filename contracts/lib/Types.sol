@@ -38,6 +38,8 @@ library Types {
         mapping(address => mapping(address => uint256)) positionSerialNum;
         // filled amount of order
         mapping(bytes32 => uint256) orderFilledPaperAmount;
+        // valid order sender
+        mapping(address => bool) validOrderSender;
         // insurance account
         address insurance;
         // EIP712 domain separator

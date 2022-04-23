@@ -37,4 +37,13 @@ describe("operations", async () => {
     expect(registeredPerps[1]).to.be.equal(context.perpList[2].address);
     expect(registeredPerps.length).to.be.equal(2);
   });
+
+  it("set order sender", async () => {
+    let traderAddress = context.traderList[0].address;
+    expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be.false;
+    await context.dealer.setOrderSender(traderAddress, true);
+    expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be.true;
+    await context.dealer.setOrderSender(traderAddress, false);
+    expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be.false;
+  });
 });

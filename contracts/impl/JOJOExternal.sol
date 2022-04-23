@@ -41,8 +41,8 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function executeWithdraw(address to) external nonReentrant {
-        Funding._executeWithdraw(state, to);
+    function executeWithdraw(address to, bool isInternal) external nonReentrant {
+        Funding._executeWithdraw(state, to, isInternal);
     }
 
     // ========== registered perpetual only ==========

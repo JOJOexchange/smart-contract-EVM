@@ -487,7 +487,7 @@ describe("Liquidation", () => {
           .requestWithdraw(utils.parseEther("0"), utils.parseEther("5000"));
         await context.dealer
           .connect(liquidator)
-          .executeWithdraw(liquidator.address);
+          .executeWithdraw(liquidator.address, false);
         expect(
           perp0
             .connect(liquidator)

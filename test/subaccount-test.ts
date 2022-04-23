@@ -109,7 +109,7 @@ describe("Subaccount", () => {
         utils.parseEther("10"),
         utils.parseEther("20")
       );
-    await trader1Sub.connect(trader1).executeWithdraw(context.dealer.address);
+    await trader1Sub.connect(trader1).executeWithdraw(context.dealer.address, false);
     checkCredit(context, trader1Sub.address, "0", "0");
     checkPrimaryAsset(
       context,
@@ -175,7 +175,7 @@ describe("Subaccount", () => {
       trader1Sub.connect(trader2).requestWithdraw(trader2.address, "10")
     ).to.be.revertedWith("Ownable: caller is not the owner");
     expect(
-      trader1Sub.connect(trader2).executeWithdraw(trader2.address)
+      trader1Sub.connect(trader2).executeWithdraw(trader2.address, false)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     expect(
       trader1Sub.connect(trader1).init(trader2.address)

@@ -91,7 +91,11 @@ library Funding {
         );
     }
 
-    function _executeWithdraw(Types.State storage state, address to) public {
+    function _executeWithdraw(
+        Types.State storage state,
+        address to,
+        bool isInternal
+    ) public {
         require(
             state.withdrawExecutionTimestamp[msg.sender] <= block.timestamp,
             Errors.WITHDRAW_PENDING
@@ -102,7 +106,14 @@ library Funding {
         state.pendingSecondaryWithdraw[msg.sender] = 0;
         // No need to change withdrawExecutionTimestamp, because we set pending
         // withdraw amount to 0.
-        _withdraw(state, msg.sender, to, primaryAmount, secondaryAmount);
+        _withdraw(
+            state,
+            msg.sender,
+            to,
+            primaryAmount,
+            secondaryAmount,
+            isInternal
+        );
     }
 
     function _withdraw(
@@ -110,18 +121,27 @@ library Funding {
         address payer,
         address to,
         uint256 primaryAmount,
-        uint256 secondaryAmount
+        uint256 secondaryAmount,
+        bool isInternal
     ) private {
         if (primaryAmount > 0) {
             state.primaryCredit[payer] -= int256(primaryAmount);
-            IERC20(state.primaryAsset).safeTransfer(to, primaryAmount);
+            if (isInternal) {
+                state.primaryCredit[to] += int256(primaryAmount);
+            } else {
+                IERC20(state.primaryAsset).safeTransfer(to, primaryAmount);
+            }
         }
-        if(secondaryAmount>0){
+        if (secondaryAmount > 0) {
             state.secondaryCredit[payer] -= secondaryAmount;
-            IERC20(state.secondaryAsset).safeTransfer(to, secondaryAmount);
+            if (isInternal) {
+                state.secondaryCredit[payer] += secondaryAmount;
+            } else {
+                IERC20(state.secondaryAsset).safeTransfer(to, secondaryAmount);
+            }
         }
 
-        if(primaryAmount>0){
+        if (primaryAmount > 0) {
             // if trader withdraw primary asset, we should check if solid safe
             require(
                 Liquidation._isSolidSafe(state, payer),
@@ -129,10 +149,7 @@ library Funding {
             );
         } else {
             // if trader didn't withdraw primary asset, normal safe check is enough
-            require(
-                Liquidation._isSafe(state, payer),
-                Errors.ACCOUNT_NOT_SAFE
-            );
+            require(Liquidation._isSafe(state, payer), Errors.ACCOUNT_NOT_SAFE);
         }
 
         emit Withdraw(to, payer, primaryAmount, secondaryAmount);

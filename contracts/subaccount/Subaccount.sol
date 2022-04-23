@@ -78,7 +78,7 @@ contract Subaccount is ISubaccount {
     /// @notice Always withdraw to owner, no matter who fund this subaccount
     /// @param dealer As the subaccount can be used with more than one dealer,
     /// you need to pass this address in.
-    function executeWithdraw(address dealer) external onlyOwner {
-        IDealer(dealer).executeWithdraw(owner);
+    function executeWithdraw(address dealer, bool isInternal) external onlyOwner {
+        IDealer(dealer).executeWithdraw(owner, isInternal);
     }
 }

@@ -15,7 +15,9 @@ interface IDealer {
     /// @notice execute the withdrawal request.
     /// @param to Be careful if you pass in others' addresses,
     /// because the fund will be transferred to this address directly.
-    function executeWithdraw(address to) external;
+    /// @param isInternal Only credit transfers will be made,
+    /// and ERC20 transfers will not happen.
+    function executeWithdraw(address to, bool isInternal) external;
 
     /// @notice help perpetual contract parse tradeData and return
     /// the balance changes should be made to each trader.

@@ -122,12 +122,12 @@ describe("Funding", () => {
       expect(creditInfo[3]).to.be.equal(utils.parseEther("20000"));
 
       await timeJump(50);
-      expect(d.executeWithdraw(trader1Address)).to.be.revertedWith(
+      expect(d.executeWithdraw(trader1Address, false)).to.be.revertedWith(
         "JOJO_WITHDRAW_PENDING"
       );
 
       await timeJump(100);
-      await d.executeWithdraw(trader1Address);
+      await d.executeWithdraw(trader1Address, false);
       await checkCredit(context, trader1Address, "70000", "80000");
       await checkPrimaryAsset(context, trader1Address, "930000");
       await checkSecondaryAsset(context, trader1Address, "920000");
@@ -158,7 +158,7 @@ describe("Funding", () => {
         utils.parseEther("0")
       );
       await context.dealer.connect(trader1).executeWithdraw(
-        trader1.address
+        trader1.address, false
       );
       await checkCredit(context, trader1Address, "-1000","1000000")
 
@@ -167,7 +167,7 @@ describe("Funding", () => {
         utils.parseEther("900000")
       ); 
       expect(context.dealer.connect(trader1).executeWithdraw(
-        trader1.address
+        trader1.address, false
       )).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE")
     })
   });
@@ -182,7 +182,7 @@ describe("Funding", () => {
       );
       await d.requestWithdraw(utils.parseEther("100001"), utils.parseEther("0"))
       expect(
-        d.executeWithdraw(trader1Address)
+        d.executeWithdraw(trader1Address, false)
       ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
     });
   });

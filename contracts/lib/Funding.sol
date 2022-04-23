@@ -135,7 +135,7 @@ library Funding {
         if (secondaryAmount > 0) {
             state.secondaryCredit[payer] -= secondaryAmount;
             if (isInternal) {
-                state.secondaryCredit[payer] += secondaryAmount;
+                state.secondaryCredit[to] += secondaryAmount;
             } else {
                 IERC20(state.secondaryAsset).safeTransfer(to, secondaryAmount);
             }

@@ -170,6 +170,27 @@ describe("Funding", () => {
         trader1.address, false
       )).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE")
     })
+
+    it("internal transfer",async () => {
+      await context.dealer.connect(trader1).deposit(
+        utils.parseEther("1000000"),
+        utils.parseEther("1000000"),
+        trader1Address
+      );
+      await context.dealer.connect(trader1).requestWithdraw(
+        utils.parseEther("500000"),
+        utils.parseEther("200000")
+      );
+      await context.dealer.connect(trader1).executeWithdraw(
+        trader2.address, true
+      );
+      await checkCredit(context, trader1Address, "500000","800000")
+      await checkCredit(context, trader2Address, "500000","200000")
+      await checkPrimaryAsset(context,trader1Address, "0")
+      await checkSecondaryAsset(context,trader1Address, "0")
+      await checkPrimaryAsset(context,trader2Address, "1000000")
+      await checkSecondaryAsset(context,trader2Address, "1000000")
+    })
   });
 
   describe("Other revert cases", async () => {

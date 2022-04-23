@@ -6,7 +6,9 @@
 pragma solidity 0.8.9;
 
 interface IDealer {
-    /// @notice Submit withdrawal request, which can be executed after the timelock.
+    /// @notice Submit withdrawal request, which can be executed after
+    /// the timelock. The main purpose of this function is to avoid the
+    /// failure of counterparty caused by withdrawal.
     /// @param primaryAmount is the amount of primary asset you want to withdraw.
     /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
     function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)

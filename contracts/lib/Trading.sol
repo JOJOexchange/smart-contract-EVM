@@ -305,7 +305,7 @@ library Trading {
         bytes32 domainSeparator,
         Types.Order memory order,
         bytes memory signature
-    ) private returns (bytes32 orderHash) {
+    ) private view returns (bytes32 orderHash) {
         orderHash = EIP712._hashTypedDataV4(
             domainSeparator,
             _structHash(order)

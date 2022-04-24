@@ -120,7 +120,7 @@ The only centralized thing is: JOJO server will delete order info and signature 
 
 In addition, anyone can match orders, and whoever submit the matching result to blockchain receives trading fees.
 
-See `approveTrade` in [JOJOExternal.sol](. /contracts/impl/JOJOExternal.sol).
+See `approveTrade` in [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol).
 
 ## Cross mode
 JOJODealer only offers a cross position mode, where positions under different markets share margin. Positions under either market will affect the account net value and global exposure.

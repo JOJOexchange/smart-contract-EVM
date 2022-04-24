@@ -153,5 +153,8 @@ library Funding {
         }
 
         emit Withdraw(to, payer, primaryAmount, secondaryAmount);
+        if (isInternal) {
+            emit Deposit(to, payer, primaryAmount, secondaryAmount);
+        }
     }
 }

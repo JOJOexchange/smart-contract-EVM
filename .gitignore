@@ -8,6 +8,7 @@ artifacts/
 cache/
 node_modules/
 deployments/
+coverage/
 tenderly.yaml
 
 # VIM

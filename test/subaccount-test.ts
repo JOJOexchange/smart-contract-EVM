@@ -64,8 +64,12 @@ describe("Subaccount", () => {
       )[0]
     );
 
-    await trader1Sub.connect(trader1).setOperator(op.address, true);
-    await trader2Sub.connect(trader2).setOperator(op.address, true);
+    await trader1Sub
+      .connect(trader1)
+      .setOperator(context.dealer.address, op.address, true);
+    await trader2Sub
+      .connect(trader2)
+      .setOperator(context.dealer.address, op.address, true);
   });
 
   it("check registry", async () => {
@@ -76,15 +80,15 @@ describe("Subaccount", () => {
   });
 
   it("set op", async () => {
-    expect(await trader1Sub.isValidPerpetualOperator(trader1.address)).to.be
-      .true;
-    expect(await trader1Sub.isValidPerpetualOperator(op.address)).to.be.true;
+    expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
+      .to.be.true;
 
-    await trader1Sub.connect(trader1).setOperator(op.address, false);
+    await trader1Sub
+      .connect(trader1)
+      .setOperator(context.dealer.address, op.address, false);
 
-    expect(await trader1Sub.isValidPerpetualOperator(trader1.address)).to.be
-      .true;
-    expect(await trader1Sub.isValidPerpetualOperator(op.address)).to.be.false;
+    expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
+      .to.be.false;
   });
 
   it("withdraw", async () => {
@@ -109,7 +113,9 @@ describe("Subaccount", () => {
         utils.parseEther("10"),
         utils.parseEther("20")
       );
-    await trader1Sub.connect(trader1).executeWithdraw(context.dealer.address, false);
+    await trader1Sub
+      .connect(trader1)
+      .executeWithdraw(context.dealer.address, false);
     checkCredit(context, trader1Sub.address, "0", "0");
     checkPrimaryAsset(
       context,
@@ -169,7 +175,9 @@ describe("Subaccount", () => {
 
   it("revert cases", async () => {
     expect(
-      trader1Sub.connect(trader2).setOperator(trader2.address, true)
+      trader1Sub
+        .connect(trader2)
+        .setOperator(context.dealer.address, trader2.address, true)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     expect(
       trader1Sub.connect(trader2).requestWithdraw(trader2.address, "10")

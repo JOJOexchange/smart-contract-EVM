@@ -40,6 +40,9 @@ library Types {
         mapping(bytes32 => uint256) orderFilledPaperAmount;
         // valid order sender
         mapping(address => bool) validOrderSender;
+        // operator registry
+        // client => operator => isValid
+        mapping(address => mapping(address => bool)) operatorRegistry;
         // insurance account
         address insurance;
         // EIP712 domain separator

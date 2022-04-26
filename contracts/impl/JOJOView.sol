@@ -87,6 +87,14 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.validOrderSender[orderSender];
     }
 
+    function isOperatorValid(address client, address operator)
+        external
+        view
+        returns (bool)
+    {
+        return state.operatorRegistry[client][operator];
+    }
+
     // ========== risk related ==========
 
     /// @inheritdoc IDealer

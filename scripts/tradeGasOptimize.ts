@@ -7,7 +7,6 @@ import {
   openPosition,
   OrderEnv,
 } from "./order";
-import { tenderly } from "hardhat";
 
 /*
     gas1 = 1 maker 1 order
@@ -46,13 +45,6 @@ async function setUpTenderly() {
     }
   ]
   
-  await tenderly.persistArtifacts(
-    ...contractInfo
-  );
-  // await tenderly.verify(
-  //   ...contractInfo
-  // );
-
   // set up order env
   let orderEnv = await getDefaultOrderEnv(context.dealer);
   let trader1 = context.traderList[0];

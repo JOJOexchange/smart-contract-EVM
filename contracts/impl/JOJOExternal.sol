@@ -17,6 +17,14 @@ import "../lib/Trading.sol";
 abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
 
+    // ========== events ==========
+
+    event SetOperator(
+        address indexed client,
+        address indexed operator,
+        bool isValid
+    );
+
     // ========== fund related ==========
 
     /// @notice Deposit fund to get credit for trading
@@ -41,7 +49,10 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function executeWithdraw(address to, bool isInternal) external nonReentrant {
+    function executeWithdraw(address to, bool isInternal)
+        external
+        nonReentrant
+    {
         Funding._executeWithdraw(state, to, isInternal);
     }
 
@@ -140,5 +151,11 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     /// @inheritdoc IDealer
     function positionClear(address trader) external {
         Trading._positionClear(state, trader);
+    }
+
+    /// @inheritdoc IDealer
+    function setOperator(address operator, bool isValid) external {
+        state.operatorRegistry[msg.sender][operator] = isValid;
+        emit SetOperator(msg.sender, operator, isValid);
     }
 }

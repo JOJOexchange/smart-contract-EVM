@@ -3,7 +3,6 @@
     SPDX-License-Identifier: Apache-2.0
 */
 import "../intf/IDealer.sol";
-import "../intf/ISubaccount.sol";
 
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
@@ -12,7 +11,7 @@ pragma experimental ABIEncoderV2;
 /// You can open orders with isolated positions via Subaccount.
 /// You can also let others trade for you by setting them as authorized
 /// operators. Operatiors have no access to fund transfer.
-contract Subaccount is ISubaccount {
+contract Subaccount {
     // ========== storage ==========
 
     /*
@@ -42,19 +41,10 @@ contract Subaccount is ISubaccount {
         owner = _owner;
     }
 
-    /// @inheritdoc ISubaccount
-    function isValidPerpetualOperator(address operator)
-        external
-        view
-        returns (bool)
-    {
-        return operator == owner || validOperator[operator];
-    }
-
     /// @param isValid authorize operator if value is true
     /// unauthorize operator if value is false
-    function setOperator(address operator, bool isValid) external onlyOwner {
-        validOperator[operator] = isValid;
+    function setOperator(address dealer, address operator, bool isValid) external onlyOwner {
+        IDealer(dealer).setOperator(operator,isValid);
     }
 
     /*

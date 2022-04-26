@@ -77,4 +77,8 @@ interface IDealer {
     /// @notice accrual realized pnl
     /// @dev only perpetual contract can call this function.
     function positionClear(address trader) external;
+
+    /// @notice registry operator
+    /// The operator can sign order on your behalf.
+    function setOperator(address operator, bool isValid) external;
 }

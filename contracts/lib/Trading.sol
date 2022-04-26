@@ -7,9 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "../intf/IPerpetual.sol";
-import "../intf/ISubaccount.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./EIP712.sol";
@@ -69,10 +67,26 @@ library Trading {
         // validate orders
         bytes32[] memory orderHashList = new bytes32[](orderList.length);
         for (uint256 i = 0; i < orderList.length; i++) {
-            bytes32 orderHash = _validateOrder(
+            Types.Order memory order = orderList[i];
+            bytes32 orderHash = EIP712._hashTypedDataV4(
                 state.domainSeparator,
-                orderList[i],
-                signatureList[i]
+                _structHash(order)
+            );
+            address recoverSigner = ECDSA.recover(orderHash, signatureList[i]);
+            // requirements
+            require(
+                recoverSigner == order.signer ||
+                    state.operatorRegistry[order.signer][recoverSigner],
+                Errors.INVALID_ORDER_SIGNATURE
+            );
+            require(
+                _info2Expiration(order.info) >= block.timestamp,
+                Errors.ORDER_EXPIRED
+            );
+            require(
+                (order.paperAmount < 0 && order.creditAmount > 0) ||
+                    (order.paperAmount > 0 && order.creditAmount < 0),
+                Errors.ORDER_PRICE_NEGATIVE
             );
             require(orderList[i].perp == result.perp, Errors.PERP_MISMATCH);
             require(
@@ -302,40 +316,6 @@ library Trading {
         orderHash = EIP712._hashTypedDataV4(
             domainSeparator,
             _structHash(order)
-        );
-    }
-
-    function _validateOrder(
-        bytes32 domainSeparator,
-        Types.Order memory order,
-        bytes memory signature
-    ) private view returns (bytes32 orderHash) {
-        orderHash = EIP712._hashTypedDataV4(
-            domainSeparator,
-            _structHash(order)
-        );
-        // contract as trader
-        if (Address.isContract(order.signer)) {
-            require(
-                ISubaccount(order.signer).isValidPerpetualOperator(
-                    ECDSA.recover(orderHash, signature)
-                ),
-                Errors.INVALID_ORDER_SIGNATURE
-            );
-        } else {
-            require(
-                ECDSA.recover(orderHash, signature) == order.signer,
-                Errors.INVALID_ORDER_SIGNATURE
-            );
-        }
-        require(
-            _info2Expiration(order.info) >= block.timestamp,
-            Errors.ORDER_EXPIRED
-        );
-        require(
-            (order.paperAmount < 0 && order.creditAmount > 0) ||
-                (order.paperAmount > 0 && order.creditAmount < 0),
-            Errors.ORDER_PRICE_NEGATIVE
         );
     }
 

@@ -21,6 +21,7 @@ contract Subaccount {
        deployment solution.
     */
     address public owner;
+    address public dealer;
     bool public initialized;
 
     // Operator white list. The operator can delegate trading when the value is true.
@@ -35,15 +36,17 @@ contract Subaccount {
 
     // ========== functions ==========
 
-    function init(address _owner) external {
+    function init(address _owner, address _dealer) external {
         require(!initialized, "ALREADY INITIALIZED");
         initialized = true;
         owner = _owner;
+        dealer = _dealer;
+        IDealer(dealer).setOperator(owner,true);
     }
 
     /// @param isValid authorize operator if value is true
     /// unauthorize operator if value is false
-    function setOperator(address dealer, address operator, bool isValid) external onlyOwner {
+    function setOperator(address operator, bool isValid) public onlyOwner {
         IDealer(dealer).setOperator(operator,isValid);
     }
 
@@ -53,12 +56,9 @@ contract Subaccount {
         transfer fund to subaccount directly in the Dealer contract. 
     */
 
-    /// @param dealer As the subaccount can be used with more than one dealer,
-    /// you need to pass this address in.
     /// @param primaryAmount The amount of primary asset you want to withdraw
     /// @param secondaryAmount The amount of secondary asset you want to withdraw
     function requestWithdraw(
-        address dealer,
         uint256 primaryAmount,
         uint256 secondaryAmount
     ) external onlyOwner {
@@ -66,9 +66,7 @@ contract Subaccount {
     }
 
     /// @notice Always withdraw to owner, no matter who fund this subaccount
-    /// @param dealer As the subaccount can be used with more than one dealer,
-    /// you need to pass this address in.
-    function executeWithdraw(address dealer, bool isInternal) external onlyOwner {
+    function executeWithdraw(bool isInternal) external onlyOwner {
         IDealer(dealer).executeWithdraw(owner, isInternal);
     }
 }

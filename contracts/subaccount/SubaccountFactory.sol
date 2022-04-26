@@ -14,6 +14,7 @@ contract SubaccountFactory {
 
     // Subaccount template that can be cloned
     address immutable template;
+    address immutable dealer;
 
     // Subaccount can only be added.
     mapping(address => address[]) subaccountRegistry;
@@ -24,9 +25,10 @@ contract SubaccountFactory {
 
     // ========== constructor ==========
 
-    constructor() {
+    constructor(address _dealer) {
         template = address(new Subaccount());
-        Subaccount(template).init(address(this));
+        dealer = _dealer;
+        Subaccount(template).init(address(this), dealer);
     }
 
     // ========== functions ==========
@@ -36,7 +38,8 @@ contract SubaccountFactory {
     /// also known as "clones".
     function newSubaccount() external returns (address subaccount) {
         subaccount = Clones.clone(template);
-        Subaccount(subaccount).init(msg.sender);
+
+        Subaccount(subaccount).init(msg.sender, dealer);
         subaccountRegistry[msg.sender].push(subaccount);
         emit NewSubaccount(
             msg.sender,

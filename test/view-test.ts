@@ -12,7 +12,7 @@ import {
 /*
   Test cases
   - getFundingRate
-  - getRegisteredPerp
+  - getAllRegisteredPerps
   - getCreditOf
   - getTraderRisk
   - getLiquidationPrice
@@ -88,7 +88,7 @@ describe("view-functions", async () => {
   });
 
   it("get registered perp", async () => {
-    let perpList: string[] = await context.dealer.getRegisteredPerp();
+    let perpList: string[] = await context.dealer.getAllRegisteredPerps();
     expect(perpList[0]).to.equal(context.perpList[0].address);
     expect(perpList[1]).to.equal(context.perpList[1].address);
     expect(perpList[2]).to.equal(context.perpList[2].address);

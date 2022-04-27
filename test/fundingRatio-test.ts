@@ -1,12 +1,8 @@
-import "./utils/hooks"
+import "./utils/hooks";
 import { Wallet, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
-import {
-  getDefaultOrderEnv,
-  openPosition,
-  OrderEnv,
-} from "../scripts/order";
+import { getDefaultOrderEnv, openPosition, OrderEnv } from "../scripts/order";
 import { checkBalance } from "./utils/checkers";
 
 /*
@@ -28,20 +24,32 @@ describe("Funding rate", () => {
     context = await basicContext();
     trader1 = context.traderList[0];
     trader2 = context.traderList[1];
-    await context.dealer.connect(trader1).deposit(
-      utils.parseEther("0"),
-      utils.parseEther("1000000"),
-      trader1.address
-    );
-    await context.dealer.connect(trader2).deposit(
-      utils.parseEther("0"),
-      utils.parseEther("1000000"),
-      trader2.address
-    );
+    await context.dealer
+      .connect(trader1)
+      .deposit(
+        utils.parseEther("0"),
+        utils.parseEther("1000000"),
+        trader1.address
+      );
+    await context.dealer
+      .connect(trader2)
+      .deposit(
+        utils.parseEther("0"),
+        utils.parseEther("1000000"),
+        trader2.address
+      );
     orderEnv = await getDefaultOrderEnv(context.dealer);
   });
 
   it("rate=0", async () => {
+    await expect(
+      context.dealer
+        .connect(trader1)
+        .updateFundingRate(
+          [context.perpList[0].address],
+          [utils.parseEther("0")]
+        )
+    ).to.be.revertedWith("JOJO_INVALID_FUNDING_RATE_KEEPER");
     await context.dealer.updateFundingRate(
       [context.perpList[0].address],
       [utils.parseEther("0")]
@@ -67,8 +75,8 @@ describe("Funding rate", () => {
       [utils.parseEther("1")]
     );
     expect(
-        await context.dealer.getFundingRate(context.perpList[0].address)
-      ).to.equal(utils.parseEther("1"));
+      await context.dealer.getFundingRate(context.perpList[0].address)
+    ).to.equal(utils.parseEther("1"));
     await openPosition(
       trader1,
       trader2,
@@ -87,8 +95,8 @@ describe("Funding rate", () => {
       [utils.parseEther("-1")]
     );
     expect(
-        await context.dealer.getFundingRate(context.perpList[0].address)
-      ).to.equal(utils.parseEther("-1"));
+      await context.dealer.getFundingRate(context.perpList[0].address)
+    ).to.equal(utils.parseEther("-1"));
     await openPosition(
       trader1,
       trader2,
@@ -130,28 +138,28 @@ describe("Funding rate", () => {
 
   it("rate decrease", async () => {
     await context.dealer.updateFundingRate(
-        [context.perpList[0].address],
-        [utils.parseEther("1")]
-      );
-      await openPosition(
-        trader1,
-        trader2,
-        "1",
-        "30000",
-        context.perpList[0],
-        orderEnv
-      );
-      await context.dealer.updateFundingRate(
-        [context.perpList[0].address],
-        [utils.parseEther("0.5")]
-      );
-      await checkBalance(context.perpList[0], trader1.address, "1", "-30015.5");
-      await checkBalance(context.perpList[0], trader2.address, "-1", "29997.5");
-      await context.dealer.updateFundingRate(
-        [context.perpList[0].address],
-        [utils.parseEther("-0.5")]
-      );
-      await checkBalance(context.perpList[0], trader1.address, "1", "-30016.5");
-      await checkBalance(context.perpList[0], trader2.address, "-1", "29998.5");
+      [context.perpList[0].address],
+      [utils.parseEther("1")]
+    );
+    await openPosition(
+      trader1,
+      trader2,
+      "1",
+      "30000",
+      context.perpList[0],
+      orderEnv
+    );
+    await context.dealer.updateFundingRate(
+      [context.perpList[0].address],
+      [utils.parseEther("0.5")]
+    );
+    await checkBalance(context.perpList[0], trader1.address, "1", "-30015.5");
+    await checkBalance(context.perpList[0], trader2.address, "-1", "29997.5");
+    await context.dealer.updateFundingRate(
+      [context.perpList[0].address],
+      [utils.parseEther("-0.5")]
+    );
+    await checkBalance(context.perpList[0], trader1.address, "1", "-30016.5");
+    await checkBalance(context.perpList[0], trader2.address, "-1", "29998.5");
   });
 });

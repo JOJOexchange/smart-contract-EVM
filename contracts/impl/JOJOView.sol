@@ -39,7 +39,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     }
 
     /// @notice Return all registered perpetual contract market.
-    function getRegisteredPerp() external view returns (address[] memory) {
+    function getAllRegisteredPerps() external view returns (address[] memory) {
         return state.registeredPerp;
     }
 

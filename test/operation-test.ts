@@ -16,7 +16,7 @@ describe("operations", async () => {
   });
 
   it("remove perp", async () => {
-    let registeredPerps = await context.dealer.getRegisteredPerp();
+    let registeredPerps = await context.dealer.getAllRegisteredPerps();
     expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
     expect(registeredPerps[1]).to.be.equal(context.perpList[1].address);
     expect(registeredPerps[2]).to.be.equal(context.perpList[2].address);
@@ -32,7 +32,7 @@ describe("operations", async () => {
       false, // register
     ]);
 
-    registeredPerps = await context.dealer.getRegisteredPerp();
+    registeredPerps = await context.dealer.getAllRegisteredPerps();
     expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
     expect(registeredPerps[1]).to.be.equal(context.perpList[2].address);
     expect(registeredPerps.length).to.be.equal(2);

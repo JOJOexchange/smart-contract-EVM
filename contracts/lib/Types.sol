@@ -45,6 +45,8 @@ library Types {
         mapping(address => mapping(address => bool)) operatorRegistry;
         // insurance account
         address insurance;
+        // funding rate keeper
+        address fundingRateKeeper;
         // EIP712 domain separator
         bytes32 domainSeparator;
     }

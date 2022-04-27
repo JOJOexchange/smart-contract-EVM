@@ -32,6 +32,8 @@ contract JOJOOperation is JOJOStorage {
 
     event UpdatePerpRiskParams(address indexed perp, Types.RiskParams param);
 
+    event SetFundingRateKeeper(address oldKeeper, address newKeeper);
+
     event SetInsurance(address oldInsurance, address newInsurance);
 
     event SetWithdrawTimeLock(
@@ -65,14 +67,20 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== params updates ==========
 
+    /// @notice Update multiple funding rate at once.
+    /// Can only be called by funding rate keeper.
     function updateFundingRate(
         address[] calldata perpList,
         int256[] calldata rateList
-    ) external onlyOwner {
+    ) external {
+        require(
+            msg.sender == state.fundingRateKeeper,
+            Errors.INVALID_FUNDING_RATE_KEEPER
+        );
         for (uint256 i = 0; i < perpList.length; i++) {
-            Types.RiskParams storage param = state.perpRiskParams[perpList[i]];
-            int256 oldRate = param.fundingRate;
-            param.fundingRate = rateList[i];
+            Types.RiskParams storage params = state.perpRiskParams[perpList[i]];
+            int256 oldRate = params.fundingRate;
+            params.fundingRate = rateList[i];
             emit UpdateFundingRate(perpList[i], oldRate, rateList[i]);
         }
     }
@@ -107,6 +115,12 @@ contract JOJOOperation is JOJOStorage {
         );
         state.perpRiskParams[perp] = param;
         emit UpdatePerpRiskParams(perp, param);
+    }
+
+    function setFundingRateKeeper(address newKeeper) external onlyOwner {
+        address oldKeeper = state.fundingRateKeeper;
+        state.fundingRateKeeper = newKeeper;
+        emit SetFundingRateKeeper(oldKeeper, newKeeper);
     }
 
     function setInsurance(address newInsurance) external onlyOwner {

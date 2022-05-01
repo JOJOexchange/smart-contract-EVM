@@ -1,21 +1,9 @@
-import { task } from "hardhat/config";
+require("dotenv").config();
 import "@nomiclabs/hardhat-waffle";
 import "@nomiclabs/hardhat-ethers";
 import "solidity-coverage";
-import "hardhat-gas-reporter"
-// import '@typechain/hardhat'
-// import '@nomiclabs/hardhat-ethers'
-// import '@nomiclabs/hardhat-waffle'
-
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-// task("accounts", "Prints the list of accounts", async (args, hre) => {
-//   const accounts = await hre.ethers.getSigners();
-
-//   for (const account of accounts) {
-//     console.log(await account.address);
-//   }
-// });
+import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-etherscan";
 
 export default {
   solidity: {
@@ -27,16 +15,16 @@ export default {
       },
     },
   },
-  networks:{
-    hardhat:{
-      chainId:31337,
-      gas:20000000,
-    },
-    localhost:{
-      chainId:31337,
+  networks: {
+    hardhat: {
+      chainId: 31337,
+      gas: 20000000,
     }
   },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+  },
   gasReporter: {
-    enabled: false
-  }
+    enabled: false,
+  },
 };

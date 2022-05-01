@@ -65,10 +65,10 @@ export async function basicContext(): Promise<Context> {
   // deploy core contracts
   let primaryAsset: Contract = await (
     await ethers.getContractFactory("TestERC20")
-  ).deploy("USDT", "USDT");
+  ).deploy("USDT", "USDT",18);
   let secondaryAsset: Contract = await (
     await ethers.getContractFactory("TestERC20")
-  ).deploy("USDJ", "USDJ");
+  ).deploy("USDJ", "USDJ",18);
   let dealer = await (
     await ethers.getContractFactory("JOJODealer", {
       libraries: {

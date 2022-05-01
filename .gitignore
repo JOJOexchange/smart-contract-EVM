@@ -1,14 +1,14 @@
 .coverage*
 .DS_Store
-.env.local
+.env
 .idea
 
 dist/
 artifacts/
 cache/
 node_modules/
-deployments/
 coverage/
+interact/
 tenderly.yaml
 
 # VIM

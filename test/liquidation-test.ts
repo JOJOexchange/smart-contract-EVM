@@ -445,7 +445,7 @@ describe("Liquidation", () => {
       expect(
         await context.dealer.isPositionSafe(trader1.address, perp0.address)
       ).to.be.true;
-      await context.dealer.handleBadDebt(trader1.address);
+      await context.dealer.handleBadDebt([trader1.address]);
       await checkCredit(context, insurance, "-6205", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
     });
@@ -478,7 +478,7 @@ describe("Liquidation", () => {
             )
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
         expect(
-          context.dealer.handleBadDebt(trader1.address)
+          context.dealer.handleBadDebt([trader1.address])
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
       });
       it("liquidator not safe", async () => {
@@ -507,7 +507,7 @@ describe("Liquidation", () => {
             utils.parseEther("-500")
           );
         expect(
-          context.dealer.handleBadDebt(trader1.address)
+          context.dealer.handleBadDebt([trader1.address])
         ).to.be.revertedWith("JOJO_TRADER_STILL_IN_LIQUIDATION");
       });
     });

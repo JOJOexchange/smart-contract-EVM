@@ -45,9 +45,19 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== balance related ==========
 
+    /// @notice batch operation for _handleBadDebt
+    function handleBadDebt(address[] calldata liquidatedTraderList)
+        external
+        onlyOwner
+    {
+        for (uint256 i = 0; i < liquidatedTraderList.length; i++) {
+            _handleBadDebt(liquidatedTraderList[i]);
+        }
+    }
+
     /// @notice Transfer all bad debt to insurance account, including
     /// primary and secondary balance.
-    function handleBadDebt(address liquidatedTrader) external onlyOwner {
+    function _handleBadDebt(address liquidatedTrader) private {
         require(
             !Liquidation._isSafe(state, liquidatedTrader),
             Errors.ACCOUNT_IS_SAFE

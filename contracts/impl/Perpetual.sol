@@ -95,7 +95,6 @@ contract Perpetual is Ownable, IPerpetual {
         for (uint256 i = 0; i < traderList.length; i++) {
             address trader = traderList[i];
             _settle(trader, rate, paperChangeList[i], creditChangeList[i]);
-            require(IDealer(owner()).isSafe(trader), "TRADER_NOT_SAFE");
         }
     }
 

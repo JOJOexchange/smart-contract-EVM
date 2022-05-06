@@ -56,6 +56,29 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         Funding._executeWithdraw(state, to, isInternal);
     }
 
+    /// @inheritdoc IDealer
+    function isSafe(address trader) external view returns (bool safe) {
+        return Liquidation._isSafe(state, trader);
+    }
+
+    /// @inheritdoc IDealer
+    function isPositionSafe(address trader, address perp)
+        external
+        view
+        returns (bool safe)
+    {
+        (int256 paper, ) = IPerpetual(perp).balanceOf(trader);
+        if (paper == 0) {
+            return true;
+        }
+        return Liquidation._isPositionSafe(state, trader, perp);
+    }
+
+    /// @inheritdoc IDealer
+    function getFundingRate(address perp) external view returns (int256) {
+        return state.perpRiskParams[perp].fundingRate;
+    }
+
     // ========== registered perpetual only ==========
 
     /// @inheritdoc IDealer
@@ -72,16 +95,6 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             orderSender,
             tradeData
         );
-
-        // charge fee
-        state.primaryCredit[orderSender] += result.orderSenderFee;
-        // if orderSender pay traders, check if orderSender is safe
-        if (result.orderSenderFee < 0) {
-            require(
-                Liquidation._isSolidSafe(state, orderSender),
-                Errors.ORDER_SENDER_NOT_SAFE
-            );
-        }
 
         return (
             result.traderList,

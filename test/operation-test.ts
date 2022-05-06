@@ -17,9 +17,9 @@ describe("operations", async () => {
 
   it("remove perp", async () => {
     let registeredPerps = await context.dealer.getAllRegisteredPerps();
-    expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
-    expect(registeredPerps[1]).to.be.equal(context.perpList[1].address);
-    expect(registeredPerps[2]).to.be.equal(context.perpList[2].address);
+    await expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
+    await expect(registeredPerps[1]).to.be.equal(context.perpList[1].address);
+    await expect(registeredPerps[2]).to.be.equal(context.perpList[2].address);
 
     await context.dealer.setPerpRiskParams(context.perpList[1].address, [
       utils.parseEther("0.05"), // 5% liquidation
@@ -33,17 +33,20 @@ describe("operations", async () => {
     ]);
 
     registeredPerps = await context.dealer.getAllRegisteredPerps();
-    expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
-    expect(registeredPerps[1]).to.be.equal(context.perpList[2].address);
-    expect(registeredPerps.length).to.be.equal(2);
+    await expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
+    await expect(registeredPerps[1]).to.be.equal(context.perpList[2].address);
+    await expect(registeredPerps.length).to.be.equal(2);
   });
 
   it("set order sender", async () => {
     let traderAddress = context.traderList[0].address;
-    expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be.false;
+    await expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be
+      .false;
     await context.dealer.setOrderSender(traderAddress, true);
-    expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be.true;
+    await expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be
+      .true;
     await context.dealer.setOrderSender(traderAddress, false);
-    expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be.false;
+    await expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be
+      .false;
   });
 });

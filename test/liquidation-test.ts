@@ -325,12 +325,12 @@ describe("Liquidation", () => {
       await checkCredit(context, insurance, "203.94", "0");
       await checkCredit(context, trader1.address, "-4824.94", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
-      console.log(
-        await context.dealer.getLiquidationPrice(
-          liquidator.address,
-          perp0.address
-        )
-      );
+      // console.log(
+      //   await context.dealer.getLiquidationPrice(
+      //     liquidator.address,
+      //     perp0.address
+      //   )
+      // );
     });
     it("single liquidation < total position", async () => {
       const liquidatorChange = await context.dealer.getLiquidationCost(
@@ -468,7 +468,7 @@ describe("Liquidation", () => {
         await context.priceSourceList[0].setMarkPrice(
           utils.parseEther("22000")
         );
-        expect(
+        await expect(
           perp0
             .connect(liquidator)
             .liquidate(
@@ -477,7 +477,7 @@ describe("Liquidation", () => {
               utils.parseEther("-500")
             )
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
-        expect(
+        await expect(
           context.dealer.handleBadDebt([trader1.address])
         ).to.be.revertedWith("JOJO_ACCOUNT_IS_SAFE");
       });
@@ -488,7 +488,7 @@ describe("Liquidation", () => {
         await context.dealer
           .connect(liquidator)
           .executeWithdraw(liquidator.address, false);
-        expect(
+        await expect(
           perp0
             .connect(liquidator)
             .liquidate(
@@ -506,7 +506,7 @@ describe("Liquidation", () => {
             utils.parseEther("0.01"),
             utils.parseEther("-500")
           );
-        expect(
+        await expect(
           context.dealer.handleBadDebt([trader1.address])
         ).to.be.revertedWith("JOJO_TRADER_STILL_IN_LIQUIDATION");
       });

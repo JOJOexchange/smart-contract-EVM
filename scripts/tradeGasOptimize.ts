@@ -38,11 +38,7 @@ async function setUpTenderly() {
     {
       name: "Funding",
       address: context.FundingLib,
-    },
-    {
-      name: "Trading",
-      address: context.TradingLib,
-    },
+    }
   ];
 
   // set up order env

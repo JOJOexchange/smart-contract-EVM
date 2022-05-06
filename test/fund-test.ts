@@ -133,17 +133,21 @@ describe("Funding", () => {
       await checkSecondaryAsset(context, trader1Address, "920000");
     });
 
-    it("withdraw primary asset to negative",async () => {
-      await context.dealer.connect(trader1).deposit(
-        utils.parseEther("0"),
-        utils.parseEther("1000000"),
-        trader1Address
-      );
-      await context.dealer.connect(trader2).deposit(
-        utils.parseEther("1000000"),
-        utils.parseEther("0"),
-        trader2Address
-      );
+    it("withdraw primary asset to negative", async () => {
+      await context.dealer
+        .connect(trader1)
+        .deposit(
+          utils.parseEther("0"),
+          utils.parseEther("1000000"),
+          trader1Address
+        );
+      await context.dealer
+        .connect(trader2)
+        .deposit(
+          utils.parseEther("1000000"),
+          utils.parseEther("0"),
+          trader2Address
+        );
       await openPosition(
         trader1,
         trader2,
@@ -153,58 +157,70 @@ describe("Funding", () => {
         await getDefaultOrderEnv(context.dealer)
       );
       await setPrice(context.priceSourceList[0], "30100");
-      await context.dealer.connect(trader1).requestWithdraw(
-        utils.parseEther("1000"),
-        utils.parseEther("0")
-      );
-      await context.dealer.connect(trader1).executeWithdraw(
-        trader1.address, false
-      );
-      await checkCredit(context, trader1Address, "-1000","1000000")
+      await context.dealer
+        .connect(trader1)
+        .requestWithdraw(utils.parseEther("1000"), utils.parseEther("0"));
+      await context.dealer
+        .connect(trader1)
+        .executeWithdraw(trader1.address, false);
+      await checkCredit(context, trader1Address, "-1000", "1000000");
 
-      await context.dealer.connect(trader1).requestWithdraw(
-        utils.parseEther("0"),
-        utils.parseEther("900000")
-      ); 
-      expect(context.dealer.connect(trader1).executeWithdraw(
-        trader1.address, false
-      )).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE")
-    })
+      await context.dealer
+        .connect(trader1)
+        .requestWithdraw(utils.parseEther("0"), utils.parseEther("900000"));
+      expect(
+        context.dealer.connect(trader1).executeWithdraw(trader1.address, false)
+      ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
+    });
 
-    it("internal transfer",async () => {
-      await context.dealer.connect(trader1).deposit(
-        utils.parseEther("1000000"),
-        utils.parseEther("1000000"),
-        trader1Address
-      );
-      await context.dealer.connect(trader1).requestWithdraw(
-        utils.parseEther("500000"),
-        utils.parseEther("200000")
-      );
-      await context.dealer.connect(trader1).executeWithdraw(
-        trader2.address, true
-      );
-      await checkCredit(context, trader1Address, "500000","800000")
-      await checkCredit(context, trader2Address, "500000","200000")
-      await checkPrimaryAsset(context,trader1Address, "0")
-      await checkSecondaryAsset(context,trader1Address, "0")
-      await checkPrimaryAsset(context,trader2Address, "1000000")
-      await checkSecondaryAsset(context,trader2Address, "1000000")
-    })
+    it("internal transfer", async () => {
+      await context.dealer
+        .connect(trader1)
+        .deposit(
+          utils.parseEther("1000000"),
+          utils.parseEther("1000000"),
+          trader1Address
+        );
+      await context.dealer
+        .connect(trader1)
+        .requestWithdraw(
+          utils.parseEther("500000"),
+          utils.parseEther("200000")
+        );
+      await context.dealer
+        .connect(trader1)
+        .executeWithdraw(trader2.address, true);
+      await checkCredit(context, trader1Address, "500000", "800000");
+      await checkCredit(context, trader2Address, "500000", "200000");
+      await checkPrimaryAsset(context, trader1Address, "0");
+      await checkSecondaryAsset(context, trader1Address, "0");
+      await checkPrimaryAsset(context, trader2Address, "1000000");
+      await checkSecondaryAsset(context, trader2Address, "1000000");
+    });
   });
 
   describe("Other revert cases", async () => {
     it("solid safe check", async () => {
+      await context.dealer
+        .connect(trader2)
+        .deposit(
+          utils.parseEther("100"),
+          utils.parseEther("0"),
+          trader2Address
+        );
       let d = context.dealer.connect(trader1);
       await d.deposit(
         utils.parseEther("100000"),
         utils.parseEther("100000"),
         trader1Address
       );
-      await d.requestWithdraw(utils.parseEther("100001"), utils.parseEther("0"))
-      expect(
-        d.executeWithdraw(trader1Address, false)
-      ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
+      await d.requestWithdraw(
+        utils.parseEther("100001"),
+        utils.parseEther("0")
+      );
+      await expect(d.executeWithdraw(trader1Address, false)).to.be.revertedWith(
+        "JOJO_ACCOUNT_NOT_SAFE"
+      );
     });
   });
 });

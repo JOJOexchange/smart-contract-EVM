@@ -15,7 +15,7 @@ import "../lib/EIP712.sol";
 /// view functions -> JOJOView
 /// external calls -> JOJOExternal
 /// owner-only methods -> JOJOOperation
-contract JOJODealer is JOJOView, JOJOExternal, JOJOOperation {
+contract JOJODealer is JOJOExternal, JOJOOperation, JOJOView {
     constructor(address _primaryAsset) Ownable() {
         state.primaryAsset = _primaryAsset;
         state.domainSeparator = EIP712._buildDomainSeparator(

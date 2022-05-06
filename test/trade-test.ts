@@ -26,7 +26,6 @@ import { revert, snapshot, timeJump } from "./utils/timemachine";
     - without maker de-duplicate
     - negative fee rate
   - change funding rate
-  - self match
 
   Revert cases list
   - order price negative
@@ -217,6 +216,20 @@ describe("Trade", () => {
         context.traderList[2]
       );
 
+      const wrongData = encodeTradeData(
+        [o1.order, o3.order, o2.order],
+        [o1.signature, o3.signature, o2.signature],
+        [
+          utils.parseEther("3").toString(),
+          utils.parseEther("2").toString(),
+          utils.parseEther("1").toString(),
+        ]
+      );
+
+      await expect(context.perpList[0].trade(wrongData)).to.be.revertedWith(
+        "JOJO_ORDER_WRONG_SORTING"
+      );
+
       const data = encodeTradeData(
         [o1.order, o2.order, o3.order],
         [o1.signature, o2.signature, o3.signature],
@@ -241,41 +254,6 @@ describe("Trade", () => {
       await checkBalance(context.perpList[0], trader3.address, "2", "-99980");
       await checkBalance(context.perpList[0], context.ownerAddress, "0", "0");
       await checkCredit(context, context.ownerAddress, "54", "0");
-    });
-
-    it("self match", async () => {
-      // o1 short at price 30000 - taker
-      const o1 = await buildOrder(
-        orderEnv,
-        context.perpList[0].address,
-        utils.parseEther("-3").toString(),
-        utils.parseEther("90000").toString(),
-        context.traderList[0]
-      );
-      // o2 long at price 40000 - maker
-      const o2 = await buildOrder(
-        orderEnv,
-        context.perpList[0].address,
-        utils.parseEther("1").toString(),
-        utils.parseEther("-40000").toString(),
-        context.traderList[0]
-      );
-      const data = encodeTradeData(
-        [o1.order, o2.order],
-        [o1.signature, o2.signature],
-        [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
-      );
-      await expect(context.perpList[0].trade(data))
-        .to.emit(context.perpList[0], "BalanceChange")
-        .withArgs(
-          trader1.address,
-          utils.parseEther("1"),
-          utils.parseEther("-40004")
-        );
-
-      await checkBalance(context.perpList[0], trader1.address, "0", "0");
-      await checkCredit(context, trader1.address, "-24", "1000000");
-      await checkCredit(context, context.ownerAddress, "24", "0");
     });
   });
 
@@ -432,7 +410,7 @@ describe("Trade", () => {
         [utils.parseEther("100").toString(), utils.parseEther("100").toString()]
       );
       await expect(context.perpList[0].trade(data10)).to.be.revertedWith(
-        "TRADER_NOT_SAFE"
+        "JOJO_ACCOUNT_NOT_SAFE"
       );
 
       // 9. order expired

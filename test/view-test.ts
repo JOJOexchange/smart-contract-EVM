@@ -65,15 +65,6 @@ describe("view-functions", async () => {
     );
   });
 
-  it("get asset address", async () => {
-    expect(await context.dealer.getPrimaryAsset()).to.equal(
-      context.primaryAsset.address
-    );
-    expect(await context.dealer.getSecondaryAsset()).to.equal(
-      context.secondaryAsset.address
-    );
-  });
-
   it("get funding rate", async () => {
     await context.dealer.updateFundingRate(
       [context.perpList[1].address],
@@ -89,9 +80,9 @@ describe("view-functions", async () => {
 
   it("get registered perp", async () => {
     let perpList: string[] = await context.dealer.getAllRegisteredPerps();
-    expect(perpList[0]).to.equal(context.perpList[0].address);
-    expect(perpList[1]).to.equal(context.perpList[1].address);
-    expect(perpList[2]).to.equal(context.perpList[2].address);
+    await expect(perpList[0]).to.equal(context.perpList[0].address);
+    await expect(perpList[1]).to.equal(context.perpList[1].address);
+    await expect(perpList[2]).to.equal(context.perpList[2].address);
   });
 
   it("get trader risk", async () => {
@@ -102,35 +93,35 @@ describe("view-functions", async () => {
     // risk1
     // netvalue = 10000-15-10+5000-2000 = 12975
     // exposure = 35000+18000 = 53000
-    expect(risk1.netValue).to.be.equal(utils.parseEther("12975"));
-    expect(risk1.exposure).to.be.equal(utils.parseEther("53000"));
+    await expect(risk1.netValue).to.be.equal(utils.parseEther("12975"));
+    await expect(risk1.exposure).to.be.equal(utils.parseEther("53000"));
     // risk2
     // netvalue = 10000-3-2-5000+2000 = 6995
     // exposure = 35000+18000 = 53000
-    expect(risk2.netValue).to.be.equal(utils.parseEther("6995"));
-    expect(risk2.exposure).to.be.equal(utils.parseEther("53000"));
+    await expect(risk2.netValue).to.be.equal(utils.parseEther("6995"));
+    await expect(risk2.exposure).to.be.equal(utils.parseEther("53000"));
   });
 
   it("get trader risk & liq price", async () => {
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader1.address,
         context.perpList[0].address
       )
     ).to.be.equal("21262886597938144329896");
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader1.address,
         context.perpList[1].address
       )
     ).to.be.equal("1213157894736842105263");
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader2.address,
         context.perpList[0].address
       )
     ).to.be.equal("38247572815533980582524");
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader2.address,
         context.perpList[1].address
@@ -140,7 +131,7 @@ describe("view-functions", async () => {
 
   it("can not get valid liq price", async () => {
     // 1. no position
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader1.address,
         context.perpList[2].address
@@ -155,7 +146,7 @@ describe("view-functions", async () => {
       context.perpList[2],
       orderEnv
     );
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader1.address,
         context.perpList[2].address
@@ -170,7 +161,7 @@ describe("view-functions", async () => {
       context.perpList[2],
       orderEnv
     );
-    expect(
+    await expect(
       await context.dealer.getLiquidationPrice(
         trader1.address,
         context.perpList[2].address
@@ -178,35 +169,24 @@ describe("view-functions", async () => {
     ).to.be.equal("0");
   });
 
-  it("get order hash", async () => {
-    let o = await buildOrder(
-      await getDefaultOrderEnv(context.dealer),
-      context.perpList[0].address,
-      utils.parseEther("1").toString(),
-      utils.parseEther("-30000").toString(),
-      context.traderList[0]
-    );
-    expect(await context.dealer.getOrderHash(o.order)).to.be.equal(o.hash);
-  });
-
   it("get risk params", async () => {
     let params = await context.dealer.getRiskParams(
       context.perpList[0].address
     );
-    expect(params.liquidationThreshold).to.be.equal(utils.parseEther("0.03"));
-    expect(params.liquidationPriceOff).to.be.equal(utils.parseEther("0.01"));
-    expect(params.insuranceFeeRate).to.be.equal(utils.parseEther("0.01"));
-    expect(params.fundingRate).to.be.equal(utils.parseEther("1"));
-    expect(params.markPriceSource).to.be.equal(
+    await expect(params.liquidationThreshold).to.be.equal(utils.parseEther("0.03"));
+    await expect(params.liquidationPriceOff).to.be.equal(utils.parseEther("0.01"));
+    await expect(params.insuranceFeeRate).to.be.equal(utils.parseEther("0.01"));
+    await expect(params.fundingRate).to.be.equal(utils.parseEther("1"));
+    await expect(params.markPriceSource).to.be.equal(
       context.priceSourceList[0].address
     );
-    expect(params.name).to.be.equal("BTC20x");
-    expect(params.isRegistered).to.be.true;
+    await expect(params.name).to.be.equal("BTC20x");
+    await expect(params.isRegistered).to.be.true;
   });
 
   it("get positions", async () => {
     let positions = await context.dealer.getPositions(trader1.address);
-    expect(positions.length).to.be.equal(2);
+    await expect(positions.length).to.be.equal(2);
     await openPosition(
       trader2,
       trader1,
@@ -224,18 +204,18 @@ describe("view-functions", async () => {
       orderEnv
     );
     positions = await context.dealer.getPositions(trader1.address);
-    expect(positions.length).to.be.equal(0);
+    await expect(positions.length).to.be.equal(0);
   });
 
   it("get version", async () => {
     let version = await context.dealer.version();
-    expect(version).to.be.equal("JOJODealer V1.0");
+    await expect(version).to.be.equal("JOJODealer V1.0");
   });
 
   it("get mark price", async () => {
     let markPrice = await context.dealer.getMarkPrice(
       context.perpList[1].address
     );
-    expect(markPrice).to.be.equal(utils.parseEther("2000"));
+    await expect(markPrice).to.be.equal(utils.parseEther("2000"));
   });
 });

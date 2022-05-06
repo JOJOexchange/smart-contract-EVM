@@ -47,7 +47,7 @@ library Funding {
         uint256 primaryAmount,
         uint256 secondaryAmount,
         address to
-    ) public {
+    ) external {
         if (primaryAmount > 0) {
             IERC20(state.primaryAsset).safeTransferFrom(
                 msg.sender,
@@ -73,7 +73,7 @@ library Funding {
         Types.State storage state,
         uint256 primaryAmount,
         uint256 secondaryAmount
-    ) public {
+    ) external {
         if (primaryAmount > 0) {
             state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
         }
@@ -95,7 +95,7 @@ library Funding {
         Types.State storage state,
         address to,
         bool isInternal
-    ) public {
+    ) external {
         require(
             state.withdrawExecutionTimestamp[msg.sender] <= block.timestamp,
             Errors.WITHDRAW_PENDING

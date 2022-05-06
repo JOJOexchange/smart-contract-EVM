@@ -13,6 +13,7 @@ import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./EIP712.sol";
 import "./Types.sol";
+import "./Liquidation.sol";
 
 library Trading {
     using SignedDecimalMath for int256;
@@ -43,7 +44,7 @@ library Trading {
         Types.State storage state,
         address orderSender,
         bytes calldata tradeData
-    ) public returns (Types.MatchResult memory result) {
+    ) internal returns (Types.MatchResult memory result) {
         result.perp = msg.sender;
         require(
             state.perpRiskParams[result.perp].isRegistered,
@@ -207,6 +208,15 @@ library Trading {
                 result.creditChangeList[0],
                 state.positionSerialNum[orderList[0].signer][result.perp]
             );
+            // charge fee
+            state.primaryCredit[orderSender] += result.orderSenderFee;
+            // if orderSender pay traders, check if orderSender is safe
+            if (result.orderSenderFee < 0) {
+                require(
+                    Liquidation._isSolidSafe(state, orderSender),
+                    Errors.ORDER_SENDER_NOT_SAFE
+                );
+            }
         }
 
         // check if trader safe
@@ -217,9 +227,11 @@ library Trading {
         Types.State storage state,
         Types.MatchResult memory result
     ) private view {
+        // cache mark price to save gas
         uint256 totalPerpNum = state.registeredPerp.length;
         address[] memory perpList = new address[](totalPerpNum);
         int256[] memory markPriceCache = new int256[](totalPerpNum);
+        // check each trader's exposure and net value
         for (uint256 i = 0; i < result.traderList.length; i++) {
             address trader = result.traderList[i];
             uint256 liqThreshold;
@@ -231,11 +243,13 @@ library Trading {
                 address perp = state.openPositions[trader][j];
                 Types.RiskParams memory params = state.perpRiskParams[perp];
                 int256 markPrice;
+                // check if mark price is cached
                 for (uint256 k = 0; k < totalPerpNum; k++) {
                     if (perpList[k] == perp) {
                         markPrice = markPriceCache[k];
                         break;
                     }
+                    // if not, query mark price and cache it
                     if (perpList[k] == address(0)) {
                         markPrice = int256(
                             IMarkPriceSource(params.markPriceSource)
@@ -248,11 +262,13 @@ library Trading {
                 }
                 (int256 paperAmount, int256 credit) = IPerpetual(perp)
                     .balanceOf(trader);
+                // add the paper change right now 
                 if (perp == result.perp) {
                     paperAmount += result.paperChangeList[i];
                 }
                 exposure += paperAmount.decimalMul(markPrice).abs();
                 netValue += paperAmount.decimalMul(markPrice) + credit;
+                // use the most strict liquidation threshold
                 if (params.liquidationThreshold > liqThreshold) {
                     liqThreshold = params.liquidationThreshold;
                 }
@@ -278,7 +294,7 @@ library Trading {
     }
 
     function _positionClear(Types.State storage state, address trader)
-        external
+        internal
     {
         Types.RiskParams memory params = state.perpRiskParams[msg.sender];
         require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
@@ -370,17 +386,6 @@ library Trading {
             structHash := keccak256(start, 224)
             mstore(start, tmp)
         }
-    }
-
-    function _getOrderHash(bytes32 domainSeparator, Types.Order memory order)
-        public
-        pure
-        returns (bytes32 orderHash)
-    {
-        orderHash = EIP712._hashTypedDataV4(
-            domainSeparator,
-            _structHash(order)
-        );
     }
 
     // ========== data convert ==========

@@ -5,7 +5,7 @@
 
 2. Deploy dealer. 
 
-    2.1 First deploy and verify 3 libraries.
+    2.1 First deploy 3 libraries.
 
     2.2 Link libraries to dealer contract and deploy.
 

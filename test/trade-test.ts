@@ -258,6 +258,52 @@ describe("Trade", () => {
   });
 
   describe("revert cases", async () => {
+    it("self match", async () => {
+      // o1 short at price 30000 - taker
+      const o1 = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("-3").toString(),
+        utils.parseEther("90000").toString(),
+        context.traderList[0]
+      );
+      // o2 long at price 40000 - maker
+      const o2 = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("1").toString(),
+        utils.parseEther("-40000").toString(),
+        context.traderList[0]
+      );
+      const data = encodeTradeData(
+        [o1.order, o2.order],
+        [o1.signature, o2.signature],
+        [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
+      );
+      await expect(context.perpList[0].trade(data)).to.be.revertedWith(
+        "JOJO_ORDER_SELF_MATCH"
+      );
+    });
+
+    it("at least two traders", async () => {
+      // o1 short at price 30000 - taker
+      const o1 = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("-3").toString(),
+        utils.parseEther("90000").toString(),
+        context.traderList[0]
+      );
+      const data = encodeTradeData(
+        [o1.order],
+        [o1.signature],
+        [utils.parseEther("1").toString()]
+      );
+      await expect(context.perpList[0].trade(data)).to.be.revertedWith(
+        "JOJO_AT_LEASE_TWO_TRADERS"
+      );
+    });
+
     it("revert cases", async () => {
       const o1 = await buildOrder(
         orderEnv,

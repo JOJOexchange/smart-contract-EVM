@@ -41,6 +41,12 @@ library Liquidation {
         int256 creditChange
     );
 
+    event HandleBadDebt(
+        address indexed liquidatedTrader,
+        int256 primaryCredit,
+        uint256 secondaryCredit
+    );
+
     // ========== trader safety check ==========
 
     function _getTotalExposure(Types.State storage state, address trader)
@@ -52,9 +58,6 @@ library Liquidation {
             uint256 strictLiqThreshold
         )
     {
-        int256 netValueDelta;
-        uint256 exposureDelta;
-        uint256 threshold;
         // sum net value and exposure among all markets
         for (uint256 i = 0; i < state.openPositions[trader].length; i++) {
             (int256 paperAmount, int256 credit) = IPerpetual(
@@ -63,20 +66,15 @@ library Liquidation {
             Types.RiskParams memory params = state.perpRiskParams[
                 state.openPositions[trader][i]
             ];
-            uint256 price = IMarkPriceSource(params.markPriceSource)
-                .getMarkPrice();
-            int256 signedExposure = paperAmount.decimalMul(int256(price));
+            int256 price = int256(IMarkPriceSource(params.markPriceSource)
+                .getMarkPrice());
 
-            netValueDelta = signedExposure + credit;
-            exposureDelta = signedExposure.abs();
-            threshold = params.liquidationThreshold;
-
-            netPositionValue += netValueDelta;
-            exposure += exposureDelta;
+            netPositionValue += paperAmount.decimalMul(price) + credit;
+            exposure += paperAmount.decimalMul(price).abs();
 
             // use the most strict liquidation requirement
-            if (threshold > strictLiqThreshold) {
-                strictLiqThreshold = threshold;
+            if (params.liquidationThreshold > strictLiqThreshold) {
+                strictLiqThreshold = params.liquidationThreshold;
             }
         }
     }
@@ -245,6 +243,10 @@ library Liquidation {
             uint256 insuranceFee
         )
     {
+        // only registered perp
+        Types.RiskParams memory params = state.perpRiskParams[perp];
+        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
+
         // can not liquidate a safe trader
         require(
             !_isPositionSafe(state, liquidatedTrader, perp),
@@ -265,8 +267,6 @@ library Liquidation {
             : requestPaperAmount;
 
         // get price
-        Types.RiskParams memory params = state.perpRiskParams[perp];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
         uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
         uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
         price = liqtorPaperChange > 0
@@ -287,5 +287,23 @@ library Liquidation {
     {
         price = IMarkPriceSource(state.perpRiskParams[perp].markPriceSource)
             .getMarkPrice();
+    }
+
+    function _handleBadDebt(Types.State storage state, address liquidatedTrader) external {
+        require(
+            !Liquidation._isSafe(state, liquidatedTrader),
+            Errors.ACCOUNT_IS_SAFE
+        );
+        require(
+            state.openPositions[liquidatedTrader].length == 0,
+            Errors.TRADER_STILL_IN_LIQUIDATION
+        );
+        int256 primaryCredit = state.primaryCredit[liquidatedTrader];
+        uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];
+        state.primaryCredit[state.insurance] += primaryCredit;
+        state.secondaryCredit[state.insurance] += secondaryCredit;
+        state.primaryCredit[liquidatedTrader] = 0;
+        state.secondaryCredit[liquidatedTrader] = 0;
+        emit HandleBadDebt(liquidatedTrader, primaryCredit, secondaryCredit);
     }
 }

@@ -32,19 +32,15 @@ async function setUpTenderly() {
       address: context.perpList[0],
     },
     {
-      name:"Liquidation",
-      address: context.LiquidationLib
+      name: "Liquidation",
+      address: context.LiquidationLib,
     },
     {
-      name:"Funding",
-      address: context.FundingLib
-    },
-    {
-      name:"Trading",
-      address: context.TradingLib
+      name: "Funding",
+      address: context.FundingLib,
     }
-  ]
-  
+  ];
+
   // set up order env
   let orderEnv = await getDefaultOrderEnv(context.dealer);
   let trader1 = context.traderList[0];
@@ -125,14 +121,14 @@ async function setUpTenderly() {
     ]
   );
   const tx_1maker1order = await (await context.perpList[0].trade(data1)).wait();
-  console.log(tx_1maker1order.transactionHash);
-  console.log(tx_1maker1order.gasUsed);
+  console.log("tx_1maker1order:", tx_1maker1order.transactionHash);
+  console.log("tx_1maker1order:", tx_1maker1order.gasUsed.toString());
   const tx_1maker2order = await (await context.perpList[0].trade(data2)).wait();
-  console.log(tx_1maker2order.transactionHash);
-  console.log(tx_1maker2order.gasUsed);
+  console.log("tx_1maker2order:", tx_1maker2order.transactionHash);
+  console.log("tx_1maker2order:", tx_1maker2order.gasUsed.toString());
   const tx_2maker2order = await (await context.perpList[0].trade(data3)).wait();
-  console.log(tx_2maker2order.transactionHash);
-  console.log(tx_2maker2order.gasUsed);
+  console.log("tx_2maker2order:", tx_2maker2order.transactionHash);
+  console.log("tx_2maker2order:", tx_2maker2order.gasUsed.toString());
 }
 
 setUpTenderly();

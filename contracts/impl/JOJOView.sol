@@ -8,21 +8,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
-import "../intf/IDealer.sol";
 import "../lib/Liquidation.sol";
 import "../lib/Trading.sol";
 import "../utils/Errors.sol";
 
-abstract contract JOJOView is JOJOStorage, IDealer {
+contract JOJOView is JOJOStorage {
     // ========== simple read state ==========
-
-    function getPrimaryAsset() external view returns (address) {
-        return state.primaryAsset;
-    }
-
-    function getSecondaryAsset() external view returns (address) {
-        return state.secondaryAsset;
-    }
 
     /// @param perp the address of perpetual contract market
     function getRiskParams(address perp)
@@ -31,11 +22,6 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         returns (Types.RiskParams memory params)
     {
         params = state.perpRiskParams[perp];
-    }
-
-    /// @inheritdoc IDealer
-    function getFundingRate(address perp) external view returns (int256) {
-        return state.perpRiskParams[perp].fundingRate;
     }
 
     /// @notice Return all registered perpetual contract market.
@@ -97,24 +83,6 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     // ========== risk related ==========
 
-    /// @inheritdoc IDealer
-    function isSafe(address trader) external view returns (bool safe) {
-        return Liquidation._isSafe(state, trader);
-    }
-
-    /// @inheritdoc IDealer
-    function isPositionSafe(address trader, address perp)
-        external
-        view
-        returns (bool safe)
-    {
-        (int256 paper, ) = IPerpetual(perp).balanceOf(trader);
-        if (paper == 0) {
-            return true;
-        }
-        return Liquidation._isPositionSafe(state, trader, perp);
-    }
-
     /// @notice Get the risk profile data of a trader.
     /// @return netValue net value of trader including credit amount
     /// @return exposure open position value of the trader across all markets
@@ -169,17 +137,6 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     }
 
     // ========== order related ==========
-
-    /// @notice Calculate order hash.
-    /// @dev Use this function to check if your script
-    /// returns the correct order hash.
-    function getOrderHash(Types.Order memory order)
-        external
-        view
-        returns (bytes32 orderHash)
-    {
-        orderHash = Trading._getOrderHash(state.domainSeparator, order);
-    }
 
     /// @notice Get filled paper amount of an order to avoid double matching.
     /// @return filledAmount includes paper amount

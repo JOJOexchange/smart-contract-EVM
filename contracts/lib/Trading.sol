@@ -8,10 +8,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../intf/IPerpetual.sol";
+import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./EIP712.sol";
 import "./Types.sol";
+import "./Liquidation.sol";
 
 library Trading {
     using SignedDecimalMath for int256;
@@ -88,11 +90,15 @@ library Trading {
                     (order.paperAmount > 0 && order.creditAmount < 0),
                 Errors.ORDER_PRICE_NEGATIVE
             );
-            require(orderList[i].perp == result.perp, Errors.PERP_MISMATCH);
+            require(order.perp == result.perp, Errors.PERP_MISMATCH);
             require(
-                orderList[i].orderSender == orderSender ||
-                    orderList[i].orderSender == address(0),
+                order.orderSender == orderSender ||
+                    order.orderSender == address(0),
                 Errors.INVALID_ORDER_SENDER
+            );
+            require(
+                i == 0 || order.signer != orderList[0].signer,
+                Errors.ORDER_SELF_MATCH
             );
             state.orderFilledPaperAmount[orderHash] += matchPaperAmount[i];
             require(
@@ -108,21 +114,26 @@ library Trading {
         /*
             traderList[0] is taker
             traderList[1:] are makers
-            If a maker has more than one order, you should align these orders
-            closely together. So that the function could merge orders to save
-            gas by reducing balances chagne operations.
+            If a maker has more than one order, maker orders should be listed 
+            in ascending order. So that the function could merge orders to save
+            gas(by reducing balances chagne operations).
         */
         {
             require(orderList.length >= 2, Errors.INVALID_TRADER_NUMBER);
             // de-duplicated maker
             uint256 uniqueTraderNum = 2;
-            uint256 totalMakerFilledPaper;
-            // start from the first maker
-            for (uint256 i = 1; i < orderList.length; i++) {
-                if (i >= 2 && orderList[i].signer != orderList[i - 1].signer) {
-                    uniqueTraderNum += 1;
-                }
+            uint256 totalMakerFilledPaper = matchPaperAmount[1];
+            // start from the second maker, which is the third trader
+            for (uint256 i = 2; i < orderList.length; i++) {
                 totalMakerFilledPaper += matchPaperAmount[i];
+                if (orderList[i].signer > orderList[i - 1].signer) {
+                    uniqueTraderNum += 1;
+                } else {
+                    require(
+                        orderList[i].signer == orderList[i - 1].signer,
+                        Errors.ORDER_WRONG_SORTING
+                    );
+                }
             }
             // taker match amount must equals summary of makers' match amount
             require(
@@ -197,6 +208,75 @@ library Trading {
                 result.creditChangeList[0],
                 state.positionSerialNum[orderList[0].signer][result.perp]
             );
+            // charge fee
+            state.primaryCredit[orderSender] += result.orderSenderFee;
+            // if orderSender pay traders, check if orderSender is safe
+            if (result.orderSenderFee < 0) {
+                require(
+                    Liquidation._isSolidSafe(state, orderSender),
+                    Errors.ORDER_SENDER_NOT_SAFE
+                );
+            }
+        }
+
+        // check if trader safe
+        _checkIsTraderSafe(state, result);
+    }
+
+    function _checkIsTraderSafe(
+        Types.State storage state,
+        Types.MatchResult memory result
+    ) private view {
+        // cache mark price to save gas
+        uint256 totalPerpNum = state.registeredPerp.length;
+        address[] memory perpList = new address[](totalPerpNum);
+        int256[] memory markPriceCache = new int256[](totalPerpNum);
+        // check each trader's exposure and net value
+        for (uint256 i = 0; i < result.traderList.length; i++) {
+            address trader = result.traderList[i];
+            uint256 liqThreshold;
+            uint256 exposure;
+            int256 netValue = state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]) +
+                result.creditChangeList[i];
+            for (uint256 j = 0; j < state.openPositions[trader].length; j++) {
+                address perp = state.openPositions[trader][j];
+                Types.RiskParams memory params = state.perpRiskParams[perp];
+                int256 markPrice;
+                // check if mark price is cached
+                for (uint256 k = 0; k < totalPerpNum; k++) {
+                    if (perpList[k] == perp) {
+                        markPrice = markPriceCache[k];
+                        break;
+                    }
+                    // if not, query mark price and cache it
+                    if (perpList[k] == address(0)) {
+                        markPrice = int256(
+                            IMarkPriceSource(params.markPriceSource)
+                                .getMarkPrice()
+                        );
+                        perpList[k] = perp;
+                        markPriceCache[k] = markPrice;
+                        break;
+                    }
+                }
+                (int256 paperAmount, int256 credit) = IPerpetual(perp)
+                    .balanceOf(trader);
+                // add the paper change right now 
+                if (perp == result.perp) {
+                    paperAmount += result.paperChangeList[i];
+                }
+                exposure += paperAmount.decimalMul(markPrice).abs();
+                netValue += paperAmount.decimalMul(markPrice) + credit;
+                // use the most strict liquidation threshold
+                if (params.liquidationThreshold > liqThreshold) {
+                    liqThreshold = params.liquidationThreshold;
+                }
+            }
+            require(
+                netValue >= int256((exposure * liqThreshold) / 10**18),
+                Errors.ACCOUNT_NOT_SAFE
+            );
         }
     }
 
@@ -214,7 +294,7 @@ library Trading {
     }
 
     function _positionClear(Types.State storage state, address trader)
-        external
+        internal
     {
         Types.RiskParams memory params = state.perpRiskParams[msg.sender];
         require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
@@ -306,17 +386,6 @@ library Trading {
             structHash := keccak256(start, 224)
             mstore(start, tmp)
         }
-    }
-
-    function _getOrderHash(bytes32 domainSeparator, Types.Order memory order)
-        public
-        pure
-        returns (bytes32 orderHash)
-    {
-        orderHash = EIP712._hashTypedDataV4(
-            domainSeparator,
-            _structHash(order)
-        );
     }
 
     // ========== data convert ==========

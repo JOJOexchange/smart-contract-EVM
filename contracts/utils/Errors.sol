@@ -20,6 +20,8 @@ library Errors {
     string constant ORDER_PRICE_NEGATIVE = "JOJO_ORDER_PRICE_NEGATIVE";
     string constant ORDER_SENDER_NOT_SAFE = "JOJO_ORDER_SENDER_NOT_SAFE";
     string constant ORDER_EXPIRED = "JOJO_ORDER_EXPIRED";
+    string constant ORDER_WRONG_SORTING = "JOJO_ORDER_WRONG_SORTING";
+    string constant ORDER_SELF_MATCH = "JOJO_ORDER_SELF_MATCH";
     string constant ACCOUNT_NOT_SAFE = "JOJO_ACCOUNT_NOT_SAFE";
     string constant ACCOUNT_IS_SAFE = "JOJO_ACCOUNT_IS_SAFE";
     string constant TAKER_TRADE_AMOUNT_WRONG = "JOJO_TAKER_TRADE_AMOUNT_WRONG";

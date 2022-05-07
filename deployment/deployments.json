@@ -2,20 +2,25 @@
   {
     "network": "goerli",
     "Dealer": {
-      "Dealer": "0x2a11C6eeeC209266A062B38059C9D12C33FBd0Ca",
-      "Liquidation": "0x7Ba901E4617d91ff0aEd698b78C6D828F30E9c1D",
-      "Funding": "0xd2b577BD7bc2D6Ead0E010F5a25A091967971aD6",
-      "Trading": "0x5F8E53F1306426Ebd665FB800742D740E3d0AcD1"
+      "Dealer": "0x8f9a9eecB911d409FD2B97191845A54f6Ed43780",
+      "Liquidation": "0x680E041EC2D967992267dA764C32279c833F81b2",
+      "Funding": "0x3755D362774FC08C30CdD1A305e1c8107E2046D2",
+      "Operation":"0x28F9897f6152f8f59a511a6D9d79Eb177719b5bd"
     },
     "PerpetualList": [
       {
-        "Perpetual": "",
-        "Name": "",
-        "MarkPriceSource": ""
+        "Perpetual": "0x7d0e5B5D9f73c31C2CF8eD60934F624497A01619",
+        "Name": "BTCUSDC",
+        "MarkPriceSource": "0xA087d928989e88fea12923D2a1009E277Db98D65"
+      },
+      {
+        "Perpetual": "0xAA8b7ddb3Ee0D42Fb51E947624fFA18DB079d32F",
+        "Name": "ETHUSDC",
+        "MarkPriceSource": "0x3145409AE634aa8070f12fA18C67ad62d0044F60"
       }
     ],
     "PrimaryAsset": "0x998bBdACf6BD51492301207a8A98B1FF8f2E0EE5",
-    "SecondaryAsset": "0xf4776f6FCD2bb48A7523d93B16CD4e82A4Ea9b5E",
+    "SecondaryAsset": "0xe804CD55893A6066C21D1fA0F58A06309FB3d2eA",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",
     "Owner": "0x9999159ac03167762E7476F008796F6e7DefFad5",
     "FundingRateKeeper": "0x88887Fab71016660Cf4CA3EE8f843D99D297986E",

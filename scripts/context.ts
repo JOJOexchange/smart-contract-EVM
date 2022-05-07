@@ -30,7 +30,6 @@ export interface Context {
   traderList: Wallet[];
   LiquidationLib:Contract;
   FundingLib:Contract;
-  TradingLib:Contract;
 }
 
 export async function basicContext(): Promise<Context> {
@@ -58,8 +57,8 @@ export async function basicContext(): Promise<Context> {
   const FundingLib = await (
     await ethers.getContractFactory("Funding")
   ).deploy();
-  const TradingLib = await (
-    await ethers.getContractFactory("Trading")
+  const OperationLib = await (
+    await ethers.getContractFactory("Operation")
   ).deploy();
 
   // deploy core contracts
@@ -74,7 +73,7 @@ export async function basicContext(): Promise<Context> {
       libraries: {
         Funding: FundingLib.address,
         Liquidation: LiquidationLib.address,
-        Trading: TradingLib.address,
+        Operation: OperationLib.address,
       },
     })
   ).deploy(primaryAsset.address);
@@ -159,8 +158,7 @@ export async function basicContext(): Promise<Context> {
     insuranceAddress: insuranceAddress,
     traderList: traders,
     LiquidationLib:LiquidationLib,
-    FundingLib:FundingLib,
-    TradingLib:TradingLib
+    FundingLib:FundingLib
   };
 }
 

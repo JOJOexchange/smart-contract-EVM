@@ -24,16 +24,13 @@ interface IChainlink {
 contract ChainlinkExpandAdaptor {
     address public immutable chainlink;
     uint256 public immutable decimalsCorrection;
-    int256 public immutable heartbeat;
 
     constructor(
         address _chainlink,
-        uint256 _decimalsCorrection,
-        int256 _heartbeat
+        uint256 _decimalsCorrection
     ) {
         chainlink = _chainlink;
         decimalsCorrection = 10**_decimalsCorrection;
-        heartbeat = _heartbeat;
     }
 
     function getMarkPrice() external view returns (uint256) {

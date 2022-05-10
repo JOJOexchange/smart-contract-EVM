@@ -5,7 +5,7 @@
       "Dealer": "0x8f9a9eecB911d409FD2B97191845A54f6Ed43780",
       "Liquidation": "0x680E041EC2D967992267dA764C32279c833F81b2",
       "Funding": "0x3755D362774FC08C30CdD1A305e1c8107E2046D2",
-      "Operation":"0x28F9897f6152f8f59a511a6D9d79Eb177719b5bd"
+      "Operation": "0x28F9897f6152f8f59a511a6D9d79Eb177719b5bd"
     },
     "PerpetualList": [
       {
@@ -21,6 +21,33 @@
     ],
     "PrimaryAsset": "0x998bBdACf6BD51492301207a8A98B1FF8f2E0EE5",
     "SecondaryAsset": "0xe804CD55893A6066C21D1fA0F58A06309FB3d2eA",
+    "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",
+    "Owner": "0x9999159ac03167762E7476F008796F6e7DefFad5",
+    "FundingRateKeeper": "0x88887Fab71016660Cf4CA3EE8f843D99D297986E",
+    "OrderSender": "0x7777405dB28BcAc40F6FD2AABc62751384aAD38c"
+  },
+  {
+    "network": "bsctest",
+    "Dealer": {
+        "Dealer": "0xfA63692bC2122Da0e0C1191043CCa5C3A35bBE38",
+        "Liquidation": "0xd2b577BD7bc2D6Ead0E010F5a25A091967971aD6",
+        "Funding": "0x5F8E53F1306426Ebd665FB800742D740E3d0AcD1",
+        "Operation": "0xe804CD55893A6066C21D1fA0F58A06309FB3d2eA"
+      },
+      "PerpetualList": [
+        {
+          "Perpetual": "0x0eC7f726E7e64aB93dE3AA9d238684d99262c53f",
+          "Name": "BTCUSDC",
+          "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04"
+        },
+        {
+          "Perpetual": "0x075457191618C3dB60563dC76AAb267B7b44F1b3",
+          "Name": "ETHUSDC",
+          "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF"
+        }
+      ],
+    "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
+    "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",
     "Owner": "0x9999159ac03167762E7476F008796F6e7DefFad5",
     "FundingRateKeeper": "0x88887Fab71016660Cf4CA3EE8f843D99D297986E",

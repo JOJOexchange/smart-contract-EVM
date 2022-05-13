@@ -74,12 +74,8 @@ library Funding {
         uint256 primaryAmount,
         uint256 secondaryAmount
     ) external {
-        if (primaryAmount > 0) {
-            state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
-        }
-        if (secondaryAmount > 0) {
-            state.pendingSecondaryWithdraw[msg.sender] = secondaryAmount;
-        }
+        state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
+        state.pendingSecondaryWithdraw[msg.sender] = secondaryAmount;
         state.withdrawExecutionTimestamp[msg.sender] =
             block.timestamp +
             state.withdrawTimeLock;

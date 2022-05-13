@@ -27,11 +27,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
 
     // ========== fund related ==========
 
-    /// @notice Deposit fund to get credit for trading
-    /// @param primaryAmount is the amount of primary asset you want to withdraw.
-    /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
-    /// @param to Please be careful. If you pass in others' addresses,
-    /// the credit will be added to that address directly.
+    /// @inheritdoc IDealer
     function deposit(
         uint256 primaryAmount,
         uint256 secondaryAmount,

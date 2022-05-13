@@ -6,6 +6,17 @@
 pragma solidity 0.8.9;
 
 interface IDealer {
+    /// @notice Deposit fund to get credit for trading
+    /// @param primaryAmount is the amount of primary asset you want to withdraw.
+    /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
+    /// @param to Please be careful. If you pass in others' addresses,
+    /// the credit will be added to that address directly.
+    function deposit(
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
+        address to
+    ) external;
+
     /// @notice Submit withdrawal request, which can be executed after
     /// the timelock. The main purpose of this function is to avoid the
     /// failure of counterparty caused by withdrawal.
@@ -54,7 +65,7 @@ interface IDealer {
     /// Funding rate is a 1e18 based decimal.
     function getFundingRate(address perp) external view returns (int256);
 
-    /// @notice when someone calls liquidate function at perpetual.sol, it 
+    /// @notice when someone calls liquidate function at perpetual.sol, it
     /// will call this function to know how to change balances.
     /// @dev only perpetual contract can call this function.
     /// liqtor is short for liquidator, liqed is short for liquidated trader.

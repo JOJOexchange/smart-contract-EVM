@@ -54,9 +54,8 @@ library Operation {
             state.registeredPerp.push(perp);
         }
         require(
-            param.liquidationThreshold < 10**18 &&
-                param.liquidationPriceOff < param.liquidationThreshold &&
-                param.insuranceFeeRate < param.liquidationThreshold,
+                param.liquidationPriceOff <= param.liquidationThreshold &&
+                param.insuranceFeeRate <= param.liquidationThreshold,
             Errors.INVALID_RISK_PARAM
         );
         state.perpRiskParams[perp] = param;

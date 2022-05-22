@@ -54,7 +54,7 @@ library Operation {
             state.registeredPerp.push(perp);
         }
         require(
-                param.liquidationPriceOff <= param.liquidationThreshold &&
+            param.liquidationPriceOff <= param.liquidationThreshold &&
                 param.insuranceFeeRate <= param.liquidationThreshold,
             Errors.INVALID_RISK_PARAM
         );
@@ -70,6 +70,10 @@ library Operation {
         require(
             msg.sender == state.fundingRateKeeper,
             Errors.INVALID_FUNDING_RATE_KEEPER
+        );
+        require(
+            perpList.length == rateList.length,
+            Errors.ARRAY_LENGTH_NOT_SAME
         );
         for (uint256 i = 0; i < perpList.length; i++) {
             Types.RiskParams storage params = state.perpRiskParams[perpList[i]];

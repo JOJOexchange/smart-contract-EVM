@@ -24,9 +24,6 @@ contract Subaccount {
     address public dealer;
     bool public initialized;
 
-    // Operator white list. The operator can delegate trading when the value is true.
-    mapping(address => bool) validOperator;
-
     // ========== modifier ==========
 
     modifier onlyOwner() {

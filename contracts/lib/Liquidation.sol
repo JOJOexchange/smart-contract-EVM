@@ -49,7 +49,7 @@ library Liquidation {
 
     // ========== trader safety check ==========
 
-    function _getTotalExposure(Types.State storage state, address trader)
+    function getTotalExposure(Types.State storage state, address trader)
         public
         view
         returns (
@@ -89,7 +89,7 @@ library Liquidation {
             int256 netPositionValue,
             uint256 exposure,
             uint256 strictLiqThreshold
-        ) = _getTotalExposure(state, trader);
+        ) = getTotalExposure(state, trader);
 
         // net value >= exposure * liqThreshold
         return
@@ -113,7 +113,7 @@ library Liquidation {
             int256 netPositionValue,
             uint256 exposure,
             uint256 strictLiqThreshold
-        ) = _getTotalExposure(state, trader);
+        ) = getTotalExposure(state, trader);
         return
             netPositionValue + state.primaryCredit[trader] >= 0 &&
             netPositionValue +
@@ -126,15 +126,15 @@ library Liquidation {
         Check if a certain position safe.
         Because we use cross mode, the safety of position also depends on
         positions in other markets.
-        _isPositionSafe use the liqThreshold of this position but not the 
+        isPositionSafe use the liqThreshold of this position but not the 
         most strict liqThreshold.
     */
-    function _isPositionSafe(
+    function isPositionSafe(
         Types.State storage state,
         address trader,
         address perp
     ) public view returns (bool) {
-        (int256 netPositionValue, uint256 exposure, ) = _getTotalExposure(
+        (int256 netPositionValue, uint256 exposure, ) = getTotalExposure(
             state,
             trader
         );
@@ -146,7 +146,7 @@ library Liquidation {
             int256((exposure * liqThreshold) / 10**18);
     }
 
-    function _getLiquidationPrice(
+    function getLiquidationPrice(
         Types.State storage state,
         address trader,
         address perp
@@ -156,7 +156,7 @@ library Liquidation {
             return 0;
         }
 
-        (int256 positionNetValue, uint256 exposure, ) = _getTotalExposure(
+        (int256 positionNetValue, uint256 exposure, ) = getTotalExposure(
             state,
             trader
         );
@@ -229,7 +229,7 @@ library Liquidation {
         Using a fixed discount price model.
         Will help you liquidate up to the position size.
     */
-    function _getLiquidateCreditAmount(
+    function getLiquidateCreditAmount(
         Types.State storage state,
         address perp,
         address liquidatedTrader,
@@ -249,7 +249,7 @@ library Liquidation {
 
         // can not liquidate a safe trader
         require(
-            !_isPositionSafe(state, liquidatedTrader, perp),
+            !isPositionSafe(state, liquidatedTrader, perp),
             Errors.ACCOUNT_IS_SAFE
         );
 
@@ -280,7 +280,7 @@ library Liquidation {
             10**18;
     }
 
-    function _getMarkPrice(Types.State storage state, address perp)
+    function getMarkPrice(Types.State storage state, address perp)
         external
         view
         returns (uint256 price)
@@ -289,7 +289,7 @@ library Liquidation {
             .getMarkPrice();
     }
 
-    function _handleBadDebt(Types.State storage state, address liquidatedTrader) external {
+    function handleBadDebt(Types.State storage state, address liquidatedTrader) external {
         require(
             !Liquidation._isSafe(state, liquidatedTrader),
             Errors.ACCOUNT_IS_SAFE

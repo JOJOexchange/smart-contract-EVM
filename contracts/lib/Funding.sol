@@ -42,7 +42,7 @@ library Funding {
 
     // ========== deposit ==========
 
-    function _deposit(
+    function deposit(
         Types.State storage state,
         uint256 primaryAmount,
         uint256 secondaryAmount,
@@ -69,7 +69,7 @@ library Funding {
 
     // ========== withdraw ==========
 
-    function _requestWithdraw(
+    function requestWithdraw(
         Types.State storage state,
         uint256 primaryAmount,
         uint256 secondaryAmount
@@ -87,7 +87,7 @@ library Funding {
         );
     }
 
-    function _executeWithdraw(
+    function executeWithdraw(
         Types.State storage state,
         address to,
         bool isInternal

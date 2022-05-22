@@ -32,7 +32,7 @@ contract JOJOView is JOJOStorage {
     /// @notice Return mark price of a perpetual market.
     /// price is a 1e18 based decimal.
     function getMarkPrice(address perp) external view returns (uint256) {
-        return Liquidation._getMarkPrice(state, perp);
+        return Liquidation.getMarkPrice(state, perp);
     }
 
     /// @notice Get all open positions of a certain trader.
@@ -92,7 +92,7 @@ contract JOJOView is JOJOStorage {
         returns (int256 netValue, uint256 exposure)
     {
         int256 positionNetValue;
-        (positionNetValue, exposure, ) = Liquidation._getTotalExposure(
+        (positionNetValue, exposure, ) = Liquidation.getTotalExposure(
             state,
             trader
         );
@@ -113,7 +113,7 @@ contract JOJOView is JOJOStorage {
         view
         returns (uint256 liquidationPrice)
     {
-        return Liquidation._getLiquidationPrice(state, trader, perp);
+        return Liquidation.getLiquidationPrice(state, trader, perp);
     }
 
     /// @notice a view version of requestLiquidate, liquidators can use
@@ -128,7 +128,7 @@ contract JOJOView is JOJOStorage {
         returns (int256 liqtorPaperChange, int256 liqtorCreditChange)
     {
         (liqtorPaperChange, liqtorCreditChange, ) = Liquidation
-            ._getLiquidateCreditAmount(
+            .getLiquidateCreditAmount(
                 state,
                 perp,
                 liquidatedTrader,

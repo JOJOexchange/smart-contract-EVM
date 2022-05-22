@@ -33,7 +33,7 @@ library Operation {
 
     // ========== functions ==========
 
-    function _setPerpRiskParams(
+    function setPerpRiskParams(
         Types.State storage state,
         address perp,
         Types.RiskParams calldata param
@@ -62,7 +62,7 @@ library Operation {
         emit UpdatePerpRiskParams(perp, param);
     }
 
-    function _updateFundingRate(
+    function updateFundingRate(
         Types.State storage state,
         address[] calldata perpList,
         int256[] calldata rateList
@@ -79,7 +79,7 @@ library Operation {
         }
     }
 
-    function _setFundingRateKeeper(Types.State storage state, address newKeeper)
+    function setFundingRateKeeper(Types.State storage state, address newKeeper)
         external
     {
         address oldKeeper = state.fundingRateKeeper;
@@ -87,7 +87,7 @@ library Operation {
         emit SetFundingRateKeeper(oldKeeper, newKeeper);
     }
 
-    function _setInsurance(Types.State storage state, address newInsurance)
+    function setInsurance(Types.State storage state, address newInsurance)
         external
     {
         address oldInsurance = state.insurance;
@@ -95,7 +95,7 @@ library Operation {
         emit SetInsurance(oldInsurance, newInsurance);
     }
 
-    function _setWithdrawTimeLock(
+    function setWithdrawTimeLock(
         Types.State storage state,
         uint256 newWithdrawTimeLock
     ) external {
@@ -113,7 +113,7 @@ library Operation {
         emit SetOrderSender(orderSender, isValid);
     }
 
-    function _setSecondaryAsset(
+    function setSecondaryAsset(
         Types.State storage state,
         address _secondaryAsset
     ) external {

@@ -33,7 +33,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         uint256 secondaryAmount,
         address to
     ) external nonReentrant {
-        Funding._deposit(state, primaryAmount, secondaryAmount, to);
+        Funding.deposit(state, primaryAmount, secondaryAmount, to);
     }
 
     /// @inheritdoc IDealer
@@ -41,7 +41,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         external
         nonReentrant
     {
-        Funding._requestWithdraw(state, primaryAmount, secondaryAmount);
+        Funding.requestWithdraw(state, primaryAmount, secondaryAmount);
     }
 
     /// @inheritdoc IDealer
@@ -49,7 +49,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         external
         nonReentrant
     {
-        Funding._executeWithdraw(state, to, isInternal);
+        Funding.executeWithdraw(state, to, isInternal);
     }
 
     /// @inheritdoc IDealer
@@ -67,7 +67,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         if (paper == 0) {
             return true;
         }
-        return Liquidation._isPositionSafe(state, trader, perp);
+        return Liquidation.isPositionSafe(state, trader, perp);
     }
 
     /// @inheritdoc IDealer
@@ -116,7 +116,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         address perp = msg.sender;
         uint256 insuranceFee;
         (liqtorPaperChange, liqtorCreditChange, insuranceFee) = Liquidation
-            ._getLiquidateCreditAmount(
+            .getLiquidateCreditAmount(
                 state,
                 perp,
                 liquidatedTrader,

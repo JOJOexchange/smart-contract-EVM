@@ -19,14 +19,14 @@ contract JOJOOperation is JOJOStorage {
 
     // ========== balance related ==========
 
-    /// @notice batch operation for _handleBadDebt. Will transfer all bad
+    /// @notice batch operation for handleBadDebt. Will transfer all bad
     /// debt to insurance account, including primary and secondary balance.
     function handleBadDebt(address[] calldata liquidatedTraderList)
         external
         onlyOwner
     {
         for (uint256 i = 0; i < liquidatedTraderList.length; i++) {
-            Liquidation._handleBadDebt(state, liquidatedTraderList[i]);
+            Liquidation.handleBadDebt(state, liquidatedTraderList[i]);
         }
     }
 
@@ -38,7 +38,7 @@ contract JOJOOperation is JOJOStorage {
         address[] calldata perpList,
         int256[] calldata rateList
     ) external {
-        Operation._updateFundingRate(state, perpList, rateList);
+        Operation.updateFundingRate(state, perpList, rateList);
     }
 
     /// @notice Set risk parameters for a perpetual market.
@@ -48,22 +48,22 @@ contract JOJOOperation is JOJOStorage {
         external
         onlyOwner
     {
-        Operation._setPerpRiskParams(state, perp, param);
+        Operation.setPerpRiskParams(state, perp, param);
     }
 
     function setFundingRateKeeper(address newKeeper) external onlyOwner {
-        Operation._setFundingRateKeeper(state, newKeeper);
+        Operation.setFundingRateKeeper(state, newKeeper);
     }
 
     function setInsurance(address newInsurance) external onlyOwner {
-        Operation._setInsurance(state, newInsurance);
+        Operation.setInsurance(state, newInsurance);
     }
 
     function setWithdrawTimeLock(uint256 newWithdrawTimeLock)
         external
         onlyOwner
     {
-        Operation._setWithdrawTimeLock(state, newWithdrawTimeLock);
+        Operation.setWithdrawTimeLock(state, newWithdrawTimeLock);
     }
 
     function setOrderSender(address orderSender, bool isValid)
@@ -75,6 +75,6 @@ contract JOJOOperation is JOJOStorage {
 
     /// @notice Secondary asset can only be set once.
     function setSecondaryAsset(address _secondaryAsset) external onlyOwner {
-        Operation._setSecondaryAsset(state, _secondaryAsset);
+        Operation.setSecondaryAsset(state, _secondaryAsset);
     }
 }

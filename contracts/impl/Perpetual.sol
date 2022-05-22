@@ -70,7 +70,7 @@ contract Perpetual is Ownable, IPerpetual {
 
     /// @inheritdoc IPerpetual
     function balanceOf(address trader)
-        public
+        external
         view
         returns (int256 paper, int256 credit)
     {

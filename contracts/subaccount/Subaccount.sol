@@ -46,7 +46,7 @@ contract Subaccount {
 
     /// @param isValid authorize operator if value is true
     /// unauthorize operator if value is false
-    function setOperator(address operator, bool isValid) public onlyOwner {
+    function setOperator(address operator, bool isValid) external onlyOwner {
         IDealer(dealer).setOperator(operator,isValid);
     }
 

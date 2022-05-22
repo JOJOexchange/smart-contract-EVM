@@ -150,7 +150,7 @@ library Liquidation {
         Types.State storage state,
         address trader,
         address perp
-    ) public view returns (uint256 liquidationPrice) {
+    ) external view returns (uint256 liquidationPrice) {
         (int256 paperAmount, ) = IPerpetual(perp).balanceOf(trader);
         if (paperAmount == 0) {
             return 0;

@@ -59,7 +59,7 @@ library Liquidation {
         )
     {
         // sum net value and exposure among all markets
-        for (uint256 i = 0; i < state.openPositions[trader].length; i++) {
+        for (uint256 i = 0; i < state.openPositions[trader].length;) {
             (int256 paperAmount, int256 credit) = IPerpetual(
                 state.openPositions[trader][i]
             ).balanceOf(trader);
@@ -75,6 +75,10 @@ library Liquidation {
             // use the most strict liquidation requirement
             if (params.liquidationThreshold > strictLiqThreshold) {
                 strictLiqThreshold = params.liquidationThreshold;
+            }
+
+            unchecked {
+                ++i;
             }
         }
     }

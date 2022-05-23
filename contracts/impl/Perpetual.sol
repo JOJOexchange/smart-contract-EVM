@@ -92,9 +92,12 @@ contract Perpetual is Ownable, IPerpetual {
 
         int256 rate = IDealer(owner()).getFundingRate(address(this));
 
-        for (uint256 i = 0; i < traderList.length; i++) {
+        for (uint256 i = 0; i < traderList.length; ) {
             address trader = traderList[i];
             _settle(trader, rate, paperChangeList[i], creditChangeList[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 

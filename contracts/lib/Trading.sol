@@ -68,7 +68,7 @@ library Trading {
 
         // validate orders
         bytes32[] memory orderHashList = new bytes32[](orderList.length);
-        for (uint256 i = 0; i < orderList.length; i++) {
+        for (uint256 i = 0; i < orderList.length; ) {
             Types.Order memory order = orderList[i];
             bytes32 orderHash = EIP712._hashTypedDataV4(
                 state.domainSeparator,
@@ -109,6 +109,9 @@ library Trading {
             // register position for quick query
             _addPosition(state, result.perp, orderList[i].signer);
             orderHashList[i] = orderHash;
+            unchecked {
+                ++i;
+            }
         }
 
         /*
@@ -153,7 +156,7 @@ library Trading {
             // the first maker's trader index is 1
             uint256 currentTraderIndex = 1;
             result.traderList[1] = orderList[1].signer;
-            for (uint256 i = 1; i < orderList.length; i++) {
+            for (uint256 i = 1; i < orderList.length; ) {
                 _priceMatchCheck(orderList[0], orderList[i]);
 
                 // new maker, currentTraderIndex +1
@@ -190,6 +193,10 @@ library Trading {
                 result.paperChangeList[0] -= paperChange;
                 result.creditChangeList[0] -= creditChange;
                 result.orderSenderFee += fee;
+
+                unchecked {
+                    ++i;
+                }
             }
         }
 
@@ -200,14 +207,6 @@ library Trading {
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
-            emit OrderFilled(
-                orderHashList[0],
-                orderList[0].signer,
-                result.perp,
-                result.paperChangeList[0],
-                result.creditChangeList[0],
-                state.positionSerialNum[orderList[0].signer][result.perp]
-            );
             // charge fee
             state.primaryCredit[orderSender] += result.orderSenderFee;
             // if orderSender pay traders, check if orderSender is safe
@@ -262,7 +261,7 @@ library Trading {
                 }
                 (int256 paperAmount, int256 credit) = IPerpetual(perp)
                     .balanceOf(trader);
-                // add the paper change right now 
+                // add the paper change right now
                 if (perp == result.perp) {
                     paperAmount += result.paperChangeList[i];
                 }

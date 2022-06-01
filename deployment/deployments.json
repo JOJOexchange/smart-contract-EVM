@@ -38,12 +38,14 @@
         {
           "Perpetual": "0x0eC7f726E7e64aB93dE3AA9d238684d99262c53f",
           "Name": "BTCUSDC",
-          "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04"
+          "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
+          "MarkPriceEventTrigger":"0xa353f8b083f7575cfec443b5ad585d42f652e9f7"
         },
         {
           "Perpetual": "0x075457191618C3dB60563dC76AAb267B7b44F1b3",
           "Name": "ETHUSDC",
-          "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF"
+          "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF",
+          "MarkPriceEventTrigger":"0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
         }
       ],
     "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",

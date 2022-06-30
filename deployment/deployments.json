@@ -29,25 +29,26 @@
   {
     "network": "bsctest",
     "Dealer": {
-        "Dealer": "0xfA63692bC2122Da0e0C1191043CCa5C3A35bBE38",
-        "Liquidation": "0xd2b577BD7bc2D6Ead0E010F5a25A091967971aD6",
-        "Funding": "0x5F8E53F1306426Ebd665FB800742D740E3d0AcD1",
-        "Operation": "0xe804CD55893A6066C21D1fA0F58A06309FB3d2eA"
+      "Dealer": "0xfA63692bC2122Da0e0C1191043CCa5C3A35bBE38",
+      "Liquidation": "0xd2b577BD7bc2D6Ead0E010F5a25A091967971aD6",
+      "Funding": "0x5F8E53F1306426Ebd665FB800742D740E3d0AcD1",
+      "Operation": "0xe804CD55893A6066C21D1fA0F58A06309FB3d2eA"
+    },
+    "PerpetualList": [
+      {
+        "Perpetual": "0x0eC7f726E7e64aB93dE3AA9d238684d99262c53f",
+        "Name": "BTCUSDC",
+        "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
+        "MarkPriceEventTrigger": "0xa353f8b083f7575cfec443b5ad585d42f652e9f7"
       },
-      "PerpetualList": [
-        {
-          "Perpetual": "0x0eC7f726E7e64aB93dE3AA9d238684d99262c53f",
-          "Name": "BTCUSDC",
-          "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
-          "MarkPriceEventTrigger":"0xa353f8b083f7575cfec443b5ad585d42f652e9f7"
-        },
-        {
-          "Perpetual": "0x075457191618C3dB60563dC76AAb267B7b44F1b3",
-          "Name": "ETHUSDC",
-          "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF",
-          "MarkPriceEventTrigger":"0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
-        }
-      ],
+      {
+        "Perpetual": "0x075457191618C3dB60563dC76AAb267B7b44F1b3",
+        "Name": "ETHUSDC",
+        "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF",
+        "MarkPriceEventTrigger": "0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
+      }
+    ],
+    "SubaccountFactory": "0x72BAb59444BAA826Cb2fdAd9386D17b0e470cDB9",
     "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
     "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",

@@ -16,6 +16,7 @@ import {
   checkSecondaryAsset,
 } from "./utils/checkers";
 import { timeJump } from "./utils/timemachine";
+import { parseEther } from "ethers/lib/utils";
 
 /*
     Test cases list
@@ -76,12 +77,12 @@ describe("Subaccount", () => {
   });
 
   it("set op", async () => {
-     expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
+    expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
       .to.be.true;
 
     await trader1Sub.connect(trader1).setOperator(op.address, false);
 
-     expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
+    expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
       .to.be.false;
   });
 
@@ -93,28 +94,15 @@ describe("Subaccount", () => {
         utils.parseEther("20"),
         trader1Sub.address
       );
-    await checkCredit(
-      context,
-      trader1Sub.address,
-      "10",
-      "20"
-    );
+    await checkCredit(context, trader1Sub.address, "10", "20");
 
     await trader1Sub
       .connect(trader1)
       .requestWithdraw(utils.parseEther("10"), utils.parseEther("20"));
-    await trader1Sub.connect(trader1).executeWithdraw(false);
+    await trader1Sub.connect(trader1).executeWithdraw(trader1.address, false);
     await checkCredit(context, trader1Sub.address, "0", "0");
-    await checkPrimaryAsset(
-      context,
-      trader1.address,
-      "1000000"
-    );
-    await checkSecondaryAsset(
-      context,
-      trader1.address,
-      "1000000"
-    );
+    await checkPrimaryAsset(context, trader1.address, "1000000");
+    await checkSecondaryAsset(context, trader1.address, "1000000");
   });
 
   it("trade", async () => {
@@ -169,10 +157,34 @@ describe("Subaccount", () => {
       trader1Sub.connect(trader2).requestWithdraw("10", "10")
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
-      trader1Sub.connect(trader2).executeWithdraw(false)
+      trader1Sub.connect(trader2).executeWithdraw(trader2.address, false)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
       trader1Sub.connect(trader1).init(trader2.address, context.dealer.address)
     ).to.be.revertedWith("ALREADY INITIALIZED");
+  });
+
+  it.only("retrieve asset", async () => {
+    await expect(
+      trader1.sendTransaction({
+        to: trader1Sub.address,
+        value: parseEther("0.1"),
+        gasLimit: 50000,
+      })
+    ).reverted;
+
+    await context.primaryAsset.mint([trader1Sub.address], [parseEther("1")]);
+    await expect(trader1Sub.retrieve(
+      trader1.address,
+      context.primaryAsset.address,
+      parseEther("1")
+    )).to.be.revertedWith("Ownable: caller is not the owner");
+    await trader1Sub.connect(trader1).retrieve(
+      trader1.address,
+      context.primaryAsset.address,
+      parseEther("1")
+    );
+    const balance = await context.primaryAsset.balanceOf(trader1.address)
+    expect(balance).to.equal(parseEther("1000001"))
   });
 });

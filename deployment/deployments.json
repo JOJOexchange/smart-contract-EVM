@@ -48,7 +48,7 @@
         "MarkPriceEventTrigger": "0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
       }
     ],
-    "SubaccountFactory": "0x72BAb59444BAA826Cb2fdAd9386D17b0e470cDB9",
+    "SubaccountFactory": "0x5c60f2ACe9726f7B5468bB864F954D460BbF5962",
     "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
     "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",

@@ -7,6 +7,8 @@ import "../intf/IDealer.sol";
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 /// @notice Subaccount can help its owner manage risk and positions.
 /// You can open orders with isolated positions via Subaccount.
 /// You can also let others trade for you by setting them as authorized
@@ -38,13 +40,13 @@ contract Subaccount {
         initialized = true;
         owner = _owner;
         dealer = _dealer;
-        IDealer(dealer).setOperator(owner,true);
+        IDealer(dealer).setOperator(owner, true);
     }
 
     /// @param isValid authorize operator if value is true
     /// unauthorize operator if value is false
     function setOperator(address operator, bool isValid) external onlyOwner {
-        IDealer(dealer).setOperator(operator,isValid);
+        IDealer(dealer).setOperator(operator, isValid);
     }
 
     /*
@@ -55,15 +57,24 @@ contract Subaccount {
 
     /// @param primaryAmount The amount of primary asset you want to withdraw
     /// @param secondaryAmount The amount of secondary asset you want to withdraw
-    function requestWithdraw(
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    ) external onlyOwner {
+    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
+        external
+        onlyOwner
+    {
         IDealer(dealer).requestWithdraw(primaryAmount, secondaryAmount);
     }
 
     /// @notice Always withdraw to owner, no matter who fund this subaccount
-    function executeWithdraw(bool isInternal) external onlyOwner {
-        IDealer(dealer).executeWithdraw(owner, isInternal);
+    function executeWithdraw(address to, bool isInternal) external onlyOwner {
+        IDealer(dealer).executeWithdraw(to, isInternal);
+    }
+
+    /// @notice retrieve asset
+    function retrieve(
+        address to,
+        address token,
+        uint256 amount
+    ) external onlyOwner {
+        IERC20(token).transfer(to, amount);
     }
 }

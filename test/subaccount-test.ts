@@ -164,7 +164,7 @@ describe("Subaccount", () => {
     ).to.be.revertedWith("ALREADY INITIALIZED");
   });
 
-  it.only("retrieve asset", async () => {
+  it("retrieve asset", async () => {
     await expect(
       trader1.sendTransaction({
         to: trader1Sub.address,

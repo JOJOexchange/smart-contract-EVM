@@ -6,7 +6,6 @@ import { Context } from "./context";
 let ORDER_STRUCTURE = [
   { name: "perp", type: "address" },
   { name: "signer", type: "address" },
-  { name: "orderSender", type: "address" },
   { name: "paperAmount", type: "int128" },
   { name: "creditAmount", type: "int128" },
   { name: "info", type: "bytes32" },
@@ -15,7 +14,6 @@ let ORDER_STRUCTURE = [
 export interface Order {
   perp: string;
   signer: string;
-  orderSender: string;
   paperAmount: string;
   creditAmount: string;
   info: string;
@@ -70,7 +68,6 @@ export async function buildOrder(
   let order: Order = {
     perp: perpAddress,
     signer: signer.address,
-    orderSender: orderEnv.orderSender,
     paperAmount: paperAmount,
     creditAmount: creditAmount,
     info: infoBytes,
@@ -98,7 +95,7 @@ export function encodeTradeData(
   let abiCoder = new ethers.utils.AbiCoder();
   return abiCoder.encode(
     [
-      "tuple(address perp, address signer, address orderSender, int128 paperAmount, int128 creditAmount, bytes32 info)[]",
+      "tuple(address perp, address signer, int128 paperAmount, int128 creditAmount, bytes32 info)[]",
       "bytes[]",
       "uint256[]",
     ],

@@ -92,11 +92,6 @@ library Trading {
             );
             require(order.perp == result.perp, Errors.PERP_MISMATCH);
             require(
-                order.orderSender == orderSender ||
-                    order.orderSender == address(0),
-                Errors.INVALID_ORDER_SENDER
-            );
-            require(
                 i == 0 || order.signer != orderList[0].signer,
                 Errors.ORDER_SELF_MATCH
             );
@@ -361,7 +356,6 @@ library Trading {
                     Types.ORDER_TYPEHASH,
                     order.perp,
                     order.signer,
-                    order.orderSender,
                     order.paperAmount,
                     order.creditAmount,
                     order.info
@@ -378,11 +372,11 @@ library Trading {
         assembly {
             let start := sub(order, 32)
             let tmp := mload(start)
-            // 224 = (1 + 6) * 32
+            // 192 = (1 + 5) * 32
             // [0...32)   bytes: EIP712_ORDER_TYPE
-            // [32...224) bytes: order
+            // [32...192) bytes: order
             mstore(start, orderTypeHash)
-            structHash := keccak256(start, 224)
+            structHash := keccak256(start, 192)
             mstore(start, tmp)
         }
     }

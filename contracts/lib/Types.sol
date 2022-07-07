@@ -65,11 +65,6 @@ library Types {
             is an EOA account and signed the order.
         */
         address signer;
-        /*
-            Only the orderSender can match this order. If
-            orderSender is 0x0, then everyone can match this order.
-        */
-        address orderSender;
         // positive(negative) if you want to open long(short) position
         int128 paperAmount;
         // negative(positive) if you want to open short(long) position
@@ -90,7 +85,7 @@ library Types {
     // EIP712 component
     bytes32 public constant ORDER_TYPEHASH =
         keccak256(
-            "Order(address perp,address signer,address orderSender,int128 paperAmount,int128 creditAmount,bytes32 info)"
+            "Order(address perp,address signer,int128 paperAmount,int128 creditAmount,bytes32 info)"
         );
 
     /// @notice risk params of a perpetual market

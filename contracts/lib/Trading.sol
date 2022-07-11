@@ -202,6 +202,14 @@ library Trading {
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
+            emit OrderFilled(
+                orderHashList[0],
+                orderList[0].signer,
+                result.perp,
+                result.paperChangeList[0],
+                result.creditChangeList[0],
+                state.positionSerialNum[orderList[0].signer][result.perp]
+            );
             // charge fee
             state.primaryCredit[orderSender] += result.orderSenderFee;
             // if orderSender pay traders, check if orderSender is safe

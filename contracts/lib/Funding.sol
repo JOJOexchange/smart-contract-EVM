@@ -30,8 +30,7 @@ library Funding {
         address indexed to,
         address indexed payer,
         uint256 primaryAmount,
-        uint256 secondaryAmount,
-        bool isInternal
+        uint256 secondaryAmount
     );
 
     event RequestWithdraw(
@@ -39,6 +38,13 @@ library Funding {
         uint256 primaryAmount,
         uint256 secondaryAmount,
         uint256 executionTimestamp
+    );
+
+    event InternalTransfer(
+        address indexed to,
+        address indexed payer,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
     );
 
     // ========== deposit ==========
@@ -149,9 +155,10 @@ library Funding {
             require(Liquidation._isSafe(state, payer), Errors.ACCOUNT_NOT_SAFE);
         }
 
-        emit Withdraw(to, payer, primaryAmount, secondaryAmount, isInternal);
         if (isInternal) {
-            emit Deposit(to, payer, primaryAmount, secondaryAmount);
+            emit InternalTransfer(to, payer, primaryAmount, secondaryAmount);
+        } else {
+            emit Withdraw(to, payer, primaryAmount, secondaryAmount);
         }
     }
 }

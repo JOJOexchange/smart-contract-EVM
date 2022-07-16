@@ -9,13 +9,13 @@
     },
     "PerpetualList": [
       {
-        "Perpetual": "0x72BAb59444BAA826Cb2fdAd9386D17b0e470cDB9",
+        "Perpetual": "0x511a3028d952B4c1E2120BAAFEEF826FEafd8287",
         "Name": "BTCUSDC",
         "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
         "MarkPriceEventTrigger": "0xa353f8b083f7575cfec443b5ad585d42f652e9f7"
       },
       {
-        "Perpetual": "0x48d55d323873b79F9497b795fa33Ae67fE81687C",
+        "Perpetual": "0x2a9054b14505f030d70C1E3Fecf82828abb9F513",
         "Name": "ETHUSDC",
         "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF",
         "MarkPriceEventTrigger": "0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
@@ -27,6 +27,7 @@
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",
     "Owner": "0x9999159ac03167762E7476F008796F6e7DefFad5",
     "FundingRateKeeper": "0x88887Fab71016660Cf4CA3EE8f843D99D297986E",
-    "OrderSender": "0x7777405dB28BcAc40F6FD2AABc62751384aAD38c"
+    "OrderSender": "0x7777405dB28BcAc40F6FD2AABc62751384aAD38c",
+    "WithdrawTimelock": 15
   }
 ]

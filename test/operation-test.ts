@@ -20,6 +20,7 @@ describe("operations", async () => {
     await expect(registeredPerps[0]).to.be.equal(context.perpList[0].address);
     await expect(registeredPerps[1]).to.be.equal(context.perpList[1].address);
     await expect(registeredPerps[2]).to.be.equal(context.perpList[2].address);
+    await expect(registeredPerps.length).to.be.equal(3);
 
     await context.dealer.setPerpRiskParams(context.perpList[1].address, [
       utils.parseEther("0.05"), // 5% liquidation

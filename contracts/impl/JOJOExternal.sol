@@ -58,19 +58,6 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function isPositionSafe(address trader, address perp)
-        external
-        view
-        returns (bool safe)
-    {
-        (int256 paper, ) = IPerpetual(perp).balanceOf(trader);
-        if (paper == 0) {
-            return true;
-        }
-        return Liquidation.isPositionSafe(state, trader, perp);
-    }
-
-    /// @inheritdoc IDealer
     function getFundingRate(address perp) external view returns (int256) {
         return state.perpRiskParams[perp].fundingRate;
     }

@@ -45,21 +45,9 @@ interface IDealer {
             int256[] memory creditChangeList
         );
 
-    /// @notice check if the trader's cross margin ratio is safe.
-    /// At lease one of the trader's open positions will be liquidated
-    /// if return false, but we don't know which one.
-    /// @dev Normally, this function is used internally. If you want to monitor
-    /// a certain position, please use isPositionSafe.
+    /// @notice check if the trader's account is safe. The trader's positions
+    /// under all markets will be liquidated if the return value is true
     function isSafe(address trader) external view returns (bool);
-
-    /// @notice check if a certain position is safe. The position will
-    /// be liquidated if return false.
-    /// @param perp please pass in address of Perpetual.sol.
-    /// This function will check the trader's position in this market.
-    function isPositionSafe(address trader, address perp)
-        external
-        view
-        returns (bool);
 
     /// @notice get funding rate of a perpetual market.
     /// Funding rate is a 1e18 based decimal.

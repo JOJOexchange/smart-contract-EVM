@@ -55,27 +55,27 @@ library Liquidation {
         returns (
             int256 netPositionValue,
             uint256 exposure,
-            uint256 strictLiqThreshold
+            uint256 maintenanceMargin
         )
     {
         // sum net value and exposure among all markets
-        for (uint256 i = 0; i < state.openPositions[trader].length;) {
-            (int256 paperAmount, int256 credit) = IPerpetual(
+        for (uint256 i = 0; i < state.openPositions[trader].length; ) {
+            (int256 paperAmount, int256 creditAmount) = IPerpetual(
                 state.openPositions[trader][i]
             ).balanceOf(trader);
             Types.RiskParams memory params = state.perpRiskParams[
                 state.openPositions[trader][i]
             ];
-            int256 price = int256(IMarkPriceSource(params.markPriceSource)
-                .getMarkPrice());
+            int256 price = int256(
+                IMarkPriceSource(params.markPriceSource).getMarkPrice()
+            );
 
-            netPositionValue += paperAmount.decimalMul(price) + credit;
-            exposure += paperAmount.decimalMul(price).abs();
-
-            // use the most strict liquidation requirement
-            if (params.liquidationThreshold > strictLiqThreshold) {
-                strictLiqThreshold = params.liquidationThreshold;
-            }
+            netPositionValue += paperAmount.decimalMul(price) + creditAmount;
+            uint256 exposureIncrement = paperAmount.decimalMul(price).abs();
+            exposure += exposureIncrement;
+            maintenanceMargin +=
+                (exposureIncrement * params.liquidationThreshold) /
+                10**18;
 
             unchecked {
                 ++i;
@@ -89,18 +89,17 @@ library Liquidation {
         view
         returns (bool)
     {
-        (
-            int256 netPositionValue,
-            uint256 exposure,
-            uint256 strictLiqThreshold
-        ) = getTotalExposure(state, trader);
+        (int256 netPositionValue, , uint256 maintenanceMargin) = getTotalExposure(
+            state,
+            trader
+        );
 
-        // net value >= exposure * liqThreshold
+        // net value >= maintenanceMargin
         return
             netPositionValue +
                 state.primaryCredit[trader] +
                 int256(state.secondaryCredit[trader]) >=
-            int256((exposure * strictLiqThreshold) / 10**18);
+            int256(maintenanceMargin);
     }
 
     /*
@@ -113,120 +112,91 @@ library Liquidation {
         view
         returns (bool)
     {
-        (
-            int256 netPositionValue,
-            uint256 exposure,
-            uint256 strictLiqThreshold
-        ) = getTotalExposure(state, trader);
+        (int256 netPositionValue, , uint256 maintenanceMargin) = getTotalExposure(
+            state,
+            trader
+        );
         return
             netPositionValue + state.primaryCredit[trader] >= 0 &&
             netPositionValue +
                 state.primaryCredit[trader] +
                 int256(state.secondaryCredit[trader]) >=
-            int256((exposure * strictLiqThreshold) / 10**18);
+            int256(maintenanceMargin);
     }
 
-    /*
-        Check if a certain position safe.
-        Because we use cross mode, the safety of position also depends on
-        positions in other markets.
-        isPositionSafe use the liqThreshold of this position but not the 
-        most strict liqThreshold.
-    */
-    function isPositionSafe(
-        Types.State storage state,
-        address trader,
-        address perp
-    ) public view returns (bool) {
-        (int256 netPositionValue, uint256 exposure, ) = getTotalExposure(
-            state,
-            trader
-        );
-        uint256 liqThreshold = state.perpRiskParams[perp].liquidationThreshold;
-        return
-            netPositionValue +
-                state.primaryCredit[trader] +
-                int256(state.secondaryCredit[trader]) >=
-            int256((exposure * liqThreshold) / 10**18);
-    }
-
+    /// @return liquidationPrice It should be considered as absolutely
+    /// safe or being liquidated if return 0.
     function getLiquidationPrice(
         Types.State storage state,
         address trader,
         address perp
     ) external view returns (uint256 liquidationPrice) {
-        (int256 paperAmount, ) = IPerpetual(perp).balanceOf(trader);
-        if (paperAmount == 0) {
+        if (!state.hasPosition[trader][perp]) {
             return 0;
         }
-
-        (int256 positionNetValue, uint256 exposure, ) = getTotalExposure(
-            state,
-            trader
-        );
-
-        Types.RiskParams memory params = state.perpRiskParams[perp];
-        uint256 markPrice = IMarkPriceSource(params.markPriceSource)
-            .getMarkPrice();
-
-        // remove perp paper influence
-        exposure -= paperAmount.decimalMul(int256(markPrice)).abs();
-        int256 netValue = positionNetValue +
-            state.primaryCredit[trader] +
-            int256(state.secondaryCredit[trader]) -
-            paperAmount.decimalMul(int256(markPrice));
 
         /*
             To avoid liquidation, we need:
-            exposure * liquidationThreshold <= netValue
+            netValue >= maintenanceMargin
 
-            The change of mark price will influence the value of this position's paper.
-            So we first eliminate the impact of this paper value, then we have:
-            exposure = exposure - abs(paperAmount) * price
-            netValue = netValue - paperAmount * price
+            We first calculate the maintenanceMargin for all other markets' positions.
+            Let's call it maintenanceMargin'
+
+            Then we have netValue of the account.
+            Let's call it netValue'
+
+            So we have:
+            netValue' + paperAmount * price + creditAmount >= maintenanceMargin' + abs(paperAmount) * price * liquidationThreshold
             
-            Then we consider under what circumstances the equal sign holds.
-
             if paperAmount > 0
-                (exposure + paperAmount * liqPrice) * liqThreshold = netValue + paperAmount * liqPrice
-                exposure * liqThreshold - netValue = paperAmount * liqPrice * (1-liqThreshold)
-                liqPrice = (exposure * liqThreshold - netValue) / paperAmount / (1-liqThreshold)
-                    >> if paperAmount=0, no liqPrice
-                    >> if the right side is less than zero, the account is super safe, no liqPrice
+                paperAmount * price * (1-liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount 
+                price >= (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1-liquidationThreshold)
+                liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1-liquidationThreshold)
 
             if paperAmount < 0
-                (exposure - paperAmount * liqPrice) * liqThreshold = netValue + paperAmount * liqPrice
-                exposure * liqThreshold - netValue = paperAmount * liqPrice * (1+liqThreshold)
-                liqPrice = (exposure * liqThreshold - netValue) / paperAmount / (1+liqThreshold)
-                    >> if paperAmount=0, no liqPrice
-                    >> if the right side is less than zero, the position must already be liquidated, no liqPrice
-
-            let temp1 = exposure * liqThreshold - netValue
-            let temp2 = 
-                1-liqThreshold, if paperAmount > 0
-                1+liqThreshold, if paperAmount < 0
-
-            then we have:
-                liqPrice = temp1/paperAmount/temp2
+                paperAmount * price * (1+liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount 
+                price <= (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1+liquidationThreshold)
+                liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1+liquidationThreshold)
+            
+            Let's call 1±liquidationThreshold "multiplier"
+            Then:
+                liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/multiplier
+            
+            If liqPrice<0, it should be considered as absolutely safe or being liquidated. 
         */
-        int256 temp1 = int256(
-            (exposure * params.liquidationThreshold) / 10**18
-        ) - netValue;
-        int256 temp2 = int256(
-            paperAmount > 0
-                ? 10**18 - params.liquidationThreshold
-                : 10**18 + params.liquidationThreshold
+        int256 maintenanceMarginPrime;
+        int256 netValuePrime = state.primaryCredit[trader] +
+            int256(state.secondaryCredit[trader]);
+        for (uint256 i = 0; i < state.openPositions[trader].length; i++) {
+            address p = state.openPositions[trader][i];
+            if (perp != p) {
+                (
+                    int256 paperAmountPrime,
+                    int256 creditAmountPrime
+                ) = IPerpetual(p).balanceOf(trader);
+                Types.RiskParams memory params = state.perpRiskParams[p];
+                int256 price = int256(
+                    IMarkPriceSource(params.markPriceSource).getMarkPrice()
+                );
+                netValuePrime +=
+                    paperAmountPrime.decimalMul(price) +
+                    creditAmountPrime;
+                maintenanceMarginPrime += int256(
+                    (paperAmountPrime.decimalMul(price).abs() *
+                        params.liquidationThreshold) / 10**18
+                );
+            }
+        }
+        (int256 paperAmount, int256 creditAmount) = IPerpetual(perp).balanceOf(
+            trader
         );
-        // If the paperAmount too small, liqPrice is meaningless, return 0
-        if (temp2.decimalMul(paperAmount) == 0) {
-            return 0;
-        }
-        int256 liqPrice = temp1.decimalDiv(temp2.decimalMul(paperAmount));
-        if (liqPrice < 0) {
-            return 0;
-        } else {
-            liquidationPrice = uint256(liqPrice);
-        }
+        int256 multiplier = paperAmount > 0
+            ? int256(10**18 - state.perpRiskParams[perp].liquidationThreshold)
+            : int256(10**18 + state.perpRiskParams[perp].liquidationThreshold);
+        int256 liqPrice = (maintenanceMarginPrime - netValuePrime - creditAmount)
+            .decimalDiv(paperAmount)
+            .decimalDiv(multiplier);
+        return liqPrice < 0 ? 0 : uint256(liqPrice);
     }
 
     /*
@@ -252,10 +222,7 @@ library Liquidation {
         require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
 
         // can not liquidate a safe trader
-        require(
-            !isPositionSafe(state, liquidatedTrader, perp),
-            Errors.ACCOUNT_IS_SAFE
-        );
+        require(!_isSafe(state, liquidatedTrader), Errors.ACCOUNT_IS_SAFE);
 
         // calculate paper change, up to the position size
         (int256 brokenPaperAmount, ) = IPerpetual(perp).balanceOf(
@@ -293,7 +260,9 @@ library Liquidation {
             .getMarkPrice();
     }
 
-    function handleBadDebt(Types.State storage state, address liquidatedTrader) external {
+    function handleBadDebt(Types.State storage state, address liquidatedTrader)
+        external
+    {
         require(
             !Liquidation._isSafe(state, liquidatedTrader),
             Errors.ACCOUNT_IS_SAFE

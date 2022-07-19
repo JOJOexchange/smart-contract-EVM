@@ -108,25 +108,25 @@ describe("view-functions", async () => {
         trader1.address,
         context.perpList[0].address
       )
-    ).to.be.equal("21262886597938144329896");
+    ).to.be.equal("21675257731958762886597");
     await expect(
       await context.dealer.getLiquidationPrice(
         trader1.address,
         context.perpList[1].address
       )
-    ).to.be.equal("1213157894736842105263");
+    ).to.be.equal("1150000000000000000000");
     await expect(
       await context.dealer.getLiquidationPrice(
         trader2.address,
         context.perpList[0].address
       )
-    ).to.be.equal("38247572815533980582524");
+    ).to.be.equal("37859223300970873786407");
     await expect(
       await context.dealer.getLiquidationPrice(
         trader2.address,
         context.perpList[1].address
       )
-    ).to.be.equal("2713809523809523809523");
+    ).to.be.equal("2770952380952380952380");
   });
 
   it("can not get valid liq price", async () => {

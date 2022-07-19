@@ -103,13 +103,11 @@ describe("decimal6", async () => {
       trader2.address,
       context.perpList[0].address
     );
-    expect(liqPrice1).to.be.equal("20634020618")
-    expect(liqPrice2).to.be.equal("38832038834")
-    await context.priceSourceList[0].setMarkPrice(shift6("40000"));
-    expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[0].address)).to.be.true
-    expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[0].address)).to.be.false
+    expect(liqPrice1).to.be.equal("20634020618");
+    expect(liqPrice2).to.be.equal("38832038834");
     await context.priceSourceList[0].setMarkPrice(shift6("20000"));
-    expect(await context.dealer.isPositionSafe(trader1.address, context.perpList[0].address)).to.be.false
-    expect(await context.dealer.isPositionSafe(trader2.address, context.perpList[0].address)).to.be.true
+    expect(await context.dealer.isSafe(trader1.address)).to.be.false;
+    await context.priceSourceList[0].setMarkPrice(shift6("40000"));
+    expect(await context.dealer.isSafe(trader2.address)).to.be.false;
   });
 });

@@ -114,119 +114,32 @@ describe("Liquidation", () => {
         context.perpList[1],
         orderEnv
       );
-      await context.priceSourceList[0].setMarkPrice(utils.parseEther("21262"));
-      expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[0].address
-        )
-      ).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[1].address
-        )
-      ).to.be.false;
-      expect(await context.dealer.isSafe(trader2.address)).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[0].address
-        )
-      ).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[1].address
-        )
-      ).to.be.true;
 
-      await context.priceSourceList[0].setMarkPrice(utils.parseEther("38248"));
+      // trader1 BTC liqPrice 21675.257731958762886597
+      // trader2 BTC liqPrice 37859.223300970873786407
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("21676"));
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[0].address
-        )
-      ).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[1].address
-        )
-      ).to.be.true;
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("21675"));
+      expect(await context.dealer.isSafe(trader1.address)).to.be.false;
+
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("37859"));
+      expect(await context.dealer.isSafe(trader2.address)).to.be.true;
+      await context.priceSourceList[0].setMarkPrice(utils.parseEther("37860"));
       expect(await context.dealer.isSafe(trader2.address)).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[0].address
-        )
-      ).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[1].address
-        )
-      ).to.be.false;
 
       await context.priceSourceList[0].setMarkPrice(utils.parseEther("30000"));
 
-      await context.priceSourceList[1].setMarkPrice(utils.parseEther("1213"));
-      expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[0].address
-        )
-      ).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[1].address
-        )
-      ).to.be.false;
-      expect(await context.dealer.isSafe(trader2.address)).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[0].address
-        )
-      ).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[1].address
-        )
-      ).to.be.true;
-
-      await context.priceSourceList[1].setMarkPrice(utils.parseEther("2714"));
+      // trader1 ETH liqPrice 1150
+      // trader2 ETH liqPrice 2770.952380952380952380
+      await context.priceSourceList[1].setMarkPrice(utils.parseEther("1150"));
       expect(await context.dealer.isSafe(trader1.address)).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[0].address
-        )
-      ).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader1.address,
-          context.perpList[1].address
-        )
-      ).to.be.true;
+      await context.priceSourceList[1].setMarkPrice(utils.parseEther("1149"));
+      expect(await context.dealer.isSafe(trader1.address)).to.be.false;
+
+      await context.priceSourceList[1].setMarkPrice(utils.parseEther("2770"));
+      expect(await context.dealer.isSafe(trader2.address)).to.be.true;
+      await context.priceSourceList[1].setMarkPrice(utils.parseEther("2771"));
       expect(await context.dealer.isSafe(trader2.address)).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[0].address
-        )
-      ).to.be.true;
-      expect(
-        await context.dealer.isPositionSafe(
-          trader2.address,
-          context.perpList[1].address
-        )
-      ).to.be.false;
     });
   });
 
@@ -451,9 +364,6 @@ describe("Liquidation", () => {
         );
       await checkCredit(context, trader1.address, "-6393.1", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-      expect(
-        await context.dealer.isPositionSafe(trader1.address, perp0.address)
-      ).to.be.true;
       await expect(
         perp0
           .connect(liquidator)

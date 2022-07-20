@@ -120,18 +120,18 @@ async function setUpTenderly() {
       utils.parseEther("1").toString(),
     ]
   );
-  let hash = await context.perpList[0].trade(data1)
-  console.log(hash)
-  console.log(await hash.wait())
-  // const tx_1maker1order = await (await context.perpList[0].trade(data1)).wait();
-  // console.log("tx_1maker1order:", tx_1maker1order.transactionHash);
-  // console.log("tx_1maker1order:", tx_1maker1order.gasUsed.toString());
-  // const tx_1maker2order = await (await context.perpList[0].trade(data2)).wait();
-  // console.log("tx_1maker2order:", tx_1maker2order.transactionHash);
-  // console.log("tx_1maker2order:", tx_1maker2order.gasUsed.toString());
-  // const tx_2maker2order = await (await context.perpList[0].trade(data3)).wait();
-  // console.log("tx_2maker2order:", tx_2maker2order.transactionHash);
-  // console.log("tx_2maker2order:", tx_2maker2order.gasUsed.toString());
+  // let hash = await context.perpList[0].trade(data1)
+  // console.log(hash)
+  // console.log(await hash.wait())
+  const tx_1maker1order = await (await context.perpList[0].trade(data1)).wait();
+  console.log("tx_1maker1order:", tx_1maker1order.transactionHash);
+  console.log("tx_1maker1order:", tx_1maker1order.gasUsed.toString());
+  const tx_1maker2order = await (await context.perpList[0].trade(data2)).wait();
+  console.log("tx_1maker2order:", tx_1maker2order.transactionHash);
+  console.log("tx_1maker2order:", tx_1maker2order.gasUsed.toString());
+  const tx_2maker2order = await (await context.perpList[0].trade(data3)).wait();
+  console.log("tx_2maker2order:", tx_2maker2order.transactionHash);
+  console.log("tx_2maker2order:", tx_2maker2order.gasUsed.toString());
 }
 
 setUpTenderly();

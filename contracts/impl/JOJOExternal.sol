@@ -70,7 +70,8 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         returns (
             address[] memory, // traderList
             int256[] memory, // paperChangeList
-            int256[] memory // creditChangeList
+            int256[] memory, // creditChangeList
+            int256 fundingRate // funding rate
         )
     {
         Types.MatchResult memory result = Trading._approveTrade(
@@ -82,7 +83,8 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         return (
             result.traderList,
             result.paperChangeList,
-            result.creditChangeList
+            result.creditChangeList,
+            state.perpRiskParams[msg.sender].fundingRate
         );
     }
 

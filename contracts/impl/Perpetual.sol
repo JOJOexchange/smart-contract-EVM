@@ -87,10 +87,9 @@ contract Perpetual is Ownable, IPerpetual {
         (
             address[] memory traderList,
             int256[] memory paperChangeList,
-            int256[] memory creditChangeList
+            int256[] memory creditChangeList,
+            int256 rate
         ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
-
-        int256 rate = IDealer(owner()).getFundingRate(address(this));
 
         for (uint256 i = 0; i < traderList.length; ) {
             address trader = traderList[i];

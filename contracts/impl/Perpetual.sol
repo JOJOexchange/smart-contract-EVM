@@ -154,14 +154,6 @@ contract Perpetual is Ownable, IPerpetual {
         }
     }
 
-    // ========== owner only adjustment ==========
-
-    /// @inheritdoc IPerpetual
-    function changeCredit(address trader, int256 amount) external onlyOwner {
-        balanceMap[trader].reducedCredit += int128(amount);
-        emit BalanceChange(trader, 0, amount);
-    }
-
     // ========== settlement ==========
 
     /*
@@ -188,12 +180,16 @@ contract Perpetual is Ownable, IPerpetual {
         int128 newReducedCredkt = int128(
             credit - int256(newPaper).decimalMul(rate)
         );
+        if(balanceMap[trader].paper==0){
+            IDealer(owner()).addPosition(trader);
+        }
         balanceMap[trader].paper = newPaper;
         balanceMap[trader].reducedCredit = newReducedCredkt;
         emit BalanceChange(trader, paperChange, creditChange);
         if (balanceMap[trader].paper == 0) {
             // realize PNL
-            IDealer(owner()).positionClear(trader);
+            IDealer(owner()).realizePnl(trader, balanceMap[trader].reducedCredit);
+            balanceMap[trader].reducedCredit = 0;
         }
     }
 }

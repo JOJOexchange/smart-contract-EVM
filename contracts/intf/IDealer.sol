@@ -78,11 +78,17 @@ interface IDealer {
     /// including primary and secondary balance.
     function handleBadDebt(address liquidatedTrader) external;
 
-    /// @notice accrual realized pnl
-    /// @dev only perpetual contract can call this function.
-    function positionClear(address trader) external;
+    /// @notice Register new position
+    /// @dev only perpetual contract can call this function when
+    /// someone opens a new position.
+    function addPosition(address trader) external;
 
-    /// @notice registry operator
+    /// @notice Accrual realized pnl
+    /// @dev only perpetual contract can call this function when
+    /// someone's position is closed.
+    function realizePnl(address trader, int256 pnl) external;
+
+    /// @notice Registry operator
     /// The operator can sign order on your behalf.
     function setOperator(address operator, bool isValid) external;
 }

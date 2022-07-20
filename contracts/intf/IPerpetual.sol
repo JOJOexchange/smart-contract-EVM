@@ -39,7 +39,4 @@ interface IPerpetual {
         int256 requestPaper,
         int256 expectCredit
     ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange);
-
-    /// @notice This function can only be called by the owner and used for accrual unrealized PNL
-    function changeCredit(address trader, int256 amount) external;
 }

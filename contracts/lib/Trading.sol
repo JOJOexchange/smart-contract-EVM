@@ -102,7 +102,6 @@ library Trading {
                 Errors.ORDER_FILLED_OVERFLOW
             );
             // register position for quick query
-            _addPosition(state, result.perp, orderList[i].signer);
             orderHashList[i] = orderHash;
             unchecked {
                 ++i;
@@ -289,24 +288,24 @@ library Trading {
         address perp,
         address trader
     ) internal {
+        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
+        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
         if (!state.hasPosition[trader][perp]) {
             state.hasPosition[trader][perp] = true;
             state.openPositions[trader].push(perp);
         }
     }
 
-    function _positionClear(Types.State storage state, address trader)
+    function _realizePnl(Types.State storage state, address trader, int256 pnl)
         internal
     {
         Types.RiskParams memory params = state.perpRiskParams[msg.sender];
         require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
 
-        (, int256 creditAmount) = IPerpetual(msg.sender).balanceOf(trader);
-        IPerpetual(msg.sender).changeCredit(trader, -1 * creditAmount);
-        state.primaryCredit[trader] += creditAmount;
+        state.hasPosition[trader][msg.sender] = false;
+        state.primaryCredit[trader] += pnl;
         state.positionSerialNum[trader][msg.sender] += 1;
 
-        state.hasPosition[trader][msg.sender] = false;
         address[] storage positionList = state.openPositions[trader];
         for (uint256 i = 0; i < positionList.length; i++) {
             if (positionList[i] == msg.sender) {

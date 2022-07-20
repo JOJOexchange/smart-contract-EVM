@@ -111,9 +111,6 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
                 liquidatedTrader,
                 requestPaperAmount
             );
-        if (liqtorPaperChange != 0) {
-            Trading._addPosition(state, perp, liquidator);
-        }
 
         state.primaryCredit[state.insurance] += int256(insuranceFee);
 
@@ -154,8 +151,13 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function positionClear(address trader) external {
-        Trading._positionClear(state, trader);
+    function addPosition(address trader) external {
+        Trading._addPosition(state, msg.sender, trader);
+    }
+
+    /// @inheritdoc IDealer
+    function realizePnl(address trader, int256 pnl) external {
+        Trading._realizePnl(state, trader, pnl);
     }
 
     /// @inheritdoc IDealer

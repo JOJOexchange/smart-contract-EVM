@@ -93,13 +93,17 @@ describe("view-functions", async () => {
     // risk1
     // netvalue = 10000-15-10+5000-2000 = 12975
     // exposure = 35000+18000 = 53000
+    // maintenanceMargin = 35000*0.03+18000*0.05 = 1950
     await expect(risk1.netValue).to.be.equal(utils.parseEther("12975"));
     await expect(risk1.exposure).to.be.equal(utils.parseEther("53000"));
+    await expect(risk1.maintenanceMargin).to.be.equal(utils.parseEther("1950"));
     // risk2
     // netvalue = 10000-3-2-5000+2000 = 6995
     // exposure = 35000+18000 = 53000
+    // maintenanceMargin = 35000*0.03+18000*0.05 = 1950
     await expect(risk2.netValue).to.be.equal(utils.parseEther("6995"));
     await expect(risk2.exposure).to.be.equal(utils.parseEther("53000"));
+    await expect(risk1.maintenanceMargin).to.be.equal(utils.parseEther("1950"));
   });
 
   it("get trader risk & liq price", async () => {
@@ -173,8 +177,12 @@ describe("view-functions", async () => {
     let params = await context.dealer.getRiskParams(
       context.perpList[0].address
     );
-    await expect(params.liquidationThreshold).to.be.equal(utils.parseEther("0.03"));
-    await expect(params.liquidationPriceOff).to.be.equal(utils.parseEther("0.01"));
+    await expect(params.liquidationThreshold).to.be.equal(
+      utils.parseEther("0.03")
+    );
+    await expect(params.liquidationPriceOff).to.be.equal(
+      utils.parseEther("0.01")
+    );
     await expect(params.insuranceFeeRate).to.be.equal(utils.parseEther("0.01"));
     await expect(params.fundingRate).to.be.equal(utils.parseEther("1"));
     await expect(params.markPriceSource).to.be.equal(

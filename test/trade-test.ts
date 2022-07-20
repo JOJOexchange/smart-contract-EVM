@@ -12,6 +12,7 @@ import {
 } from "../scripts/order";
 import { checkBalance, checkCredit } from "./utils/checkers";
 import { revert, snapshot, timeJump } from "./utils/timemachine";
+import { parseEther } from "ethers/lib/utils";
 
 /*
   Test cases list
@@ -257,7 +258,102 @@ describe("Trade", () => {
     });
   });
 
-  describe("revert cases", async () => {
+  describe("liquidation check in approveTrade", async () => {
+    it("trade success", async () => {
+      // 1000 BTC 30000000*0.03 = 900000
+      // 1000 ETH 2000000*0.05 = 100000
+      // taker fee: 16000
+      // BTC fee 30000000 * 0.0005 = 15000
+      // ETH fee 2000000 * 0.0005 = 1000
+      // maker fee: 3200
+      // BTC fee 30000000 * 0.0001 = 3000
+      // ETH fee 2000000 * 0.0001 = 200
+      await context.dealer
+        .connect(trader1)
+        .deposit(
+          utils.parseEther("16000"),
+          utils.parseEther("0"),
+          trader1.address
+        );
+      await context.dealer
+        .connect(trader2)
+        .deposit(
+          utils.parseEther("3200"),
+          utils.parseEther("0"),
+          trader2.address
+        );
+      await openPosition(
+        trader1,
+        trader2,
+        "1000",
+        "30000",
+        context.perpList[0],
+        orderEnv
+      );
+      await openPosition(
+        trader1,
+        trader2,
+        "1000",
+        "2000",
+        context.perpList[1],
+        orderEnv
+      );
+      let trader1Risk = await context.dealer.getTraderRisk(trader1.address)
+      let trader2Risk = await context.dealer.getTraderRisk(trader2.address)
+      expect(trader1Risk.netValue).to.be.equal(parseEther("1000000"))
+      expect(trader1Risk.maintenanceMargin).to.be.equal(parseEther("1000000"))
+      expect(trader2Risk.netValue).to.be.equal(parseEther("1000000"))
+      expect(trader2Risk.maintenanceMargin).to.be.equal(parseEther("1000000"))
+    });
+    it("trade failed", async () => {
+      await context.dealer
+        .connect(trader1)
+        .deposit(
+          utils.parseEther("15990"),
+          utils.parseEther("0"),
+          trader1.address
+        );
+      await context.dealer
+        .connect(trader2)
+        .deposit(
+          utils.parseEther("3199"),
+          utils.parseEther("0"),
+          trader2.address
+        );
+      await openPosition(
+        trader1,
+        trader2,
+        "1000",
+        "30000",
+        context.perpList[0],
+        orderEnv
+      );
+      const o1 = await buildOrder(
+        orderEnv,
+        context.perpList[1].address,
+        utils.parseEther("1000").toString(),
+        utils.parseEther("-2000000").toString(),
+        trader1
+      );
+      const o2 = await buildOrder(
+        orderEnv,
+        context.perpList[1].address,
+        utils.parseEther("-1000").toString(),
+        utils.parseEther("2000000").toString(),
+        trader2
+      );
+      const data = encodeTradeData(
+        [o1.order, o2.order],
+        [o1.signature, o2.signature],
+        [utils.parseEther("1000").toString(), utils.parseEther("1000").toString()]
+      );
+      await expect(context.perpList[1].trade(data)).to.be.revertedWith(
+        "JOJO_ACCOUNT_NOT_SAFE"
+      );
+    });
+  });
+
+  describe("other revert cases", async () => {
     it("self match", async () => {
       // o1 short at price 30000 - taker
       const o1 = await buildOrder(
@@ -379,7 +475,7 @@ describe("Trade", () => {
       await expect(
         context.perpList[0].connect(trader1).trade(data5)
       ).to.be.revertedWith("JOJO_INVALID_ORDER_SENDER");
-      
+
       // 4. perp wrong
       await expect(context.perpList[1].trade(data5)).to.be.revertedWith(
         "JOJO_PERP_MISMATCH"

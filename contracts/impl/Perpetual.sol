@@ -117,7 +117,7 @@ contract Perpetual is Ownable, IPerpetual {
             liqtorCreditChange,
             liqedPaperChange,
             liqedCreditChange
-        ) = IDealer(owner()).requestLiquidate(
+        ) = IDealer(owner()).requestLiquidation(
             msg.sender,
             liquidatedTrader,
             requestPaper
@@ -180,9 +180,6 @@ contract Perpetual is Ownable, IPerpetual {
         int128 newReducedCredkt = int128(
             credit - int256(newPaper).decimalMul(rate)
         );
-        if(balanceMap[trader].paper==0){
-            IDealer(owner()).addPosition(trader);
-        }
         balanceMap[trader].paper = newPaper;
         balanceMap[trader].reducedCredit = newReducedCredkt;
         emit BalanceChange(trader, paperChange, creditChange);

@@ -102,6 +102,7 @@ library Trading {
                 Errors.ORDER_FILLED_OVERFLOW
             );
             // register position for quick query
+            _addPosition(state, result.perp, orderList[i].signer);
             orderHashList[i] = orderHash;
             unchecked {
                 ++i;
@@ -232,11 +233,10 @@ library Trading {
         uint256 totalPerpNum = state.registeredPerp.length;
         address[] memory perpList = new address[](totalPerpNum);
         int256[] memory markPriceCache = new int256[](totalPerpNum);
-        // check each trader's exposure and net value
+        // check each trader's maintenance margin and net value
         for (uint256 i = 0; i < result.traderList.length; i++) {
             address trader = result.traderList[i];
-            uint256 liqThreshold;
-            uint256 exposure;
+            uint256 maintenanceMargin;
             int256 netValue = state.primaryCredit[trader] +
                 int256(state.secondaryCredit[trader]) +
                 result.creditChangeList[i];
@@ -267,15 +267,11 @@ library Trading {
                 if (perp == result.perp) {
                     paperAmount += result.paperChangeList[i];
                 }
-                exposure += paperAmount.decimalMul(markPrice).abs();
+                maintenanceMargin += paperAmount.decimalMul(markPrice).abs() * params.liquidationThreshold / 10**18;
                 netValue += paperAmount.decimalMul(markPrice) + credit;
-                // use the most strict liquidation threshold
-                if (params.liquidationThreshold > liqThreshold) {
-                    liqThreshold = params.liquidationThreshold;
-                }
             }
             require(
-                netValue >= int256((exposure * liqThreshold) / 10**18),
+                netValue >= int256(maintenanceMargin),
                 Errors.ACCOUNT_NOT_SAFE
             );
         }

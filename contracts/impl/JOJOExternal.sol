@@ -89,7 +89,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function requestLiquidate(
+    function requestLiquidation(
         address liquidator,
         address liquidatedTrader,
         int256 requestPaperAmount
@@ -102,45 +102,14 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             int256 liqedCreditChange
         )
     {
-        address perp = msg.sender;
-        uint256 insuranceFee;
-        (liqtorPaperChange, liqtorCreditChange, insuranceFee) = Liquidation
-            .getLiquidateCreditAmount(
+        return
+            Liquidation.requestLiquidation(
                 state,
-                perp,
+                msg.sender,
+                liquidator,
                 liquidatedTrader,
                 requestPaperAmount
             );
-
-        state.primaryCredit[state.insurance] += int256(insuranceFee);
-
-        // liquidated trader balance change
-        liqedCreditChange = liqtorCreditChange * -1 - int256(insuranceFee);
-        liqedPaperChange = liqtorPaperChange * -1;
-
-        // events
-        uint256 ltSN = state.positionSerialNum[liquidatedTrader][perp];
-        uint256 liquidatorSN = state.positionSerialNum[liquidator][perp];
-        emit Liquidation.BeingLiquidated(
-            perp,
-            liquidatedTrader,
-            liqedPaperChange,
-            liqedCreditChange,
-            ltSN
-        );
-        emit Liquidation.JoinLiquidation(
-            perp,
-            liquidator,
-            liquidatedTrader,
-            liqtorPaperChange,
-            liqtorCreditChange,
-            liquidatorSN
-        );
-        emit Liquidation.InsuranceChange(
-            perp,
-            liquidatedTrader,
-            int256(insuranceFee)
-        );
     }
 
     // ========== balance related ==========
@@ -148,11 +117,6 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     /// @inheritdoc IDealer
     function handleBadDebt(address liquidatedTrader) external {
         Liquidation.handleBadDebt(state, liquidatedTrader);
-    }
-
-    /// @inheritdoc IDealer
-    function addPosition(address trader) external {
-        Trading._addPosition(state, msg.sender, trader);
     }
 
     /// @inheritdoc IDealer

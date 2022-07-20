@@ -11,6 +11,7 @@ import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Types.sol";
+import "./Trading.sol";
 
 library Liquidation {
     using SignedDecimalMath for int256;
@@ -35,10 +36,10 @@ library Liquidation {
     );
 
     // emit when charge insurance fee from liquidated trader
-    event InsuranceChange(
+    event ChargeInsurance(
         address indexed perp,
         address indexed liquidatedTrader,
-        int256 creditChange
+        uint256 fee
     );
 
     event HandleBadDebt(
@@ -211,7 +212,7 @@ library Liquidation {
         address liquidatedTrader,
         int256 requestPaperAmount
     )
-        external
+        public
         view
         returns (
             int256 liqtorPaperChange,
@@ -232,7 +233,7 @@ library Liquidation {
         );
         require(brokenPaperAmount != 0, Errors.TRADER_HAS_NO_POSITION);
         require(
-            requestPaperAmount * brokenPaperAmount >= 0,
+            requestPaperAmount * brokenPaperAmount > 0,
             Errors.LIQUIDATION_REQUEST_AMOUNT_WRONG
         );
         liqtorPaperChange = requestPaperAmount.abs() > brokenPaperAmount.abs()
@@ -251,6 +252,64 @@ library Liquidation {
         insuranceFee =
             (liqtorCreditChange.abs() * params.insuranceFeeRate) /
             10**18;
+    }
+
+    function requestLiquidation(
+        Types.State storage state,
+        address perp,
+        address liquidator,
+        address liquidatedTrader,
+        int256 requestPaperAmount
+    )
+        external
+        returns (
+            int256 liqtorPaperChange,
+            int256 liqtorCreditChange,
+            int256 liqedPaperChange,
+            int256 liqedCreditChange
+        )
+    {
+        uint256 insuranceFee;
+        (
+            liqtorPaperChange,
+            liqtorCreditChange,
+            insuranceFee
+        ) = getLiquidateCreditAmount(
+            state,
+            perp,
+            liquidatedTrader,
+            requestPaperAmount
+        );
+        Trading._addPosition(state, perp, liquidator);
+        state.primaryCredit[state.insurance] += int256(insuranceFee);
+
+        // liquidated trader balance change
+        liqedCreditChange = liqtorCreditChange * -1 - int256(insuranceFee);
+        liqedPaperChange = liqtorPaperChange * -1;
+
+        // events
+        uint256 ltSN = state.positionSerialNum[liquidatedTrader][perp];
+        uint256 liquidatorSN = state.positionSerialNum[liquidator][perp];
+        emit BeingLiquidated(
+            perp,
+            liquidatedTrader,
+            liqedPaperChange,
+            liqedCreditChange,
+            ltSN
+        );
+        emit JoinLiquidation(
+            perp,
+            liquidator,
+            liquidatedTrader,
+            liqtorPaperChange,
+            liqtorCreditChange,
+            liquidatorSN
+        );
+        emit ChargeInsurance(
+            perp,
+            liquidatedTrader,
+            insuranceFee
+        );
     }
 
     function getMarkPrice(Types.State storage state, address perp)

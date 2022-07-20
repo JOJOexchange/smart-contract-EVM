@@ -89,13 +89,15 @@ contract JOJOView is JOJOStorage {
     function getTraderRisk(address trader)
         external
         view
-        returns (int256 netValue, uint256 exposure)
+        returns (
+            int256 netValue,
+            uint256 exposure,
+            uint256 maintenanceMargin
+        )
     {
         int256 positionNetValue;
-        (positionNetValue, exposure, ) = Liquidation.getTotalExposure(
-            state,
-            trader
-        );
+        (positionNetValue, exposure, maintenanceMargin) = Liquidation
+            .getTotalExposure(state, trader);
         netValue =
             positionNetValue +
             state.primaryCredit[trader] +
@@ -116,7 +118,7 @@ contract JOJOView is JOJOStorage {
         return Liquidation.getLiquidationPrice(state, trader, perp);
     }
 
-    /// @notice a view version of requestLiquidate, liquidators can use
+    /// @notice a view version of requestLiquidation, liquidators can use
     /// this function to check how much you have to pay in advance.
     function getLiquidationCost(
         address perp,

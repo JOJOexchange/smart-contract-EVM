@@ -61,7 +61,7 @@ interface IDealer {
     /// @param liquidator is the one who will take over positions.
     /// @param liquidatedTrader is the one who is being liquidated.
     /// @param requestPaperAmount is the size that the liquidator wants to take.
-    function requestLiquidate(
+    function requestLiquidation(
         address liquidator,
         address liquidatedTrader,
         int256 requestPaperAmount
@@ -77,11 +77,6 @@ interface IDealer {
     /// @notice Transfer all bad debt to insurance account, 
     /// including primary and secondary balance.
     function handleBadDebt(address liquidatedTrader) external;
-
-    /// @notice Register new position
-    /// @dev only perpetual contract can call this function when
-    /// someone opens a new position.
-    function addPosition(address trader) external;
 
     /// @notice Accrual realized pnl
     /// @dev only perpetual contract can call this function when

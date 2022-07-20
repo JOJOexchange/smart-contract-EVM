@@ -89,10 +89,11 @@ library Liquidation {
         view
         returns (bool)
     {
-        (int256 netPositionValue, , uint256 maintenanceMargin) = getTotalExposure(
-            state,
-            trader
-        );
+        (
+            int256 netPositionValue,
+            ,
+            uint256 maintenanceMargin
+        ) = getTotalExposure(state, trader);
 
         // net value >= maintenanceMargin
         return
@@ -112,10 +113,11 @@ library Liquidation {
         view
         returns (bool)
     {
-        (int256 netPositionValue, , uint256 maintenanceMargin) = getTotalExposure(
-            state,
-            trader
-        );
+        (
+            int256 netPositionValue,
+            ,
+            uint256 maintenanceMargin
+        ) = getTotalExposure(state, trader);
         return
             netPositionValue + state.primaryCredit[trader] >= 0 &&
             netPositionValue +
@@ -193,9 +195,9 @@ library Liquidation {
         int256 multiplier = paperAmount > 0
             ? int256(10**18 - state.perpRiskParams[perp].liquidationThreshold)
             : int256(10**18 + state.perpRiskParams[perp].liquidationThreshold);
-        int256 liqPrice = (maintenanceMarginPrime - netValuePrime - creditAmount)
-            .decimalDiv(paperAmount)
-            .decimalDiv(multiplier);
+        int256 liqPrice = (maintenanceMarginPrime -
+            netValuePrime -
+            creditAmount).decimalDiv(paperAmount).decimalDiv(multiplier);
         return liqPrice < 0 ? 0 : uint256(liqPrice);
     }
 
@@ -263,20 +265,21 @@ library Liquidation {
     function handleBadDebt(Types.State storage state, address liquidatedTrader)
         external
     {
-        require(
-            !Liquidation._isSafe(state, liquidatedTrader),
-            Errors.ACCOUNT_IS_SAFE
-        );
-        require(
-            state.openPositions[liquidatedTrader].length == 0,
-            Errors.TRADER_STILL_IN_LIQUIDATION
-        );
-        int256 primaryCredit = state.primaryCredit[liquidatedTrader];
-        uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];
-        state.primaryCredit[state.insurance] += primaryCredit;
-        state.secondaryCredit[state.insurance] += secondaryCredit;
-        state.primaryCredit[liquidatedTrader] = 0;
-        state.secondaryCredit[liquidatedTrader] = 0;
-        emit HandleBadDebt(liquidatedTrader, primaryCredit, secondaryCredit);
+        if (
+            state.openPositions[liquidatedTrader].length == 0 &&
+            !Liquidation._isSafe(state, liquidatedTrader)
+        ) {
+            int256 primaryCredit = state.primaryCredit[liquidatedTrader];
+            uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];
+            state.primaryCredit[state.insurance] += primaryCredit;
+            state.secondaryCredit[state.insurance] += secondaryCredit;
+            state.primaryCredit[liquidatedTrader] = 0;
+            state.secondaryCredit[liquidatedTrader] = 0;
+            emit HandleBadDebt(
+                liquidatedTrader,
+                primaryCredit,
+                secondaryCredit
+            );
+        }
     }
 }

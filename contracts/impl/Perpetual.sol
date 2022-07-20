@@ -149,6 +149,9 @@ contract Perpetual is Ownable, IPerpetual {
         _settle(liquidatedTrader, rate, liqedPaperChange, liqedCreditChange);
         _settle(msg.sender, rate, liqtorPaperChange, liqtorCreditChange);
         require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
+        if (balanceMap[liquidatedTrader].paper==0){
+            IDealer(owner()).handleBadDebt(liquidatedTrader);
+        }
     }
 
     // ========== owner only adjustment ==========

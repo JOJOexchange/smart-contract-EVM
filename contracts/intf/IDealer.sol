@@ -74,6 +74,10 @@ interface IDealer {
             int256 liqedCreditChange
         );
 
+    /// @notice Transfer all bad debt to insurance account, 
+    /// including primary and secondary balance.
+    function handleBadDebt(address liquidatedTrader) external;
+
     /// @notice accrual realized pnl
     /// @dev only perpetual contract can call this function.
     function positionClear(address trader) external;

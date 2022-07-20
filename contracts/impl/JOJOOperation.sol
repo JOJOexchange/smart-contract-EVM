@@ -17,19 +17,6 @@ import "../lib/Operation.sol";
 contract JOJOOperation is JOJOStorage {
     using SafeERC20 for IERC20;
 
-    // ========== balance related ==========
-
-    /// @notice batch operation for handleBadDebt. Will transfer all bad
-    /// debt to insurance account, including primary and secondary balance.
-    function handleBadDebt(address[] calldata liquidatedTraderList)
-        external
-        onlyOwner
-    {
-        for (uint256 i = 0; i < liquidatedTraderList.length; i++) {
-            Liquidation.handleBadDebt(state, liquidatedTraderList[i]);
-        }
-    }
-
     // ========== params updates ==========
 
     /// @notice Update multiple funding rate at once.

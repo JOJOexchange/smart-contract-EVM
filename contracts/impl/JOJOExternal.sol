@@ -146,6 +146,13 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         );
     }
 
+    // ========== balance related ==========
+
+    /// @inheritdoc IDealer
+    function handleBadDebt(address liquidatedTrader) external {
+        Liquidation.handleBadDebt(state, liquidatedTrader);
+    }
+
     /// @inheritdoc IDealer
     function positionClear(address trader) external {
         Trading._positionClear(state, trader);

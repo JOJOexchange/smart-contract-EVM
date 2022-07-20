@@ -124,8 +124,8 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         emit Liquidation.BeingLiquidated(
             perp,
             liquidatedTrader,
-            liqtorPaperChange,
-            liqtorCreditChange,
+            liqedPaperChange,
+            liqedCreditChange,
             ltSN
         );
         emit Liquidation.JoinLiquidation(

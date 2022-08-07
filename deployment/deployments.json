@@ -2,26 +2,32 @@
   {
     "network": "bsctest",
     "Dealer": {
-      "Dealer": "0xD30F94be358D6d69b21A6B68F1CbdB3cd8db0aBC",
-      "Liquidation": "0x730ed2687cF53e38340eab55b1F270a86391505e",
-      "Funding": "0x5fc1D1984EdE8ddDcdA9F14736a728dBb74f2400",
-      "Operation": "0x102E3Fb097045c2512eE586F3738Db03d4843bB3"
+      "Dealer": "0xCA5c790268C06fa2Ed8850023Ac85EA55E1a7C24",
+      "Liquidation": "0x4fA461DeDAf0316a390a879bFEcA828CCCb9E062",
+      "Funding": "0x5528dB4ea79d771A6C3A14deb79896C487Fe8222",
+      "Operation": "0x6A05541d4C5a04BA7ae0d4016eA8056658670724"
     },
     "PerpetualList": [
       {
-        "Perpetual": "0x511a3028d952B4c1E2120BAAFEEF826FEafd8287",
+        "Perpetual": "0x2f648F867B98CbCBD18B47D6D4668F8378420392",
         "Name": "BTCUSDC",
         "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
         "MarkPriceEventTrigger": "0xa353f8b083f7575cfec443b5ad585d42f652e9f7"
       },
       {
-        "Perpetual": "0x2a9054b14505f030d70C1E3Fecf82828abb9F513",
+        "Perpetual": "0x5a59A65361ACC0798eD341535064A881A540631a",
         "Name": "ETHUSDC",
         "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF",
         "MarkPriceEventTrigger": "0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
+      },
+      {
+        "Perpetual":"0x19Ad49d8Ec0718B44F4829613a4D0DE7adE8eB04",
+        "Name":"BANAUSDC",
+        "MarkPriceSource":"0xEC80D5510BbB93a787242321EFBb5c32A2db61e4",
+        "MarkPriceEventTrigger": "0xEC80D5510BbB93a787242321EFBb5c32A2db61e4"
       }
     ],
-    "SubaccountFactory": "0x7DADfcc05Ea42A6498B56743a01752189175f754",
+    "SubaccountFactory": "0xd238df695c14c719a6D9D5A4a54A981085B8fe9d",
     "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
     "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",

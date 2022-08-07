@@ -1,0 +1,36 @@
+/*
+    Copyright 2022 JOJO Exchange
+    SPDX-License-Identifier: Apache-2.0
+    ONLY FOR TEST
+    DO NOT DEPLOY IN PRODUCTION ENV
+*/
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+pragma solidity 0.8.9;
+pragma experimental ABIEncoderV2;
+
+contract TestVolatilePriceSource is Ownable {
+    uint256 public price;
+    uint256 public updatedAt;
+    uint256 public roundId;
+
+    event AnswerUpdated(
+        int256 indexed current,
+        uint256 indexed roundId,
+        uint256 updatedAt
+    );
+
+    function getMarkPrice() external view returns (uint256) {
+        // offset [0, 27% price]
+        uint256 offset = (price * (block.number % 10) * 3e16) / 1e18;
+        // 50% price up 50% price down
+        return (block.timestamp % 2 == 0) ? price - offset : price + offset;
+    }
+
+    function setMarkPrice(uint256 newPrice) external onlyOwner {
+        price = newPrice;
+        roundId++;
+        updatedAt = block.timestamp;
+        emit AnswerUpdated(int256(price), roundId, updatedAt);
+    }
+}

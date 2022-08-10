@@ -74,6 +74,8 @@ describe("Subaccount", () => {
     const trader2Subaccount = await registry.getSubaccounts(trader2.address);
     expect(trader1Subaccount.length).to.be.equal(3);
     expect(trader2Subaccount.length).to.be.equal(3);
+    const trader1Subaccount0 = await registry.getSubaccount(trader1.address, 0);
+    expect(trader1Subaccount0).to.be.equal(trader1Subaccount[0]);
   });
 
   it("set op", async () => {
@@ -174,17 +176,17 @@ describe("Subaccount", () => {
     ).reverted;
 
     await context.primaryAsset.mint([trader1Sub.address], [parseEther("1")]);
-    await expect(trader1Sub.retrieve(
-      trader1.address,
-      context.primaryAsset.address,
-      parseEther("1")
-    )).to.be.revertedWith("Ownable: caller is not the owner");
-    await trader1Sub.connect(trader1).retrieve(
-      trader1.address,
-      context.primaryAsset.address,
-      parseEther("1")
-    );
-    const balance = await context.primaryAsset.balanceOf(trader1.address)
-    expect(balance).to.equal(parseEther("1000001"))
+    await expect(
+      trader1Sub.retrieve(
+        trader1.address,
+        context.primaryAsset.address,
+        parseEther("1")
+      )
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+    await trader1Sub
+      .connect(trader1)
+      .retrieve(trader1.address, context.primaryAsset.address, parseEther("1"));
+    const balance = await context.primaryAsset.balanceOf(trader1.address);
+    expect(balance).to.equal(parseEther("1000001"));
   });
 });

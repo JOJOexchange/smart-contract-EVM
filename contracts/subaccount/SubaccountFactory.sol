@@ -9,7 +9,6 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 contract SubaccountFactory {
-
     // ========== storage ==========
 
     // Subaccount template that can be cloned
@@ -21,7 +20,11 @@ contract SubaccountFactory {
 
     // ========== event ==========
 
-    event NewSubaccount(address indexed master, uint256 subaccountIndex);
+    event NewSubaccount(
+        address indexed master,
+        uint256 subaccountIndex,
+        address subaccountAddress
+    );
 
     // ========== constructor ==========
 
@@ -33,8 +36,8 @@ contract SubaccountFactory {
 
     // ========== functions ==========
 
-    /// @notice https://eips.ethereum.org/EIPS/eip-1167[EIP 1167] 
-    /// is a standard protocol for deploying minimal proxy contracts, 
+    /// @notice https://eips.ethereum.org/EIPS/eip-1167[EIP 1167]
+    /// is a standard protocol for deploying minimal proxy contracts,
     /// also known as "clones".
     function newSubaccount() external returns (address subaccount) {
         subaccount = Clones.clone(template);
@@ -43,7 +46,8 @@ contract SubaccountFactory {
         subaccountRegistry[msg.sender].push(subaccount);
         emit NewSubaccount(
             msg.sender,
-            subaccountRegistry[msg.sender].length - 1
+            subaccountRegistry[msg.sender].length - 1,
+            subaccount
         );
     }
 
@@ -53,5 +57,13 @@ contract SubaccountFactory {
         returns (address[] memory)
     {
         return subaccountRegistry[master];
+    }
+
+    function getSubaccount(address master, uint256 index)
+        external
+        view
+        returns (address)
+    {
+        return subaccountRegistry[master][index];
     }
 }

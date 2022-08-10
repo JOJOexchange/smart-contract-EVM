@@ -24,10 +24,18 @@
         "Perpetual":"0x19Ad49d8Ec0718B44F4829613a4D0DE7adE8eB04",
         "Name":"BANAUSDC",
         "MarkPriceSource":"0xEC80D5510BbB93a787242321EFBb5c32A2db61e4",
-        "MarkPriceEventTrigger": "0xEC80D5510BbB93a787242321EFBb5c32A2db61e4"
+        "MarkPriceEventTrigger": "0xEC80D5510BbB93a787242321EFBb5c32A2db61e4",
+        "Description": "Volatile price source used for settlement failure test"
+      },
+      {
+        "Perpetual":"0x1692f9B2923B4F54CAdA39d54faDcF60E6D610A7",
+        "Name":"LIQUSDC",
+        "MarkPriceSource":"0x03c75bbd9032a9EB67282631aB35d542571D5d18",
+        "MarkPriceEventTrigger": "0x03c75bbd9032a9EB67282631aB35d542571D5d18",
+        "Description": "Auto price oracle used for liquidation test"
       }
     ],
-    "SubaccountFactory": "0xd238df695c14c719a6D9D5A4a54A981085B8fe9d",
+    "SubaccountFactory": "0xAcd2Ddd736d56532c45052d2D0F57deF4fF5a34E",
     "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
     "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",

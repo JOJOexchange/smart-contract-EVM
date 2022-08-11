@@ -13,6 +13,7 @@ import "../intf/IDealer.sol";
 import "../lib/Liquidation.sol";
 import "../lib/Funding.sol";
 import "../lib/Trading.sol";
+import "../lib/Position.sol";
 
 abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
@@ -121,7 +122,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
 
     /// @inheritdoc IDealer
     function realizePnl(address trader, int256 pnl) external {
-        Trading._realizePnl(state, trader, pnl);
+        Position._realizePnl(state, trader, pnl);
     }
 
     /// @inheritdoc IDealer

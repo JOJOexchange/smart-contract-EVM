@@ -11,7 +11,7 @@ import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Types.sol";
-import "./Trading.sol";
+import "./Position.sol";
 
 library Liquidation {
     using SignedDecimalMath for int256;
@@ -280,7 +280,7 @@ library Liquidation {
             liquidatedTrader,
             requestPaperAmount
         );
-        Trading._addPosition(state, perp, liquidator);
+        Position._addPosition(state, perp, liquidator);
         state.primaryCredit[state.insurance] += int256(insuranceFee);
 
         // liquidated trader balance change

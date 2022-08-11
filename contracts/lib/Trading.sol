@@ -14,6 +14,7 @@ import "../utils/Errors.sol";
 import "./EIP712.sol";
 import "./Types.sol";
 import "./Liquidation.sol";
+import "./Position.sol";
 
 library Trading {
     using SignedDecimalMath for int256;
@@ -102,7 +103,7 @@ library Trading {
                 Errors.ORDER_FILLED_OVERFLOW
             );
             // register position for quick query
-            _addPosition(state, result.perp, orderList[i].signer);
+            Position._addPosition(state, result.perp, orderList[i].signer);
             orderHashList[i] = orderHash;
             unchecked {
                 ++i;
@@ -274,41 +275,6 @@ library Trading {
                 netValue >= int256(maintenanceMargin),
                 Errors.ACCOUNT_NOT_SAFE
             );
-        }
-    }
-
-    // ========== position register ==========
-
-    function _addPosition(
-        Types.State storage state,
-        address perp,
-        address trader
-    ) internal {
-        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
-        if (!state.hasPosition[trader][perp]) {
-            state.hasPosition[trader][perp] = true;
-            state.openPositions[trader].push(perp);
-        }
-    }
-
-    function _realizePnl(Types.State storage state, address trader, int256 pnl)
-        internal
-    {
-        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
-
-        state.hasPosition[trader][msg.sender] = false;
-        state.primaryCredit[trader] += pnl;
-        state.positionSerialNum[trader][msg.sender] += 1;
-
-        address[] storage positionList = state.openPositions[trader];
-        for (uint256 i = 0; i < positionList.length; i++) {
-            if (positionList[i] == msg.sender) {
-                positionList[i] = positionList[positionList.length - 1];
-                positionList.pop();
-                break;
-            }
         }
     }
 

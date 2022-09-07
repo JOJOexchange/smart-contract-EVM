@@ -269,6 +269,7 @@ library Liquidation {
             int256 liqedCreditChange
         )
     {
+        require(liquidatedTrader!=liquidator, Errors.SELF_LIQUIDATION_NOT_ALLOWED);
         uint256 insuranceFee;
         (
             liqtorPaperChange,

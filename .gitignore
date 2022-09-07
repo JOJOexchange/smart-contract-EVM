@@ -4,13 +4,13 @@
 .idea
 .vscode
 
-dist/
 artifacts/
 cache/
 node_modules/
 coverage/
 interact/
 tenderly.yaml
+hardhat.config.ts
 
 # VIM
 *.swo

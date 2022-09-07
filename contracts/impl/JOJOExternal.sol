@@ -18,6 +18,14 @@ import "../lib/Position.sol";
 abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
 
+    modifier onlyRegisteredPerp(address perp) {
+        require(
+            state.perpRiskParams[perp].isRegistered,
+            Errors.PERP_NOT_REGISTERED
+        );
+        _;
+    }
+
     // ========== events ==========
 
     event SetOperator(
@@ -59,8 +67,28 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
+    function isAllSafe(address[] memory traderList)
+        external
+        view
+        returns (bool safe)
+    {
+        return Liquidation._isAllSafe(state, traderList);
+    }
+
+    /// @inheritdoc IDealer
     function getFundingRate(address perp) external view returns (int256) {
         return state.perpRiskParams[perp].fundingRate;
+    }
+
+    /// @inheritdoc IDealer
+    function setOperator(address operator, bool isValid) external {
+        state.operatorRegistry[msg.sender][operator] = isValid;
+        emit SetOperator(msg.sender, operator, isValid);
+    }
+
+    /// @inheritdoc IDealer
+    function handleBadDebt(address liquidatedTrader) external {
+        Liquidation.handleBadDebt(state, liquidatedTrader);
     }
 
     // ========== registered perpetual only ==========
@@ -68,6 +96,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     /// @inheritdoc IDealer
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
+        onlyRegisteredPerp(msg.sender)
         returns (
             address[] memory, // traderList
             int256[] memory, // paperChangeList
@@ -96,6 +125,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         int256 requestPaperAmount
     )
         external
+        onlyRegisteredPerp(msg.sender)
         returns (
             int256 liqtorPaperChange,
             int256 liqtorCreditChange,
@@ -113,21 +143,19 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             );
     }
 
-    // ========== balance related ==========
-
     /// @inheritdoc IDealer
-    function handleBadDebt(address liquidatedTrader) external {
-        Liquidation.handleBadDebt(state, liquidatedTrader);
+    function openPosition(address trader)
+        external
+        onlyRegisteredPerp(msg.sender)
+    {
+        Position._openPosition(state, msg.sender, trader);
     }
 
     /// @inheritdoc IDealer
-    function realizePnl(address trader, int256 pnl) external {
+    function realizePnl(address trader, int256 pnl)
+        external
+        onlyRegisteredPerp(msg.sender)
+    {
         Position._realizePnl(state, trader, pnl);
-    }
-
-    /// @inheritdoc IDealer
-    function setOperator(address operator, bool isValid) external {
-        state.operatorRegistry[msg.sender][operator] = isValid;
-        emit SetOperator(msg.sender, operator, isValid);
     }
 }

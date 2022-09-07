@@ -127,6 +127,63 @@ library Liquidation {
             int256(maintenanceMargin);
     }
 
+    /// @dev A gas saving way to check multi traders' safety status
+    function _isAllSafe(Types.State storage state, address[] memory traderList)
+        internal
+        view
+        returns (bool)
+    {
+        // cache mark price
+        uint256 totalPerpNum = state.registeredPerp.length;
+        address[] memory perpList = new address[](totalPerpNum);
+        int256[] memory markPriceCache = new int256[](totalPerpNum);
+
+        // check each trader's maintenance margin and net value
+        for (uint256 i = 0; i < traderList.length; i++) {
+            address trader = traderList[i];
+            uint256 maintenanceMargin;
+            int256 netValue = state.primaryCredit[trader] +
+                int256(state.secondaryCredit[trader]);
+
+            // go through all open positions
+            for (uint256 j = 0; j < state.openPositions[trader].length; j++) {
+                address perp = state.openPositions[trader][j];
+                Types.RiskParams memory params = state.perpRiskParams[perp];
+                int256 markPrice;
+                // use cached price OR cache it
+                for (uint256 k = 0; k < totalPerpNum; k++) {
+                    if (perpList[k] == perp) {
+                        markPrice = markPriceCache[k];
+                        break;
+                    }
+                    // if not, query mark price and cache it
+                    if (perpList[k] == address(0)) {
+                        markPrice = int256(
+                            IMarkPriceSource(params.markPriceSource)
+                                .getMarkPrice()
+                        );
+                        perpList[k] = perp;
+                        markPriceCache[k] = markPrice;
+                        break;
+                    }
+                }
+                (int256 paperAmount, int256 credit) = IPerpetual(perp)
+                    .balanceOf(trader);
+                maintenanceMargin +=
+                    (paperAmount.decimalMul(markPrice).abs() *
+                        params.liquidationThreshold) /
+                    10**18;
+                netValue += paperAmount.decimalMul(markPrice) + credit;
+            }
+
+            // return false if any one of traders is lack of collateral
+            if (netValue < int256(maintenanceMargin)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /// @return liquidationPrice It should be considered as absolutely
     /// safe or being liquidated if return 0.
     function getLiquidationPrice(
@@ -220,14 +277,10 @@ library Liquidation {
             uint256 insuranceFee
         )
     {
-        // only registered perp
-        Types.RiskParams memory params = state.perpRiskParams[perp];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
-
         // can not liquidate a safe trader
         require(!_isSafe(state, liquidatedTrader), Errors.ACCOUNT_IS_SAFE);
 
-        // calculate paper change, up to the position size
+        // calculate and limit the paper change to the position size
         (int256 brokenPaperAmount, ) = IPerpetual(perp).balanceOf(
             liquidatedTrader
         );
@@ -241,6 +294,7 @@ library Liquidation {
             : requestPaperAmount;
 
         // get price
+        Types.RiskParams memory params = state.perpRiskParams[perp];
         uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
         uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
         price = liqtorPaperChange > 0
@@ -269,7 +323,10 @@ library Liquidation {
             int256 liqedCreditChange
         )
     {
-        require(liquidatedTrader!=liquidator, Errors.SELF_LIQUIDATION_NOT_ALLOWED);
+        require(
+            liquidatedTrader != liquidator,
+            Errors.SELF_LIQUIDATION_NOT_ALLOWED
+        );
         uint256 insuranceFee;
         (
             liqtorPaperChange,
@@ -281,7 +338,6 @@ library Liquidation {
             liquidatedTrader,
             requestPaperAmount
         );
-        Position._addPosition(state, perp, liquidator);
         state.primaryCredit[state.insurance] += int256(insuranceFee);
 
         // liquidated trader balance change
@@ -306,11 +362,7 @@ library Liquidation {
             liqtorCreditChange,
             liquidatorSN
         );
-        emit ChargeInsurance(
-            perp,
-            liquidatedTrader,
-            insuranceFee
-        );
+        emit ChargeInsurance(perp, liquidatedTrader, insuranceFee);
     }
 
     function getMarkPrice(Types.State storage state, address perp)

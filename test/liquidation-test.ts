@@ -33,6 +33,7 @@ import { checkBalance, checkCredit } from "./utils/checkers";
     Revert cases
     - can not liquidate safe trader
     - liquidator not safe
+    - self liquidation
     - safe account can not be handleDebt
     - can not handle debt before liquidation finished
 */
@@ -421,6 +422,17 @@ describe("Liquidation", () => {
               utils.parseEther("-500")
             )
         ).to.be.revertedWith("LIQUIDATOR_NOT_SAFE");
+      });
+      it("self liquidation", async () => {
+        await expect(
+          perp0
+            .connect(trader1)
+            .liquidate(
+              trader1.address,
+              utils.parseEther("0.01"),
+              utils.parseEther("-500")
+            )
+        ).to.be.revertedWith("JOJO_SELF_LIQUIDATION_NOT_ALLOWED");
       });
       it("can not handle debt before liquidation finished", async () => {
         await perp0

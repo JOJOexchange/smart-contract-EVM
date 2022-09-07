@@ -14,13 +14,11 @@ library Position {
     // ========== position register ==========
 
     /// @notice add position when trade or liquidation happen
-    function _addPosition(
+    function _openPosition(
         Types.State storage state,
         address perp,
         address trader
     ) internal {
-        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
         if (!state.hasPosition[trader][perp]) {
             state.hasPosition[trader][perp] = true;
             state.openPositions[trader].push(perp);
@@ -33,9 +31,6 @@ library Position {
         address trader,
         int256 pnl
     ) internal {
-        Types.RiskParams memory params = state.perpRiskParams[msg.sender];
-        require(params.isRegistered, Errors.PERP_NOT_REGISTERED);
-
         state.hasPosition[trader][msg.sender] = false;
         state.primaryCredit[trader] += pnl;
         state.positionSerialNum[trader][msg.sender] += 1;

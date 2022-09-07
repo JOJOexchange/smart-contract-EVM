@@ -348,7 +348,7 @@ describe("Trade", () => {
         [utils.parseEther("1000").toString(), utils.parseEther("1000").toString()]
       );
       await expect(context.perpList[1].trade(data)).to.be.revertedWith(
-        "JOJO_ACCOUNT_NOT_SAFE"
+        "TRADER_NOT_SAFE"
       );
     });
   });
@@ -548,7 +548,7 @@ describe("Trade", () => {
         [utils.parseEther("100").toString(), utils.parseEther("100").toString()]
       );
       await expect(context.perpList[0].trade(data10)).to.be.revertedWith(
-        "JOJO_ACCOUNT_NOT_SAFE"
+        "TRADER_NOT_SAFE"
       );
 
       // 9. order expired

@@ -50,6 +50,9 @@ interface IDealer {
     /// under all markets will be liquidated if the return value is true
     function isSafe(address trader) external view returns (bool);
 
+    /// @notice check if a list of traders are safe.
+    function isAllSafe(address[] memory traderList) external view returns (bool);
+
     /// @notice get funding rate of a perpetual market.
     /// Funding rate is a 1e18 based decimal.
     function getFundingRate(address perp) external view returns (int256);
@@ -74,9 +77,14 @@ interface IDealer {
             int256 liqedCreditChange
         );
 
-    /// @notice Transfer all bad debt to insurance account, 
+    /// @notice Transfer all bad debt to insurance account,
     /// including primary and secondary balance.
     function handleBadDebt(address liquidatedTrader) external;
+
+    /// @notice Register position into dealer for trader
+    /// @dev only perpetual contract can call this function when
+    /// someone's position is opened.
+    function openPosition(address trader) external;
 
     /// @notice Accrual realized pnl
     /// @dev only perpetual contract can call this function when

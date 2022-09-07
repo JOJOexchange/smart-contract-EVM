@@ -48,10 +48,6 @@ library Trading {
     ) internal returns (Types.MatchResult memory result) {
         result.perp = msg.sender;
         require(
-            state.perpRiskParams[result.perp].isRegistered,
-            Errors.PERP_NOT_REGISTERED
-        );
-        require(
             state.validOrderSender[orderSender],
             Errors.INVALID_ORDER_SENDER
         );
@@ -102,8 +98,6 @@ library Trading {
                     int256(orderList[i].paperAmount).abs(),
                 Errors.ORDER_FILLED_OVERFLOW
             );
-            // register position for quick query
-            Position._addPosition(state, result.perp, orderList[i].signer);
             orderHashList[i] = orderHash;
             unchecked {
                 ++i;
@@ -220,61 +214,6 @@ library Trading {
                     Errors.ORDER_SENDER_NOT_SAFE
                 );
             }
-        }
-
-        // check if trader safe
-        _checkIsTraderSafe(state, result);
-    }
-
-    function _checkIsTraderSafe(
-        Types.State storage state,
-        Types.MatchResult memory result
-    ) private view {
-        // cache mark price to save gas
-        uint256 totalPerpNum = state.registeredPerp.length;
-        address[] memory perpList = new address[](totalPerpNum);
-        int256[] memory markPriceCache = new int256[](totalPerpNum);
-        // check each trader's maintenance margin and net value
-        for (uint256 i = 0; i < result.traderList.length; i++) {
-            address trader = result.traderList[i];
-            uint256 maintenanceMargin;
-            int256 netValue = state.primaryCredit[trader] +
-                int256(state.secondaryCredit[trader]) +
-                result.creditChangeList[i];
-            for (uint256 j = 0; j < state.openPositions[trader].length; j++) {
-                address perp = state.openPositions[trader][j];
-                Types.RiskParams memory params = state.perpRiskParams[perp];
-                int256 markPrice;
-                // check if mark price is cached
-                for (uint256 k = 0; k < totalPerpNum; k++) {
-                    if (perpList[k] == perp) {
-                        markPrice = markPriceCache[k];
-                        break;
-                    }
-                    // if not, query mark price and cache it
-                    if (perpList[k] == address(0)) {
-                        markPrice = int256(
-                            IMarkPriceSource(params.markPriceSource)
-                                .getMarkPrice()
-                        );
-                        perpList[k] = perp;
-                        markPriceCache[k] = markPrice;
-                        break;
-                    }
-                }
-                (int256 paperAmount, int256 credit) = IPerpetual(perp)
-                    .balanceOf(trader);
-                // add the paper change right now
-                if (perp == result.perp) {
-                    paperAmount += result.paperChangeList[i];
-                }
-                maintenanceMargin += paperAmount.decimalMul(markPrice).abs() * params.liquidationThreshold / 10**18;
-                netValue += paperAmount.decimalMul(markPrice) + credit;
-            }
-            require(
-                netValue >= int256(maintenanceMargin),
-                Errors.ACCOUNT_NOT_SAFE
-            );
         }
     }
 

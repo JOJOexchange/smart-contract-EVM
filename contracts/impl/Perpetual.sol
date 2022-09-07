@@ -98,6 +98,8 @@ contract Perpetual is Ownable, IPerpetual {
                 ++i;
             }
         }
+
+        require(IDealer(owner()).isAllSafe(traderList), "TRADER_NOT_SAFE");
     }
 
     // ========== liquidation ==========
@@ -173,6 +175,9 @@ contract Perpetual is Ownable, IPerpetual {
         int256 paperChange,
         int256 creditChange
     ) internal {
+        if (balanceMap[trader].paper==0){
+            IDealer(owner()).openPosition(trader);
+        }
         int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
             int256(balanceMap[trader].reducedCredit) +
             creditChange;

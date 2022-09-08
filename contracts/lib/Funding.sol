@@ -40,9 +40,14 @@ library Funding {
         uint256 executionTimestamp
     );
 
-    event InternalTransfer(
-        address indexed to,
-        address indexed payer,
+    event TransferIn(
+        address trader,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    );
+
+    event TransferOut(
+        address trader,
         uint256 primaryAmount,
         uint256 secondaryAmount
     );
@@ -156,7 +161,8 @@ library Funding {
         }
 
         if (isInternal) {
-            emit InternalTransfer(to, payer, primaryAmount, secondaryAmount);
+            emit TransferIn(to, primaryAmount, secondaryAmount);
+            emit TransferOut(payer, primaryAmount, secondaryAmount);
         } else {
             emit Withdraw(to, payer, primaryAmount, secondaryAmount);
         }

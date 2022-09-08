@@ -21,7 +21,7 @@ interface IPerpetual {
     function trade(bytes calldata tradeData) external;
 
     /// @notice Submit the paper amount you want to liquidate.
-    /// Because the liquidation is public, there is no guarantee that your request 
+    /// Because the liquidation is public, there is no guarantee that your request
     /// will be executed. It will not be executed or partially executed if:
     /// 1) someone else submitted a liquidation request before you, or
     /// 2) the trader deposited enough margin in time, or
@@ -39,4 +39,11 @@ interface IPerpetual {
         int256 requestPaper,
         int256 expectCredit
     ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange);
+
+    /// @notice Get funding rate of this perpetual market. 
+    /// Funding rate is a 1e18 based decimal.
+    function getFundingRate() external view returns (int256);
+
+    /// @notice Update funding rate, only owner can call.
+    function updateFundingRate(int256 newFundingRate) external;
 }

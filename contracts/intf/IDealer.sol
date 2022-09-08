@@ -42,8 +42,7 @@ interface IDealer {
         returns (
             address[] memory traderList,
             int256[] memory paperChangeList,
-            int256[] memory creditChangeList,
-            int256 fundingRate
+            int256[] memory creditChangeList
         );
 
     /// @notice check if the trader's account is safe. The trader's positions

@@ -8,6 +8,7 @@ pragma experimental ABIEncoderV2;
 
 import "./Types.sol";
 import "../utils/Errors.sol";
+import "../intf/IPerpetual.sol";
 
 library Operation {
     // ========== events ==========
@@ -63,22 +64,16 @@ library Operation {
     }
 
     function updateFundingRate(
-        Types.State storage state,
         address[] calldata perpList,
         int256[] calldata rateList
     ) external {
-        require(
-            msg.sender == state.fundingRateKeeper,
-            Errors.INVALID_FUNDING_RATE_KEEPER
-        );
         require(
             perpList.length == rateList.length,
             Errors.ARRAY_LENGTH_NOT_SAME
         );
         for (uint256 i = 0; i < perpList.length; i++) {
-            Types.RiskParams storage params = state.perpRiskParams[perpList[i]];
-            int256 oldRate = params.fundingRate;
-            params.fundingRate = rateList[i];
+            int256 oldRate = IPerpetual(perpList[i]).getFundingRate();
+            IPerpetual(perpList[i]).updateFundingRate(rateList[i]);
             emit UpdateFundingRate(perpList[i], oldRate, rateList[i]);
         }
     }
@@ -108,7 +103,7 @@ library Operation {
         emit SetWithdrawTimeLock(oldWithdrawTimeLock, newWithdrawTimeLock);
     }
 
-    function _setOrderSender(
+    function setOrderSender(
         Types.State storage state,
         address orderSender,
         bool isValid

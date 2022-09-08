@@ -35,6 +35,7 @@ contract Perpetual is Ownable, IPerpetual {
         int128 reducedCredit;
     }
     mapping(address => balance) public balanceMap;
+    int256 fundingRate;
 
     // ========== events ==========
 
@@ -43,6 +44,8 @@ contract Perpetual is Ownable, IPerpetual {
         int256 paperChange,
         int256 creditChange
     );
+
+    event UpdateFundingRate(int256 oldFundingRate, int256 newFundingRate);
 
     // ========== constructor ==========
 
@@ -80,6 +83,16 @@ contract Perpetual is Ownable, IPerpetual {
             int256(balanceMap[trader].reducedCredit);
     }
 
+    function updateFundingRate(int256 newFundingRate) external onlyOwner {
+        int256 oldFundingRate = fundingRate;
+        fundingRate = newFundingRate;
+        emit UpdateFundingRate(oldFundingRate, newFundingRate);
+    }
+
+    function getFundingRate() external view returns (int256) {
+        return fundingRate;
+    }
+
     // ========== trade ==========
 
     /// @inheritdoc IPerpetual
@@ -87,13 +100,12 @@ contract Perpetual is Ownable, IPerpetual {
         (
             address[] memory traderList,
             int256[] memory paperChangeList,
-            int256[] memory creditChangeList,
-            int256 rate
+            int256[] memory creditChangeList
         ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
 
         for (uint256 i = 0; i < traderList.length; ) {
             address trader = traderList[i];
-            _settle(trader, rate, paperChangeList[i], creditChangeList[i]);
+            _settle(trader, paperChangeList[i], creditChangeList[i]);
             unchecked {
                 ++i;
             }
@@ -147,11 +159,10 @@ contract Perpetual is Ownable, IPerpetual {
             );
         }
 
-        int256 rate = IDealer(owner()).getFundingRate(address(this));
-        _settle(liquidatedTrader, rate, liqedPaperChange, liqedCreditChange);
-        _settle(msg.sender, rate, liqtorPaperChange, liqtorCreditChange);
+        _settle(liquidatedTrader, liqedPaperChange, liqedCreditChange);
+        _settle(msg.sender, liqtorPaperChange, liqtorCreditChange);
         require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
-        if (balanceMap[liquidatedTrader].paper==0){
+        if (balanceMap[liquidatedTrader].paper == 0) {
             IDealer(owner()).handleBadDebt(liquidatedTrader);
         }
     }
@@ -171,14 +182,16 @@ contract Perpetual is Ownable, IPerpetual {
 
     function _settle(
         address trader,
-        int256 rate,
         int256 paperChange,
         int256 creditChange
     ) internal {
-        if (balanceMap[trader].paper==0){
+        if (balanceMap[trader].paper == 0) {
             IDealer(owner()).openPosition(trader);
         }
-        int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
+        int256 rate = fundingRate; // gas saving
+        int256 credit = int256(balanceMap[trader].paper).decimalMul(
+            rate
+        ) +
             int256(balanceMap[trader].reducedCredit) +
             creditChange;
         int128 newPaper = balanceMap[trader].paper + int128(paperChange);
@@ -190,7 +203,10 @@ contract Perpetual is Ownable, IPerpetual {
         emit BalanceChange(trader, paperChange, creditChange);
         if (balanceMap[trader].paper == 0) {
             // realize PNL
-            IDealer(owner()).realizePnl(trader, balanceMap[trader].reducedCredit);
+            IDealer(owner()).realizePnl(
+                trader,
+                balanceMap[trader].reducedCredit
+            );
             balanceMap[trader].reducedCredit = 0;
         }
     }

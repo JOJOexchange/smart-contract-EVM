@@ -18,14 +18,6 @@ import "../lib/Position.sol";
 abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
 
-    modifier onlyRegisteredPerp(address perp) {
-        require(
-            state.perpRiskParams[perp].isRegistered,
-            Errors.PERP_NOT_REGISTERED
-        );
-        _;
-    }
-
     // ========== events ==========
 
     event SetOperator(
@@ -77,7 +69,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
 
     /// @inheritdoc IDealer
     function getFundingRate(address perp) external view returns (int256) {
-        return state.perpRiskParams[perp].fundingRate;
+        return IPerpetual(perp).getFundingRate();
     }
 
     /// @inheritdoc IDealer
@@ -100,8 +92,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         returns (
             address[] memory, // traderList
             int256[] memory, // paperChangeList
-            int256[] memory, // creditChangeList
-            int256 fundingRate // funding rate
+            int256[] memory // creditChangeList
         )
     {
         Types.MatchResult memory result = Trading._approveTrade(
@@ -113,8 +104,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         return (
             result.traderList,
             result.paperChangeList,
-            result.creditChangeList,
-            state.perpRiskParams[msg.sender].fundingRate
+            result.creditChangeList
         );
     }
 

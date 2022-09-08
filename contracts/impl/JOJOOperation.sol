@@ -24,8 +24,8 @@ contract JOJOOperation is JOJOStorage {
     function updateFundingRate(
         address[] calldata perpList,
         int256[] calldata rateList
-    ) external {
-        Operation.updateFundingRate(state, perpList, rateList);
+    ) external onlyFundingRateKeeper {
+        Operation.updateFundingRate(perpList, rateList);
     }
 
     /// @notice Set risk parameters for a perpetual market.
@@ -57,7 +57,7 @@ contract JOJOOperation is JOJOStorage {
         external
         onlyOwner
     {
-        Operation._setOrderSender(state, orderSender, isValid);
+        Operation.setOrderSender(state, orderSender, isValid);
     }
 
     /// @notice Secondary asset can only be set once.

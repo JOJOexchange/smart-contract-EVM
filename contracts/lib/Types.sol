@@ -106,8 +106,6 @@ library Types {
         uint256 liquidationPriceOff;
         // insurance fee rate. 1E18 based decimal.
         uint256 insuranceFeeRate;
-        // funding rate
-        int256 fundingRate;
         // price source of mark price
         address markPriceSource;
         // perpetual market name

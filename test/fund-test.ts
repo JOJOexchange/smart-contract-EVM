@@ -122,7 +122,7 @@ describe("Funding", () => {
       expect(creditInfo[3]).to.be.equal(utils.parseEther("20000"));
 
       await timeJump(50);
-      expect(d.executeWithdraw(trader1Address, false)).to.be.revertedWith(
+      await expect(d.executeWithdraw(trader1Address, false)).to.be.revertedWith(
         "JOJO_WITHDRAW_PENDING"
       );
 
@@ -167,8 +167,8 @@ describe("Funding", () => {
 
       await context.dealer
         .connect(trader1)
-        .requestWithdraw(utils.parseEther("0"), utils.parseEther("900000"));
-      expect(
+        .requestWithdraw(utils.parseEther("0"), utils.parseEther("990000"));
+      await expect(
         context.dealer.connect(trader1).executeWithdraw(trader1.address, false)
       ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
     });
@@ -221,6 +221,37 @@ describe("Funding", () => {
       await expect(d.executeWithdraw(trader1Address, false)).to.be.revertedWith(
         "JOJO_ACCOUNT_NOT_SAFE"
       );
+    });
+
+    it("safe check", async () => {
+      await context.dealer
+        .connect(trader1)
+        .deposit(
+          utils.parseEther("0"),
+          utils.parseEther("1000000"),
+          trader1Address
+        );
+      await context.dealer
+        .connect(trader2)
+        .deposit(
+          utils.parseEther("1000000"),
+          utils.parseEther("0"),
+          trader2Address
+        );
+      await openPosition(
+        trader1,
+        trader2,
+        "100",
+        "30000",
+        context.perpList[0],
+        await getDefaultOrderEnv(context.dealer)
+      );
+      await context.dealer
+        .connect(trader1)
+        .requestWithdraw(utils.parseEther("0"), utils.parseEther("999000"));
+      await expect(
+        context.dealer.connect(trader1).executeWithdraw(trader1Address, false)
+      ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
     });
   });
 });

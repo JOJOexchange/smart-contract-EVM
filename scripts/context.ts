@@ -28,8 +28,8 @@ export interface Context {
   insurance: Signer;
   insuranceAddress: string;
   traderList: Wallet[];
-  LiquidationLib:Contract;
-  FundingLib:Contract;
+  LiquidationLib: Contract;
+  FundingLib: Contract;
 }
 
 export async function basicContext(): Promise<Context> {
@@ -46,7 +46,10 @@ export async function basicContext(): Promise<Context> {
         i.toString(),
       ethers.provider
     );
-    await ethers.provider.send("hardhat_setBalance",[wallet.address, "0x10000000000000000000"])
+    await ethers.provider.send("hardhat_setBalance", [
+      wallet.address,
+      "0x10000000000000000000",
+    ]);
     traders.push(wallet);
   }
 
@@ -64,10 +67,10 @@ export async function basicContext(): Promise<Context> {
   // deploy core contracts
   let primaryAsset: Contract = await (
     await ethers.getContractFactory("TestERC20")
-  ).deploy("USDT", "USDT",18);
+  ).deploy("USDT", "USDT", 18);
   let secondaryAsset: Contract = await (
     await ethers.getContractFactory("TestERC20")
-  ).deploy("USDJ", "USDJ",18);
+  ).deploy("USDJ", "USDJ", 18);
   let dealer = await (
     await ethers.getContractFactory("JOJODealer", {
       libraries: {
@@ -77,7 +80,7 @@ export async function basicContext(): Promise<Context> {
       },
     })
   ).deploy(primaryAsset.address);
-  await dealer.setSecondaryAsset(secondaryAsset.address)
+  await dealer.setSecondaryAsset(secondaryAsset.address);
   await dealer.setInsurance(insuranceAddress);
   await dealer.setFundingRateKeeper(ownerAddress);
   await dealer.setOrderSender(ownerAddress, true);
@@ -132,6 +135,11 @@ export async function basicContext(): Promise<Context> {
   ]);
   await priceSourceList[2].setMarkPrice(utils.parseEther("10"));
 
+  await dealer.updateFundingRate(
+    [perpList[0].address, perpList[1].address, perpList[2].address],
+    [utils.parseEther("1"), utils.parseEther("1"), utils.parseEther("1")]
+  );
+
   for (let index = 0; index < traders.length; index++) {
     let trader = traders[index];
     // 1M primary token for each trader
@@ -157,8 +165,8 @@ export async function basicContext(): Promise<Context> {
     insurance: insurance,
     insuranceAddress: insuranceAddress,
     traderList: traders,
-    LiquidationLib:LiquidationLib,
-    FundingLib:FundingLib
+    LiquidationLib: LiquidationLib,
+    FundingLib: FundingLib,
   };
 }
 
@@ -166,7 +174,11 @@ export async function fundTrader(context: Context) {
   for (let i = 0; i < 3; i++) {
     await context.dealer
       .connect(context.traderList[i])
-      .deposit(utils.parseEther("1000000"), utils.parseEther("0"), context.traderList[i].address);
+      .deposit(
+        utils.parseEther("1000000"),
+        utils.parseEther("0"),
+        context.traderList[i].address
+      );
   }
 }
 

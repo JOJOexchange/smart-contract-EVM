@@ -184,7 +184,6 @@ describe("view-functions", async () => {
       utils.parseEther("0.01")
     );
     await expect(params.insuranceFeeRate).to.be.equal(utils.parseEther("0.01"));
-    await expect(params.fundingRate).to.be.equal(utils.parseEther("1"));
     await expect(params.markPriceSource).to.be.equal(
       context.priceSourceList[0].address
     );
@@ -195,14 +194,8 @@ describe("view-functions", async () => {
   it("get positions", async () => {
     let positions = await context.dealer.getPositions(trader1.address);
     await expect(positions.length).to.be.equal(2);
-    await openPosition(
-      trader2,
-      trader1,
-      "1",
-      "30000",
-      context.perpList[0],
-      orderEnv
-    );
+    positions = await context.dealer.getPositions(trader2.address);
+    await expect(positions.length).to.be.equal(2);
     await openPosition(
       trader2,
       trader1,
@@ -212,6 +205,21 @@ describe("view-functions", async () => {
       orderEnv
     );
     positions = await context.dealer.getPositions(trader1.address);
+    await expect(positions.length).to.be.equal(1);
+    positions = await context.dealer.getPositions(trader2.address);
+    await expect(positions.length).to.be.equal(1);
+    await openPosition(
+      trader2,
+      trader1,
+      "1",
+      "30000",
+      context.perpList[0],
+      orderEnv
+    );
+    
+    positions = await context.dealer.getPositions(trader1.address);
+    await expect(positions.length).to.be.equal(0);
+    positions = await context.dealer.getPositions(trader2.address);
     await expect(positions.length).to.be.equal(0);
   });
 

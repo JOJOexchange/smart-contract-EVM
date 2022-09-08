@@ -27,7 +27,7 @@ describe("operations", async () => {
       utils.parseEther("0.01"), // 1% price offset
       // utils.parseEther("1000"), // 1000ETH max
       utils.parseEther("0.01"), // 1% insurance fee
-      utils.parseEther("1"), // init funding rate 1
+      // utils.parseEther("1"), // init funding rate 1
       context.perpList[1].address, // mark price source
       "ETH10x", // name
       false, // register
@@ -50,4 +50,41 @@ describe("operations", async () => {
     await expect(await context.dealer.isOrderSenderValid(traderAddress)).to.be
       .false;
   });
+
+  it("only registered perp",async () => {
+    await expect(
+      context.dealer.approveTrade(context.traderList[0].address, "0x00")
+    ).to.be.revertedWith("JOJO_PERP_NOT_REGISTERED");
+
+    await expect(
+      context.dealer.requestLiquidation(context.traderList[0].address, context.traderList[0].address, 0)
+    ).to.be.revertedWith("JOJO_PERP_NOT_REGISTERED");
+
+    await expect(
+      context.dealer.openPosition(context.traderList[0].address)
+    ).to.be.revertedWith("JOJO_PERP_NOT_REGISTERED");
+
+    await expect(
+      context.dealer.realizePnl(context.traderList[0].address, 0)
+    ).to.be.revertedWith("JOJO_PERP_NOT_REGISTERED");
+  })
+
+  it("invalid risk param",async () => {
+    await expect(
+      context.dealer.setPerpRiskParams(context.perpList[0].address, [
+        utils.parseEther("0.03"), // 3% liquidation
+        utils.parseEther("0.02"), // 1% price offset
+        utils.parseEther("0.02"), // 1% insurance fee
+        context.priceSourceList[0].address, // mark price source
+        "BTC20x", // name
+        true, // register
+      ])
+    ).to.be.revertedWith("JOJO_INVALID_RISK_PARAM");
+  })
+
+  it("secondary asset can not be changed",async () => {
+    await expect(
+      context.dealer.setSecondaryAsset(context.secondaryAsset.address)
+    ).to.be.revertedWith("JOJO_SECONDARY_ASSET_ALREASY_EXIST")
+  })
 });

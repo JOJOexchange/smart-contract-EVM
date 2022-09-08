@@ -3,14 +3,13 @@
 .env
 .idea
 .vscode
+hardhat.config.ts
 
 artifacts/
 cache/
 node_modules/
 coverage/
 interact/
-tenderly.yaml
-hardhat.config.ts
 
 # VIM
 *.swo

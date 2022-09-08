@@ -162,4 +162,13 @@ describe("Funding rate", () => {
     await checkBalance(context.perpList[0], trader1.address, "1", "-30016.5");
     await checkBalance(context.perpList[0], trader2.address, "-1", "29998.5");
   });
+
+  it("revert cases", async () => {
+    await expect(
+      context.dealer.updateFundingRate(
+        [context.perpList[0].address],
+        [utils.parseEther("0.5"), utils.parseEther("1")]
+      )
+    ).to.be.revertedWith("JOJO_ARRAY_LENGTH_NOT_SAME");
+  });
 });

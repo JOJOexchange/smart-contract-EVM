@@ -138,7 +138,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         external
         onlyRegisteredPerp(msg.sender)
     {
-        Position._openPosition(state, msg.sender, trader);
+        Position._openPosition(state, trader);
     }
 
     /// @inheritdoc IDealer

@@ -298,12 +298,12 @@ describe("Trade", () => {
         context.perpList[1],
         orderEnv
       );
-      let trader1Risk = await context.dealer.getTraderRisk(trader1.address)
-      let trader2Risk = await context.dealer.getTraderRisk(trader2.address)
-      expect(trader1Risk.netValue).to.be.equal(parseEther("1000000"))
-      expect(trader1Risk.maintenanceMargin).to.be.equal(parseEther("1000000"))
-      expect(trader2Risk.netValue).to.be.equal(parseEther("1000000"))
-      expect(trader2Risk.maintenanceMargin).to.be.equal(parseEther("1000000"))
+      let trader1Risk = await context.dealer.getTraderRisk(trader1.address);
+      let trader2Risk = await context.dealer.getTraderRisk(trader2.address);
+      expect(trader1Risk.netValue).to.be.equal(parseEther("1000000"));
+      expect(trader1Risk.maintenanceMargin).to.be.equal(parseEther("1000000"));
+      expect(trader2Risk.netValue).to.be.equal(parseEther("1000000"));
+      expect(trader2Risk.maintenanceMargin).to.be.equal(parseEther("1000000"));
     });
     it("trade failed", async () => {
       await context.dealer
@@ -345,7 +345,10 @@ describe("Trade", () => {
       const data = encodeTradeData(
         [o1.order, o2.order],
         [o1.signature, o2.signature],
-        [utils.parseEther("1000").toString(), utils.parseEther("1000").toString()]
+        [
+          utils.parseEther("1000").toString(),
+          utils.parseEther("1000").toString(),
+        ]
       );
       await expect(context.perpList[1].trade(data)).to.be.revertedWith(
         "TRADER_NOT_SAFE"
@@ -499,12 +502,34 @@ describe("Trade", () => {
         utils.parseEther("40000").toString(),
         context.traderList[1]
       );
+      let o7Reverse = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("1").toString(),
+        utils.parseEther("-40000").toString(),
+        context.traderList[1]
+      );
+      let baseOrderReverse = await buildOrder(
+        orderEnv,
+        context.perpList[0].address,
+        utils.parseEther("-1").toString(),
+        utils.parseEther("30000").toString(),
+        context.traderList[0]
+      );
       let data7 = encodeTradeData(
         [baseOrder.order, o7.order],
         [baseOrder.signature, o7.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
+      let data7Reverse = encodeTradeData(
+        [baseOrder.order, o7Reverse.order],
+        [baseOrder.signature, o7Reverse.signature],
+        [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
+      );
       await expect(context.perpList[0].trade(data7)).to.be.revertedWith(
+        "JOJO_ORDER_PRICE_NOT_MATCH"
+      );
+      await expect(context.perpList[0].trade(data7Reverse)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NOT_MATCH"
       );
 
@@ -513,7 +538,15 @@ describe("Trade", () => {
         [o7.signature, baseOrder.signature],
         [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
       );
+      let data8Reverse = encodeTradeData(
+        [o7.order, baseOrderReverse.order],
+        [o7.signature, baseOrderReverse.signature],
+        [utils.parseEther("1").toString(), utils.parseEther("1").toString()]
+      );
       await expect(context.perpList[0].trade(data8)).to.be.revertedWith(
+        "JOJO_ORDER_PRICE_NOT_MATCH"
+      );
+      await expect(context.perpList[0].trade(data8Reverse)).to.be.revertedWith(
         "JOJO_ORDER_PRICE_NOT_MATCH"
       );
 

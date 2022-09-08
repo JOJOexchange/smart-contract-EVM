@@ -14,18 +14,19 @@ library Position {
     // ========== position register ==========
 
     /// @notice add position when trade or liquidation happen
+    /// msg.sender is the perpetual contract
     function _openPosition(
         Types.State storage state,
-        address perp,
         address trader
     ) internal {
-        if (!state.hasPosition[trader][perp]) {
-            state.hasPosition[trader][perp] = true;
-            state.openPositions[trader].push(perp);
+        if (!state.hasPosition[trader][msg.sender]) {
+            state.hasPosition[trader][msg.sender] = true;
+            state.openPositions[trader].push(msg.sender);
         }
     }
 
     /// @notice realize pnl and remove position from the registry
+    /// msg.sender is the perpetual contract
     function _realizePnl(
         Types.State storage state,
         address trader,

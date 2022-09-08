@@ -270,7 +270,7 @@ describe("Liquidation", () => {
       await checkCredit(context, insurance, "2.0394", "0");
       await checkCredit(context, trader1.address, "5000", "5000");
       expect(await context.dealer.isSafe(trader1.address)).to.be.false;
-      expect(
+      await expect(
         perp0
           .connect(liquidator)
           .liquidate(
@@ -433,6 +433,17 @@ describe("Liquidation", () => {
               utils.parseEther("-500")
             )
         ).to.be.revertedWith("JOJO_SELF_LIQUIDATION_NOT_ALLOWED");
+      });
+      it("trader is not safe but don't have certain position", async () => {
+        await expect(
+          context.perpList[1]
+            .connect(liquidator)
+            .liquidate(
+              trader1.address,
+              utils.parseEther("0.01"),
+              utils.parseEther("-500")
+            )
+        ).to.be.revertedWith("JOJO_TRADER_HAS_NO_POSITION");
       });
       it("can not handle debt before liquidation finished", async () => {
         await perp0

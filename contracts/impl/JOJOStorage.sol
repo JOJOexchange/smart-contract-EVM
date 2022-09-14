@@ -24,9 +24,9 @@ contract JOJOStorage is Ownable, ReentrancyGuard {
         _;
     }
 
-    modifier onlyRegisteredPerp(address perp) {
+    modifier onlyRegisteredPerp() {
         require(
-            state.perpRiskParams[perp].isRegistered,
+            state.perpRiskParams[msg.sender].isRegistered,
             Errors.PERP_NOT_REGISTERED
         );
         _;

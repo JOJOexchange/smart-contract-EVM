@@ -2,40 +2,47 @@
   {
     "network": "bsctest",
     "Dealer": {
-      "Dealer": "0xCA5c790268C06fa2Ed8850023Ac85EA55E1a7C24",
-      "Liquidation": "0x4fA461DeDAf0316a390a879bFEcA828CCCb9E062",
-      "Funding": "0x5528dB4ea79d771A6C3A14deb79896C487Fe8222",
-      "Operation": "0x6A05541d4C5a04BA7ae0d4016eA8056658670724"
+      "Dealer": "0xAa52A7Bf3a2f32f6C5DeBA65F779C7244263577A",
+      "Liquidation": "0xf2C0084fCe7a54825eFc076697A21264DCd7AF81",
+      "Funding": "0x8755ac5f29c8E216a19D79c8F966f01139988e67",
+      "Operation": "0x2f1108aF399e497e20D01dE7d2dD95e13Ed2048f"
     },
     "PerpetualList": [
       {
-        "Perpetual": "0x2f648F867B98CbCBD18B47D6D4668F8378420392",
+        "Perpetual": "0x2F34AA7AC4928A37BF480b802E2E4b4ca2d0F933",
         "Name": "BTCUSDC",
         "MarkPriceSource": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
         "MarkPriceEventTrigger": "0xa353f8b083f7575cfec443b5ad585d42f652e9f7"
       },
       {
-        "Perpetual": "0x5a59A65361ACC0798eD341535064A881A540631a",
+        "Perpetual": "0x33B4d96E68CcE9020c06487D3d03525557482110",
         "Name": "ETHUSDC",
         "MarkPriceSource": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF",
         "MarkPriceEventTrigger": "0xb2e351bfa39f7681e009c40dd384c5f8e9edfc73"
       },
       {
-        "Perpetual":"0x19Ad49d8Ec0718B44F4829613a4D0DE7adE8eB04",
+        "Perpetual": "0x9219d35Fa09784c42cBCd2f5eefA6Dd0675B2A9D",
+        "Name": "BNBUSDC",
+        "MarkPriceSource": "0x342fF8919A3f786EA345438F300D7F6515e25B1e",
+        "MarkPriceEventTrigger": "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526",
+        "Description": "For list & delist test"
+      },
+      {
+        "Perpetual":"0x7430e89f87ae011308579D5420b5405915BafE40",
         "Name":"BANAUSDC",
         "MarkPriceSource":"0xEC80D5510BbB93a787242321EFBb5c32A2db61e4",
         "MarkPriceEventTrigger": "0xEC80D5510BbB93a787242321EFBb5c32A2db61e4",
         "Description": "Volatile price source used for settlement failure test"
       },
       {
-        "Perpetual":"0x1692f9B2923B4F54CAdA39d54faDcF60E6D610A7",
+        "Perpetual":"0x949650c65C2c0440A4c0FdfcbCB4062750052bfb",
         "Name":"LIQUSDC",
         "MarkPriceSource":"0x03c75bbd9032a9EB67282631aB35d542571D5d18",
         "MarkPriceEventTrigger": "0x03c75bbd9032a9EB67282631aB35d542571D5d18",
         "Description": "Auto price oracle used for liquidation test"
       }
     ],
-    "SubaccountFactory": "0xAcd2Ddd736d56532c45052d2D0F57deF4fF5a34E",
+    "SubaccountFactory": "0x234eA671627c27fC0e6A205d1903e9726d6228f2",
     "PrimaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
     "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
     "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",

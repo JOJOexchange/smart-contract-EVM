@@ -7,6 +7,6 @@ pragma solidity 0.8.9;
 
 interface IMarkPriceSource {
     /// @notice Return mark price. Revert if data not available.
-    /// @return price is 1e18 based decimal
+    /// @return price is a 1e18 based decimal.
     function getMarkPrice() external view returns (uint256 price);
 }

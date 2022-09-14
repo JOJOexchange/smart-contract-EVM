@@ -14,17 +14,10 @@ import "../lib/Liquidation.sol";
 import "../lib/Funding.sol";
 import "../lib/Trading.sol";
 import "../lib/Position.sol";
+import "../lib/Operation.sol";
 
 abstract contract JOJOExternal is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
-
-    // ========== events ==========
-
-    event SetOperator(
-        address indexed client,
-        address indexed operator,
-        bool isValid
-    );
 
     // ========== fund related ==========
 
@@ -74,8 +67,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
 
     /// @inheritdoc IDealer
     function setOperator(address operator, bool isValid) external {
-        state.operatorRegistry[msg.sender][operator] = isValid;
-        emit SetOperator(msg.sender, operator, isValid);
+        Operation.setOperator(state, msg.sender, operator, isValid);
     }
 
     /// @inheritdoc IDealer
@@ -88,7 +80,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     /// @inheritdoc IDealer
     function approveTrade(address orderSender, bytes calldata tradeData)
         external
-        onlyRegisteredPerp(msg.sender)
+        onlyRegisteredPerp()
         returns (
             address[] memory, // traderList
             int256[] memory, // paperChangeList
@@ -115,7 +107,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
         int256 requestPaperAmount
     )
         external
-        onlyRegisteredPerp(msg.sender)
+        onlyRegisteredPerp()
         returns (
             int256 liqtorPaperChange,
             int256 liqtorCreditChange,
@@ -136,7 +128,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     /// @inheritdoc IDealer
     function openPosition(address trader)
         external
-        onlyRegisteredPerp(msg.sender)
+        onlyRegisteredPerp()
     {
         Position._openPosition(state, trader);
     }
@@ -144,7 +136,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     /// @inheritdoc IDealer
     function realizePnl(address trader, int256 pnl)
         external
-        onlyRegisteredPerp(msg.sender)
+        onlyRegisteredPerp()
     {
         Position._realizePnl(state, trader, pnl);
     }

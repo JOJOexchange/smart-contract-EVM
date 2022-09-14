@@ -19,22 +19,18 @@ contract Perpetual is Ownable, IPerpetual {
     /*
         We use int128 to store paper and reduced credit, 
         so that we could store balance in a single slot.
-        This can help us save gas.
+        This trick can help us saving gas.
 
         int128 can support size of 1.7E38, which is enough 
         for most transactions. But other than storing paper 
         and reduced credit values, we use int256 to achieve 
         higher accuracy of calculation.
-        
-        Please keep in mind that even int256 is allowed in 
-        some places, you should not pass in a value exceed 
-        int128 when storing paper and reduced credit values.
     */
     struct balance {
         int128 paper;
         int128 reducedCredit;
     }
-    mapping(address => balance) public balanceMap;
+    mapping(address => balance) balanceMap;
     int256 fundingRate;
 
     // ========== events ==========
@@ -68,7 +64,7 @@ contract Perpetual is Ownable, IPerpetual {
 
         e.g. If the fundingRate increases by 5 at a certain update, 
         then you will receive 5 credit for every paper you long.
-        Conversely, you will be charged 5 credit for every paper you short.
+        And you will be charged 5 credit for every paper you short.
     */
 
     /// @inheritdoc IPerpetual
@@ -143,6 +139,7 @@ contract Perpetual is Ownable, IPerpetual {
             // open short, execute price >= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 >= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange <= expectCredit/requestPaper
+            // liqtorCreditChange*requestPaper <= expectCredit*liqtorPaperChange
             require(
                 liqtorCreditChange * requestPaper <=
                     expectCredit * liqtorPaperChange,
@@ -152,6 +149,7 @@ contract Perpetual is Ownable, IPerpetual {
             // open long, execute price <= expected price
             // liqtorCreditChange/liqtorPaperChange * -1 <= expectCredit/requestPaper * -1
             // liqtorCreditChange/liqtorPaperChange >= expectCredit/requestPaper
+            // liqtorCreditChange*requestPaper >= expectCredit*liqtorPaperChange
             require(
                 liqtorCreditChange * requestPaper >=
                     expectCredit * liqtorPaperChange,

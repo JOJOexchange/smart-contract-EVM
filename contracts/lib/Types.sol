@@ -7,13 +7,13 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 library Types {
-    /// @notice storage of dealer
+    /// @notice data structure of dealer
     struct State {
-        // primary underlying asset, ERC20
+        // primary asset, ERC20
         address primaryAsset;
-        // secondary underlying asset, ERC20
+        // secondary asset, ERC20
         address secondaryAsset;
-        // credit, gained by deposit asset
+        // credit, gained by deposit assets
         mapping(address => int256) primaryCredit;
         mapping(address => uint256) secondaryCredit;
         // withdrawal request time lock
@@ -26,33 +26,34 @@ library Types {
         mapping(address => uint256) withdrawExecutionTimestamp;
         // perpetual contract risk parameters
         mapping(address => Types.RiskParams) perpRiskParams;
-        // perpetual contract register
+        // perpetual contract registry, for view
         address[] registeredPerp;
         // all open positions of a trader
         mapping(address => address[]) openPositions;
         // To quickly search if a trader has open position:
         // trader => perpetual contract address => hasPosition
         mapping(address => mapping(address => bool)) hasPosition;
-        // For offchain pnl calculation, serial number +1 whenever position cleared
+        // For offchain pnl calculation, serial number +1 whenever 
+        // position is fully closed.
         // trader => perpetual contract address => current serial Num
         mapping(address => mapping(address => uint256)) positionSerialNum;
-        // filled amount of order
+        // filled amount of orders
         mapping(bytes32 => uint256) orderFilledPaperAmount;
-        // valid order sender
+        // valid order sender registry
         mapping(address => bool) validOrderSender;
         // operator registry
         // client => operator => isValid
         mapping(address => mapping(address => bool)) operatorRegistry;
         // insurance account
         address insurance;
-        // funding rate keeper
+        // funding rate keeper, normally an EOA account
         address fundingRateKeeper;
         // EIP712 domain separator
         bytes32 domainSeparator;
     }
 
     struct Order {
-        // address of perpetual market, not the dealer
+        // address of perpetual market
         address perp;
         /*
             Signer is trader, the identity of trading behavior,
@@ -91,31 +92,32 @@ library Types {
     /// @notice risk params of a perpetual market
     struct RiskParams {
         /*
-            Liquidation will happens when 
-            netValue/exposure < liquidationThreshold.
-            The lower liquidationThreshold, the higher leverage multiplier.
+            Liquidation will happens when
+            netValue < exposure * liquidationThreshold
+            The lower liquidationThreshold, the higher leverage.
             1E18 based decimal.
         */
         uint256 liquidationThreshold;
         /*
-            This is the discount rate for the liquidation, which is a 1e18 based decimal.
+            The discount rate for the liquidation.
             markPrice * (1 - liquidationPriceOff) when liquidate long position
             markPrice * (1 + liquidationPriceOff) when liquidate short position
-            1E18 based decimal.
+            1e18 based decimal.
         */
         uint256 liquidationPriceOff;
-        // insurance fee rate. 1E18 based decimal.
+        // The insurance fee rate charged from liquidation. 
+        // 1E18 based decimal.
         uint256 insuranceFeeRate;
         // price source of mark price
         address markPriceSource;
         // perpetual market name
         string name;
-        // the market is available if true
+        // if the market is activited
         bool isRegistered;
     }
 
     /// @notice Match result obtained by parsing and validating tradeData.
-    /// Contains an array of balance change.
+    /// Contains arrays of balance change.
     struct MatchResult {
         address perp;
         address[] traderList;

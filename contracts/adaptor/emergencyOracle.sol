@@ -6,10 +6,11 @@
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
-interface IEmergencyOracle {}
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract EmergencyOracle {
-    address public owner;
+/// @notice emergency fallback oracle.
+/// Using when the third party oracle is not available.
+contract EmergencyOracle is Ownable{
     uint256 public price;
     uint256 public roundId;
     string public description;
@@ -21,18 +22,8 @@ contract EmergencyOracle {
         uint256 updatedAt
     );
 
-    event OwnershipTransferred(
-        address indexed previousOwner,
-        address indexed newOwner
-    );
-
-    modifier onlyOwner() {
-        require(owner == msg.sender, "ONLY_OWNER");
-        _;
-    }
-
-    constructor(address _owner, string memory _description) {
-        owner = _owner;
+    constructor(address _owner, string memory _description) Ownable() {
+        transferOwnership(_owner);
         description = _description;
     }
 
@@ -43,13 +34,6 @@ contract EmergencyOracle {
     function setMarkPrice(uint256 newPrice) external onlyOwner {
         price = newPrice;
         emit AnswerUpdated(int256(price), roundId, block.timestamp);
-    }
-
-    function transferOwnership(address newOwner) external onlyOwner {
-        address oldOwner = owner;
-        owner = newOwner;
-        emit OwnershipTransferred(oldOwner, newOwner);
-        roundId += 1;
     }
 }
 

@@ -61,6 +61,7 @@ contract JOJOOperation is JOJOStorage {
     }
 
     /// @notice Secondary asset can only be set once.
+    /// Secondary asset must have the same decimal with primary asset.
     function setSecondaryAsset(address _secondaryAsset) external onlyOwner {
         Operation.setSecondaryAsset(state, _secondaryAsset);
     }

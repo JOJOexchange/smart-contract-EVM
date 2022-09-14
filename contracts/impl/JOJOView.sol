@@ -35,7 +35,7 @@ contract JOJOView is JOJOStorage {
         return Liquidation.getMarkPrice(state, perp);
     }
 
-    /// @notice Get all open positions of a certain trader.
+    /// @notice Get all open positions of the trader.
     function getPositions(address trader)
         external
         view
@@ -44,7 +44,7 @@ contract JOJOView is JOJOStorage {
         return state.openPositions[trader];
     }
 
-    /// @notice Return the credit details of a certain trader.
+    /// @notice Return the credit details of the trader.
     /// You cannot use credit as net value or net margin of a trader.
     /// The net value of positions would also be included.
     function getCreditOf(address trader)
@@ -81,7 +81,7 @@ contract JOJOView is JOJOStorage {
         return state.operatorRegistry[client][operator];
     }
 
-    // ========== risk related ==========
+    // ========== liquidation related ==========
 
     /// @notice Get the risk profile data of a trader.
     /// @return netValue net value of trader including credit amount
@@ -103,8 +103,6 @@ contract JOJOView is JOJOStorage {
             state.primaryCredit[trader] +
             int256(state.secondaryCredit[trader]);
     }
-
-    // ========== liquidation related ==========
 
     /// @notice Get liquidation price of a position
     /// @dev This function is for directional use. The margin of error is typically

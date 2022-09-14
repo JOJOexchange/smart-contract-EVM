@@ -24,6 +24,12 @@ library Operation {
 
     event SetOrderSender(address orderSender, bool isValid);
 
+    event SetOperator(
+        address indexed client,
+        address indexed operator,
+        bool isValid
+    );
+
     event UpdatePerpRiskParams(address indexed perp, Types.RiskParams param);
 
     event UpdateFundingRate(
@@ -110,6 +116,16 @@ library Operation {
     ) external {
         state.validOrderSender[orderSender] = isValid;
         emit SetOrderSender(orderSender, isValid);
+    }
+
+    function setOperator(
+        Types.State storage state,
+        address client,
+        address operator,
+        bool isValid
+    ) external {
+        state.operatorRegistry[client][operator] = isValid;
+        emit SetOperator(client, operator, isValid);
     }
 
     function setSecondaryAsset(

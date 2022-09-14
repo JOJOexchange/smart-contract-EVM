@@ -48,8 +48,6 @@ library Types {
         address insurance;
         // funding rate keeper, normally an EOA account
         address fundingRateKeeper;
-        // EIP712 domain separator
-        bytes32 domainSeparator;
     }
 
     struct Order {
@@ -119,7 +117,6 @@ library Types {
     /// @notice Match result obtained by parsing and validating tradeData.
     /// Contains arrays of balance change.
     struct MatchResult {
-        address perp;
         address[] traderList;
         int256[] paperChangeList;
         int256[] creditChangeList;

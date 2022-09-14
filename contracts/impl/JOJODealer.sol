@@ -17,13 +17,8 @@ import "../lib/EIP712.sol";
 /// owner-only methods -> JOJOOperation
 /// data structure -> JOJOStorage
 contract JOJODealer is JOJOExternal, JOJOOperation, JOJOView {
-    constructor(address _primaryAsset) Ownable() {
+    constructor(address _primaryAsset) JOJOStorage() {
         state.primaryAsset = _primaryAsset;
-        state.domainSeparator = EIP712._buildDomainSeparator(
-            "JOJO",
-            "1",
-            address(this)
-        );
     }
 
     function version() external pure returns (string memory) {

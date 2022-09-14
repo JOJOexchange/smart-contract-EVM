@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
 import "../utils/Errors.sol";
+import "../utils/SignedDecimalMath.sol";
 import "../intf/IDealer.sol";
 import "../lib/Liquidation.sol";
 import "../lib/Funding.sol";
@@ -17,6 +18,7 @@ import "../lib/Position.sol";
 import "../lib/Operation.sol";
 
 abstract contract JOJOExternal is JOJOStorage, IDealer {
+    using SignedDecimalMath for int256;
     using SafeERC20 for IERC20;
 
     // ========== fund related ==========
@@ -78,36 +80,13 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     // ========== registered perpetual only ==========
 
     /// @inheritdoc IDealer
-    function approveTrade(address orderSender, bytes calldata tradeData)
-        external
-        onlyRegisteredPerp()
-        returns (
-            address[] memory, // traderList
-            int256[] memory, // paperChangeList
-            int256[] memory // creditChangeList
-        )
-    {
-        Types.MatchResult memory result = Trading._approveTrade(
-            state,
-            orderSender,
-            tradeData
-        );
-
-        return (
-            result.traderList,
-            result.paperChangeList,
-            result.creditChangeList
-        );
-    }
-
-    /// @inheritdoc IDealer
     function requestLiquidation(
         address liquidator,
         address liquidatedTrader,
         int256 requestPaperAmount
     )
         external
-        onlyRegisteredPerp()
+        onlyRegisteredPerp
         returns (
             int256 liqtorPaperChange,
             int256 liqtorCreditChange,
@@ -126,18 +105,153 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function openPosition(address trader)
-        external
-        onlyRegisteredPerp()
-    {
+    function openPosition(address trader) external onlyRegisteredPerp {
         Position._openPosition(state, trader);
     }
 
     /// @inheritdoc IDealer
     function realizePnl(address trader, int256 pnl)
         external
-        onlyRegisteredPerp()
+        onlyRegisteredPerp
     {
         Position._realizePnl(state, trader, pnl);
+    }
+
+    /// @inheritdoc IDealer
+    function approveTrade(address orderSender, bytes calldata tradeData)
+        external
+        onlyRegisteredPerp
+        returns (
+            address[] memory, // traderList
+            int256[] memory, // paperChangeList
+            int256[] memory // creditChangeList
+        )
+    {
+        require(
+            state.validOrderSender[orderSender],
+            Errors.INVALID_ORDER_SENDER
+        );
+
+        /*
+            parse tradeData
+            Pass in all orders and their signatures that need to be matched.
+            Also, pass in the amount you want to fill each order.
+        */
+        (
+            Types.Order[] memory orderList,
+            bytes[] memory signatureList,
+            uint256[] memory matchPaperAmount
+        ) = abi.decode(tradeData, (Types.Order[], bytes[], uint256[]));
+        bytes32[] memory orderHashList = new bytes32[](orderList.length);
+
+        // validate all orders
+        for (uint256 i = 0; i < orderList.length; ) {
+            Types.Order memory order = orderList[i];
+            bytes32 orderHash = EIP712._hashTypedDataV4(
+                domainSeparator,
+                _structHash(order)
+            );
+            orderHashList[i] = orderHash;
+            address recoverSigner = ECDSA.recover(orderHash, signatureList[i]);
+            // requirements
+            require(
+                recoverSigner == order.signer ||
+                    state.operatorRegistry[order.signer][recoverSigner],
+                Errors.INVALID_ORDER_SIGNATURE
+            );
+            require(
+                _info2Expiration(order.info) >= block.timestamp,
+                Errors.ORDER_EXPIRED
+            );
+            require(
+                (order.paperAmount < 0 && order.creditAmount > 0) ||
+                    (order.paperAmount > 0 && order.creditAmount < 0),
+                Errors.ORDER_PRICE_NEGATIVE
+            );
+            require(order.perp == msg.sender, Errors.PERP_MISMATCH);
+            require(
+                i == 0 || order.signer != orderList[0].signer,
+                Errors.ORDER_SELF_MATCH
+            );
+            state.orderFilledPaperAmount[orderHash] += matchPaperAmount[i];
+            require(
+                state.orderFilledPaperAmount[orderHash] <=
+                    int256(orderList[i].paperAmount).abs(),
+                Errors.ORDER_FILLED_OVERFLOW
+            );
+            unchecked {
+                ++i;
+            }
+        }
+
+        Types.MatchResult memory result = Trading._matchOrders(
+            state,
+            orderHashList,
+            orderList,
+            matchPaperAmount
+        );
+
+        // charge fee
+        state.primaryCredit[orderSender] += result.orderSenderFee;
+        // if orderSender pay fees to traders, check if orderSender is safe
+        if (result.orderSenderFee < 0) {
+            require(
+                Liquidation._isSolidSafe(state, orderSender),
+                Errors.ORDER_SENDER_NOT_SAFE
+            );
+        }
+
+        return (
+            result.traderList,
+            result.paperChangeList,
+            result.creditChangeList
+        );
+    }
+
+    function _structHash(Types.Order memory order)
+        private
+        pure
+        returns (bytes32 structHash)
+    {
+        /*
+            To save gas, we use assembly to implement the function:
+
+            keccak256(
+                abi.encode(
+                    Types.ORDER_TYPEHASH,
+                    order.perp,
+                    order.signer,
+                    order.paperAmount,
+                    order.creditAmount,
+                    order.info
+                )
+            )
+
+            Method:
+            Insert ORDER_TYPEHASH before order's memory head to construct the
+            required memory structure. Get the hash of this structure and then
+            restore it as is.
+        */
+
+        bytes32 orderTypeHash = Types.ORDER_TYPEHASH;
+        assembly {
+            let start := sub(order, 32)
+            let tmp := mload(start)
+            // 192 = (1 + 5) * 32
+            // [0...32)   bytes: EIP712_ORDER_TYPE
+            // [32...192) bytes: order
+            mstore(start, orderTypeHash)
+            structHash := keccak256(start, 192)
+            mstore(start, tmp)
+        }
+    }
+
+    function _info2Expiration(bytes32 info) private pure returns (uint256) {
+        bytes8 value = bytes8(info >> 64);
+        uint64 expiration;
+        assembly {
+            expiration := value
+        }
+        return uint256(expiration);
     }
 }

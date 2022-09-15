@@ -17,13 +17,13 @@ interface IPerpetual {
         returns (int256 paper, int256 credit);
 
     /// @notice Match and settle orders.
-    /// @dev tradeData will be forwarded to the Dealer contract and waiting 
+    /// @dev tradeData will be forwarded to the Dealer contract and waiting
     /// for matching result. Then the Perpetual contract will execute the result.
     function trade(bytes calldata tradeData) external;
 
     /// @notice Liquidate a position with customized paper amount and price protection.
-    /// @dev Because the liquidation is open to public, there is no guarantee that 
-    /// your request will be executed. 
+    /// @dev Because the liquidation is open to public, there is no guarantee that
+    /// your request will be executed.
     /// It will not be executed or partially executed if:
     /// 1) someone else submitted a liquidation request before you, or
     /// 2) the trader deposited enough margin in time, or
@@ -44,7 +44,7 @@ interface IPerpetual {
         int256 expectCredit
     ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange);
 
-    /// @notice Get funding rate of this perpetual market. 
+    /// @notice Get funding rate of this perpetual market.
     /// Funding rate is a 1e18 based decimal.
     function getFundingRate() external view returns (int256);
 

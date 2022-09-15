@@ -10,7 +10,9 @@ In this way, trading such notes is very similar to trading bitcoin spot. Since t
 JOJO is a decentralized perpetual contract exchange based on an off-chain matching system.
 
 # Smart contract overview
-We will walk you through a comprehensive understanding of the whole perpetual contract system. This is only a brief introductory guide, instead of a detailed specification.
+We will walk you through a comprehensive understanding of the whole perpetual contract system. 
+
+We don't expect this readme to explain the entire contract system. We just want to show you where to find the corresponding code for each function. There are enough commetns in the code to explain all the details.
 
 There are only two core smart contracts: [Perpetual.sol](./contracts/impl/Perpetual.sol) & [JOJODealer.sol](./contracts/impl/JOJODealer.sol).
 
@@ -48,12 +50,12 @@ The essence of the perpetual contract calculation is the state transfer of balan
 2. Trading
 3. Liquidation
 
-## Funding 
+## Funding rate
 
 It is the dealer's responsibility to ensure that the perpetual contract price is anchored to the spot price. Using the funding rate is one of the most common ways to achieve that.
 
-- If the contract price is higher than spot, the dealer could transfer the fund the long side to the short side, to bring the price down.
-- If the contract price is lower than the spot, the dealer could transfer the short side to the long side, to bring the price up.
+- If the contract price is higher than spot, the dealer should punish the long side and reward the short side. So the contract price decreases until it equals to the spot price.
+- If the contract price is lower than the spot, the dealer should punish the short side and reward the long side. So the contract price increases until it equals to the spot price.
 
 The funding rate adjusts *credit* according to the *paper* amount. It is impossible to record the number of credits on the chain, otherwise it would be too costly to modify thousands of credit values each time the funding rate is updated. So we record a value called "reducedCredit" on the chain, and the real credit is calculated using the following formula:
 
@@ -61,36 +63,40 @@ The funding rate adjusts *credit* according to the *paper* amount. It is impossi
 
 In this way, each trader's credit is automatically updated each time *fundingRate* is updated. *fundingRate* can be positive or negative. When *fundingRate* increases, the dealer could transfer fund from short positions to long positions. When *fundingRate* decreases, the dealer could transfer from long positions to short positions.
 
-This contract doesn't have to worry about the rules of updating *fundingRate* - this will be defined by [JOJODealer.sol](./contracts/impl/JOJODealer.sol). Let's move on to the next step.
+JOJO team will update the *fundingRate* every 8 hours.
+
+You can call the function below to check your paper and credit balances:
 
 ```javascript
 function balanceOf(address trader)
         external
         view
-        returns (int256 paperAmount, int256 credit);
+        returns (int256 paper, int256 credit);
 ```
+
+However, we must point out that we use the cross model, so the balance under a single market does not reflect your risk level. Please refer to `getTraderRisk` in [JOJOView.sol](./contracts/impl/JOJOView.sol).
 
 ## Trading
 
-Essentially this is the liquidity problem. We need to answer two questions: 
-- How is liquidity supplied? 
-- How is liquidity consumed? 
-Like updating *fundingRate*, this contract wouldn't need to define these questions either - we will leave them to [JOJODealer.sol](./contracts/impl/JOJODealer.sol). Operationally, the transaction is simple, just a few columns of modifications to *paper* and *reducedCredit*. This contract skips the concrete calculations and leaves them at the abstract level.
+An order sender is a relayer. He collects orders from makers and takers, match and submit to the perpetual contract via function `trade`. 
 
-```javascript
-function trade(
-        bytes calldata tradeData
-    ) external;
-```
+For now, to avoid endless expansion of systemic risk, only validated addresses can be order senders.
+
+We leave all the validation and calculation in `approveTrade` [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol). This is a complex issue so we will not dive deeper. 
 
 ## Liquidation
 
-Liquidation is a mandatory trading behavior. Like trading, this contract doesn't define liquidation and we leave it to [JOJODealer.sol](./contracts/impl/JOJODealer.sol).
+Liquidation is a mandatory trading behavior. You can trigger a liquidation by calling function below:
 
 ```javascript
-function liquidate(address liquidatedTrader, uint256 requestPaperAmount)
-        external;
+function liquidate(
+        address liquidatedTrader,
+        int256 requestPaper,
+        int256 expectCredit
+) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange);
 ```
+
+Like trading, we leave it to [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol).
 
 So far we have successfully defined the core Perpetual contract. Next, we will solve the outstanding issues one by one.
 
@@ -103,13 +109,13 @@ The dealer has three main responsibilities:
 2. Trade
 3. Execute liquidation
 
-The Dealer can be designed in various ways, and JOJODealer is just one of the solutions proposed by the JOJO team.
+The Dealer can be designed in various ways, and JOJODealerV1.0 is just one of the solutions proposed by the JOJO team. For example, you can develop an AMM version of Dealer.
 
 JOJODealer has four main features below: 
 - Off-chain matching, on-chain settlement
 - Cross model
 - Fixed discount liquidation
-- Allowing for margin deposit
+- Virtual credit
 
 ## Trading: Off-chain matching, on-chain settlement
 JOJODealer uses the orderbook model to provide liquidity. Orders are placed, canceled and mathced off-chain, while the final settlement occurs on-chain. This architecture is similar to 0xProtocol, which allows for an excellent trading experience while keeping the system decentralized enough.

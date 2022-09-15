@@ -84,7 +84,6 @@ library Liquidation {
         }
     }
 
-    // check overall safety
     function _isSafe(Types.State storage state, address trader)
         internal
         view
@@ -104,11 +103,9 @@ library Liquidation {
             int256(maintenanceMargin);
     }
 
-    /*
-        More strict than _isSafe.
-        Additional requirement: netPositionValue + primaryCredit >= 0
-        used when traders transfer out primary credit.
-    */
+    /// @notice More strict than _isSafe.
+    /// Additional requirement: netPositionValue + primaryCredit >= 0
+    /// used when traders transfer out primary credit.
     function _isSolidSafe(Types.State storage state, address trader)
         internal
         view
@@ -128,6 +125,7 @@ library Liquidation {
     }
 
     /// @dev A gas saving way to check multi traders' safety status
+    /// by caching mark prices
     function _isAllSafe(Types.State storage state, address[] memory traderList)
         internal
         view
@@ -139,19 +137,19 @@ library Liquidation {
         int256[] memory markPriceCache = new int256[](totalPerpNum);
 
         // check each trader's maintenance margin and net value
-        for (uint256 i = 0; i < traderList.length; i++) {
+        for (uint256 i = 0; i < traderList.length; ) {
             address trader = traderList[i];
             uint256 maintenanceMargin;
             int256 netValue = state.primaryCredit[trader] +
                 int256(state.secondaryCredit[trader]);
 
             // go through all open positions
-            for (uint256 j = 0; j < state.openPositions[trader].length; j++) {
+            for (uint256 j = 0; j < state.openPositions[trader].length; ) {
                 address perp = state.openPositions[trader][j];
                 Types.RiskParams memory params = state.perpRiskParams[perp];
                 int256 markPrice;
                 // use cached price OR cache it
-                for (uint256 k = 0; k < totalPerpNum; k++) {
+                for (uint256 k = 0; k < totalPerpNum; ) {
                     if (perpList[k] == perp) {
                         markPrice = markPriceCache[k];
                         break;
@@ -166,6 +164,9 @@ library Liquidation {
                         markPriceCache[k] = markPrice;
                         break;
                     }
+                    unchecked {
+                        ++k;
+                    }
                 }
                 (int256 paperAmount, int256 credit) = IPerpetual(perp)
                     .balanceOf(trader);
@@ -174,11 +175,18 @@ library Liquidation {
                         params.liquidationThreshold) /
                     10**18;
                 netValue += paperAmount.decimalMul(markPrice) + credit;
+                unchecked {
+                    ++j;
+                }
             }
 
             // return false if any one of traders is lack of collateral
             if (netValue < int256(maintenanceMargin)) {
                 return false;
+            }
+
+            unchecked {
+                ++i;
             }
         }
         return true;
@@ -259,10 +267,9 @@ library Liquidation {
         return liqPrice < 0 ? 0 : uint256(liqPrice);
     }
 
-    /*
-        Using a fixed discount price model.
-        Will help you liquidate up to the position size.
-    */
+    /// @notice Using a fixed discount price model.
+    /// Charge fee from liquidated trader.
+    /// Will limit you liquidation request to the position size.
     function getLiquidateCreditAmount(
         Types.State storage state,
         address perp,
@@ -308,6 +315,7 @@ library Liquidation {
             10**18;
     }
 
+    /// @notice execute a liquidation request
     function requestLiquidation(
         Types.State storage state,
         address perp,

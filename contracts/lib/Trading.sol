@@ -39,20 +39,18 @@ library Trading {
     // ========== matching[important] ==========
 
     /// @notice calculate balance changes
-    /// @dev Every mathcing contains 1 taker and at least 1 maker.
+    /// @dev Every mathcing contains 1 taker order and 
+    /// at least 1 maker order.
+    /// orderList[0] is taker order and orderList[1:] are taker orders.
+    /// Maker orders should be sorted by signer addresses in ascending.
+    /// So that the function could merge orders to save gas.
     function _matchOrders(
         Types.State storage state,
         bytes32[] memory orderHashList,
         Types.Order[] memory orderList,
         uint256[] memory matchPaperAmount
     ) internal returns (Types.MatchResult memory result) {
-        /*
-            traderList[0] is taker
-            traderList[1:] are makers
-            If a maker has more than one order, maker orders should be listed 
-            in ascending order. So that the function could merge orders to save
-            gas(by reducing balances chagne operations).
-        */
+        // check basic match paper amount and filter unique traders
         {
             require(orderList.length >= 2, Errors.INVALID_TRADER_NUMBER);
             // de-duplicated maker
@@ -75,12 +73,13 @@ library Trading {
                 matchPaperAmount[0] == totalMakerFilledPaper,
                 Errors.TAKER_TRADE_AMOUNT_WRONG
             );
+            // result.traderList[0] is taker
+            // result.traderList[1:] are makers
             result.traderList = new address[](uniqueTraderNum);
-            // traderList[0] is taker
             result.traderList[0] = orderList[0].signer;
         }
 
-        // merge maker orders
+        // calculating balance change
         result.paperChangeList = new int256[](result.traderList.length);
         result.creditChangeList = new int256[](result.traderList.length);
         {
@@ -120,8 +119,7 @@ library Trading {
                 );
                 // store matching result, including fees
                 result.paperChangeList[currentTraderIndex] += paperChange;
-                result.creditChangeList[currentTraderIndex] += creditChange;
-                result.creditChangeList[currentTraderIndex] -= fee;
+                result.creditChangeList[currentTraderIndex] += creditChange - fee;
                 result.paperChangeList[0] -= paperChange;
                 result.creditChangeList[0] -= creditChange;
                 result.orderSenderFee += fee;
@@ -184,9 +182,49 @@ library Trading {
         }
     }
 
+    // ========== EIP712 struct hash ==========
+
+    function _structHash(Types.Order memory order)
+        internal
+        pure
+        returns (bytes32 structHash)
+    {
+        /*
+            To save gas, we use assembly to implement the function:
+
+            keccak256(
+                abi.encode(
+                    Types.ORDER_TYPEHASH,
+                    order.perp,
+                    order.signer,
+                    order.paperAmount,
+                    order.creditAmount,
+                    order.info
+                )
+            )
+
+            This is equivalent to:
+            Insert ORDER_TYPEHASH before order's memory head. And then
+            hash the whold memory section.
+            Finally, restore the memory slot occupied by ORDER_TYPEHASH.
+        */
+
+        bytes32 orderTypeHash = Types.ORDER_TYPEHASH;
+        assembly {
+            let start := sub(order, 32)
+            let tmp := mload(start)
+            // 192 = (1 + 5) * 32
+            // [0...32)   bytes: EIP712_ORDER_TYPE
+            // [32...192) bytes: order
+            mstore(start, orderTypeHash)
+            structHash := keccak256(start, 192)
+            mstore(start, tmp)
+        }
+    }
+
     // ========== parse fee rates from info ==========
 
-    function _info2MakerFeeRate(bytes32 info) private pure returns (int256) {
+    function _info2MakerFeeRate(bytes32 info) internal pure returns (int256) {
         bytes8 value = bytes8(info >> 192);
         int64 makerFee;
         assembly {
@@ -196,7 +234,7 @@ library Trading {
     }
 
     function _info2TakerFeeRate(bytes32 info)
-        private
+        internal
         pure
         returns (int256 takerFeeRate)
     {
@@ -206,5 +244,14 @@ library Trading {
             takerFee := value
         }
         return int256(takerFee);
+    }
+
+    function _info2Expiration(bytes32 info) internal pure returns (uint256) {
+        bytes8 value = bytes8(info >> 64);
+        uint64 expiration;
+        assembly {
+            expiration := value
+        }
+        return uint256(expiration);
     }
 }

@@ -149,7 +149,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             Types.Order memory order = orderList[i];
             bytes32 orderHash = EIP712._hashTypedDataV4(
                 domainSeparator,
-                _structHash(order)
+                Trading._structHash(order)
             );
             orderHashList[i] = orderHash;
             address recoverSigner = ECDSA.recover(orderHash, signatureList[i]);
@@ -160,7 +160,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
                 Errors.INVALID_ORDER_SIGNATURE
             );
             require(
-                _info2Expiration(order.info) >= block.timestamp,
+                Trading._info2Expiration(order.info) >= block.timestamp,
                 Errors.ORDER_EXPIRED
             );
             require(
@@ -206,52 +206,5 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             result.paperChangeList,
             result.creditChangeList
         );
-    }
-
-    function _structHash(Types.Order memory order)
-        private
-        pure
-        returns (bytes32 structHash)
-    {
-        /*
-            To save gas, we use assembly to implement the function:
-
-            keccak256(
-                abi.encode(
-                    Types.ORDER_TYPEHASH,
-                    order.perp,
-                    order.signer,
-                    order.paperAmount,
-                    order.creditAmount,
-                    order.info
-                )
-            )
-
-            Method:
-            Insert ORDER_TYPEHASH before order's memory head to construct the
-            required memory structure. Get the hash of this structure and then
-            restore it as is.
-        */
-
-        bytes32 orderTypeHash = Types.ORDER_TYPEHASH;
-        assembly {
-            let start := sub(order, 32)
-            let tmp := mload(start)
-            // 192 = (1 + 5) * 32
-            // [0...32)   bytes: EIP712_ORDER_TYPE
-            // [32...192) bytes: order
-            mstore(start, orderTypeHash)
-            structHash := keccak256(start, 192)
-            mstore(start, tmp)
-        }
-    }
-
-    function _info2Expiration(bytes32 info) private pure returns (uint256) {
-        bytes8 value = bytes8(info >> 64);
-        uint64 expiration;
-        assembly {
-            expiration := value
-        }
-        return uint256(expiration);
     }
 }

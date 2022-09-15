@@ -100,8 +100,7 @@ contract Perpetual is Ownable, IPerpetual {
         ) = IDealer(owner()).approveTrade(msg.sender, tradeData);
 
         for (uint256 i = 0; i < traderList.length; ) {
-            address trader = traderList[i];
-            _settle(trader, paperChangeList[i], creditChangeList[i]);
+            _settle(traderList[i], paperChangeList[i], creditChangeList[i]);
             unchecked {
                 ++i;
             }
@@ -187,9 +186,7 @@ contract Perpetual is Ownable, IPerpetual {
             IDealer(owner()).openPosition(trader);
         }
         int256 rate = fundingRate; // gas saving
-        int256 credit = int256(balanceMap[trader].paper).decimalMul(
-            rate
-        ) +
+        int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
             int256(balanceMap[trader].reducedCredit) +
             creditChange;
         int128 newPaper = balanceMap[trader].paper + int128(paperChange);

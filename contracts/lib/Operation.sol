@@ -9,6 +9,7 @@ pragma experimental ABIEncoderV2;
 import "./Types.sol";
 import "../utils/Errors.sol";
 import "../intf/IPerpetual.sol";
+import "../intf/IDecimalERC20.sol";
 
 library Operation {
     // ========== events ==========
@@ -137,6 +138,11 @@ library Operation {
         require(
             state.secondaryAsset == address(0),
             Errors.SECONDARY_ASSET_ALREADY_EXIST
+        );
+        require(
+            IDecimalERC20(_secondaryAsset).decimals() ==
+                IDecimalERC20(state.primaryAsset).decimals(),
+            Errors.SECONDARY_ASSET_DECIMAL_WRONG
         );
         state.secondaryAsset = _secondaryAsset;
         emit SetSecondaryAsset(_secondaryAsset);

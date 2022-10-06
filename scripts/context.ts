@@ -30,6 +30,7 @@ export interface Context {
   traderList: Wallet[];
   LiquidationLib: Contract;
   FundingLib: Contract;
+  OperationLib: Contract;
 }
 
 export async function basicContext(): Promise<Context> {
@@ -167,6 +168,7 @@ export async function basicContext(): Promise<Context> {
     traderList: traders,
     LiquidationLib: LiquidationLib,
     FundingLib: FundingLib,
+    OperationLib: OperationLib,
   };
 }
 

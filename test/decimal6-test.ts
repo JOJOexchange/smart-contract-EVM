@@ -1,5 +1,6 @@
 import "./utils/hooks";
-import { Wallet, utils } from "ethers";
+import { ethers } from "hardhat";
+import { Contract, Wallet, utils } from "ethers";
 import { expect } from "chai";
 import { basicContext, Context } from "../scripts/context";
 import {
@@ -110,4 +111,22 @@ describe("decimal6", async () => {
     await context.priceSourceList[0].setMarkPrice(shift6("40000"));
     expect(await context.dealer.isSafe(trader2.address)).to.be.false;
   });
+
+  it("wrong secondary asset decimal",async () => {
+    let dealer = await (
+      await ethers.getContractFactory("JOJODealer", {
+        libraries: {
+          Funding: context.FundingLib.address,
+          Liquidation: context.LiquidationLib.address,
+          Operation: context.OperationLib.address,
+        },
+      })
+    ).deploy(context.primaryAsset.address);
+    let wrongSecondaryAsset: Contract = await (
+      await ethers.getContractFactory("TestERC20")
+    ).deploy("USDW", "USDW", 12);
+    await expect(
+      dealer.setSecondaryAsset(wrongSecondaryAsset.address)
+    ).revertedWith("SECONDARY_ASSET_DECIMAL_WRONG")
+  })
 });

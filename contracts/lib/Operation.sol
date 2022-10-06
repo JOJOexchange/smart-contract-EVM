@@ -136,7 +136,7 @@ library Operation {
     ) external {
         require(
             state.secondaryAsset == address(0),
-            Errors.SECONDARY_ASSET_ALREASY_EXIST
+            Errors.SECONDARY_ASSET_ALREADY_EXIST
         );
         state.secondaryAsset = _secondaryAsset;
         emit SetSecondaryAsset(_secondaryAsset);

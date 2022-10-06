@@ -399,7 +399,7 @@ describe("Trade", () => {
         [utils.parseEther("1").toString()]
       );
       await expect(context.perpList[0].trade(data)).to.be.revertedWith(
-        "JOJO_AT_LEASE_TWO_TRADERS"
+        "JOJO_AT_LEAST_TWO_TRADERS"
       );
     });
 

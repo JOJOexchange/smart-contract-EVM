@@ -190,11 +190,11 @@ contract Perpetual is Ownable, IPerpetual {
             int256(balanceMap[trader].reducedCredit) +
             creditChange;
         int128 newPaper = balanceMap[trader].paper + int128(paperChange);
-        int128 newReducedCredkt = int128(
+        int128 newReducedCredit = int128(
             credit - int256(newPaper).decimalMul(rate)
         );
         balanceMap[trader].paper = newPaper;
-        balanceMap[trader].reducedCredit = newReducedCredkt;
+        balanceMap[trader].reducedCredit = newReducedCredit;
         emit BalanceChange(trader, paperChange, creditChange);
         if (balanceMap[trader].paper == 0) {
             // realize PNL

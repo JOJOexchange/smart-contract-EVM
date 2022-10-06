@@ -85,6 +85,6 @@ describe("operations", async () => {
   it("secondary asset can not be changed",async () => {
     await expect(
       context.dealer.setSecondaryAsset(context.secondaryAsset.address)
-    ).to.be.revertedWith("JOJO_SECONDARY_ASSET_ALREASY_EXIST")
+    ).to.be.revertedWith("JOJO_SECONDARY_ASSET_ALREADY_EXIST")
   })
 });

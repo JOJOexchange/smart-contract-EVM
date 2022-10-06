@@ -11,7 +11,7 @@ import "./JOJOExternal.sol";
 import "./JOJOOperation.sol";
 import "../lib/EIP712.sol";
 
-/// @notice Top entrance. For implemnents of specific functions:
+/// @notice Top entrance. For implementation of specific functions:
 /// view functions -> JOJOView
 /// external calls -> JOJOExternal
 /// owner-only methods -> JOJOOperation

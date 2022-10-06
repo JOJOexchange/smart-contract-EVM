@@ -12,7 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 /// @notice Subaccount can help its owner manage risk and positions.
 /// You can open orders with isolated positions via Subaccount.
 /// You can also let others trade for you by setting them as authorized
-/// operators. Operatiors have no access to fund transfer.
+/// operators. Operators have no access to fund transfer.
 contract Subaccount {
     // ========== storage ==========
 

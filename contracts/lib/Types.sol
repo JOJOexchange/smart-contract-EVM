@@ -56,7 +56,7 @@ library Types {
         /*
             Signer is trader, the identity of trading behavior,
             whose balance will be changed.
-            Normally it shoule be an EOA account and the 
+            Normally it should be an EOA account and the 
             order is valid only if the signer signed it.
             If the signer is a contract, it must implement
             isValidPerpetualOperator(address) returns(bool).
@@ -90,7 +90,7 @@ library Types {
     /// @notice risk params of a perpetual market
     struct RiskParams {
         /*
-            Liquidation will happens when
+            Liquidation will happen when
             netValue < exposure * liquidationThreshold
             The lower liquidationThreshold, the higher leverage.
             1E18 based decimal.

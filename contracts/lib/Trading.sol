@@ -39,7 +39,7 @@ library Trading {
     // ========== matching[important] ==========
 
     /// @notice calculate balance changes
-    /// @dev Every mathcing contains 1 taker order and 
+    /// @dev Every matching contains 1 taker order and 
     /// at least 1 maker order.
     /// orderList[0] is taker order and orderList[1:] are taker orders.
     /// Maker orders should be sorted by signer addresses in ascending.
@@ -205,7 +205,7 @@ library Trading {
 
             This is equivalent to:
             Insert ORDER_TYPEHASH before order's memory head. And then
-            hash the whold memory section.
+            hash the whole memory section.
             Finally, restore the memory slot occupied by ORDER_TYPEHASH.
         */
 

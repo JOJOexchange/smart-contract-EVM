@@ -192,8 +192,8 @@ library Liquidation {
         return true;
     }
 
-    /// @return liquidationPrice It should be considered as absolutely
-    /// safe or being liquidated if return 0.
+    /// @return liquidationPrice It should be considered as the position can never be
+    /// liquidated (absolutely safe) or being liquidated at the present if return 0.
     function getLiquidationPrice(
         Types.State storage state,
         address trader,
@@ -214,7 +214,7 @@ library Liquidation {
             Let's call it netValue'
 
             So we have:
-            netValue' + paperAmount * price + creditAmount >= maintenanceMargin' + abs(paperAmount) * price * liquidationThreshold
+                netValue' + paperAmount * price + creditAmount >= maintenanceMargin' + abs(paperAmount) * price * liquidationThreshold
             
             if paperAmount > 0
                 paperAmount * price * (1-liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount 

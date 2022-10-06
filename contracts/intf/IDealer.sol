@@ -7,8 +7,8 @@ pragma solidity 0.8.9;
 
 interface IDealer {
     /// @notice Deposit fund to get credit for trading
-    /// @param primaryAmount is the amount of primary asset you want to withdraw.
-    /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
+    /// @param primaryAmount is the amount of primary asset you want to deposit.
+    /// @param secondaryAmount is the amount of secondary asset you want to deposit.
     /// @param to is the account you want to deposit to.
     function deposit(
         uint256 primaryAmount,

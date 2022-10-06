@@ -75,7 +75,7 @@ contract Perpetual is Ownable, IPerpetual {
     {
         paper = int256(balanceMap[trader].paper);
         credit =
-            paper.decimalMul(IDealer(owner()).getFundingRate(address(this))) +
+            paper.decimalMul(fundingRate) +
             int256(balanceMap[trader].reducedCredit);
     }
 

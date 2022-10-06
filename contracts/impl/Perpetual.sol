@@ -182,9 +182,7 @@ contract Perpetual is Ownable, IPerpetual {
         int256 paperChange,
         int256 creditChange
     ) internal {
-        if (balanceMap[trader].paper == 0) {
-            IDealer(owner()).openPosition(trader);
-        }
+        bool isNewPosition = balanceMap[trader].paper == 0;
         int256 rate = fundingRate; // gas saving
         int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
             int256(balanceMap[trader].reducedCredit) +
@@ -196,6 +194,9 @@ contract Perpetual is Ownable, IPerpetual {
         balanceMap[trader].paper = newPaper;
         balanceMap[trader].reducedCredit = newReducedCredit;
         emit BalanceChange(trader, paperChange, creditChange);
+        if (isNewPosition) {
+            IDealer(owner()).openPosition(trader);
+        }
         if (balanceMap[trader].paper == 0) {
             // realize PNL
             IDealer(owner()).realizePnl(

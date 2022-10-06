@@ -13,7 +13,7 @@ import "../lib/Types.sol";
 import "../utils/Errors.sol";
 
 /// @notice All storage variables of JOJODealer
-contract JOJOStorage is Ownable, ReentrancyGuard {
+abstract contract JOJOStorage is Ownable, ReentrancyGuard {
     Types.State public state;
     bytes32 public immutable domainSeparator;
 

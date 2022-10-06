@@ -8,11 +8,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
+import "../utils/Errors.sol";
+import "../intf/IDealer.sol";
 import "../lib/Liquidation.sol";
 import "../lib/Trading.sol";
-import "../utils/Errors.sol";
 
-contract JOJOView is JOJOStorage {
+abstract contract JOJOView is JOJOStorage, IDealer {
     // ========== simple read state ==========
 
     /// @param perp the address of perpetual contract market
@@ -82,6 +83,25 @@ contract JOJOView is JOJOStorage {
     }
 
     // ========== liquidation related ==========
+
+    /// @inheritdoc IDealer
+    function isSafe(address trader) external view returns (bool safe) {
+        return Liquidation._isSafe(state, trader);
+    }
+
+    /// @inheritdoc IDealer
+    function isAllSafe(address[] calldata traderList)
+        external
+        view
+        returns (bool safe)
+    {
+        return Liquidation._isAllSafe(state, traderList);
+    }
+
+    /// @inheritdoc IDealer
+    function getFundingRate(address perp) external view returns (int256) {
+        return IPerpetual(perp).getFundingRate();
+    }
 
     /// @notice Get the risk profile data of a trader.
     /// @return netValue net value of trader including credit amount

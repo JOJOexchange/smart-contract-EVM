@@ -14,7 +14,7 @@ import "../lib/Liquidation.sol";
 import "../lib/Operation.sol";
 
 /// @notice Owner-only functions
-contract JOJOOperation is JOJOStorage {
+abstract contract JOJOOperation is JOJOStorage {
     using SafeERC20 for IERC20;
 
     // ========== params updates ==========

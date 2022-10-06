@@ -54,7 +54,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function isAllSafe(address[] memory traderList)
+    function isAllSafe(address[] calldata traderList)
         external
         view
         returns (bool safe)

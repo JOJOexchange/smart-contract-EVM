@@ -126,7 +126,7 @@ library Liquidation {
 
     /// @dev A gas saving way to check multi traders' safety status
     /// by caching mark prices
-    function _isAllSafe(Types.State storage state, address[] memory traderList)
+    function _isAllSafe(Types.State storage state, address[] calldata traderList)
         internal
         view
         returns (bool)

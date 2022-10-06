@@ -64,7 +64,7 @@ library Liquidation {
             (int256 paperAmount, int256 creditAmount) = IPerpetual(
                 state.openPositions[trader][i]
             ).balanceOf(trader);
-            Types.RiskParams memory params = state.perpRiskParams[
+            Types.RiskParams storage params = state.perpRiskParams[
                 state.openPositions[trader][i]
             ];
             int256 price = int256(
@@ -146,7 +146,7 @@ library Liquidation {
             // go through all open positions
             for (uint256 j = 0; j < state.openPositions[trader].length; ) {
                 address perp = state.openPositions[trader][j];
-                Types.RiskParams memory params = state.perpRiskParams[perp];
+                Types.RiskParams storage params = state.perpRiskParams[perp];
                 int256 markPrice;
                 // use cached price OR cache it
                 for (uint256 k = 0; k < totalPerpNum; ) {
@@ -242,7 +242,7 @@ library Liquidation {
                     int256 paperAmountPrime,
                     int256 creditAmountPrime
                 ) = IPerpetual(p).balanceOf(trader);
-                Types.RiskParams memory params = state.perpRiskParams[p];
+                Types.RiskParams storage params = state.perpRiskParams[p];
                 int256 price = int256(
                     IMarkPriceSource(params.markPriceSource).getMarkPrice()
                 );
@@ -301,7 +301,7 @@ library Liquidation {
             : requestPaperAmount;
 
         // get price
-        Types.RiskParams memory params = state.perpRiskParams[perp];
+        Types.RiskParams storage params = state.perpRiskParams[perp];
         uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
         uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
         price = liqtorPaperChange > 0

@@ -52,7 +52,7 @@ interface IDealer {
     /// @notice Check if a list of traders are safe.
     /// @dev This function is more gas effective than isSafe, by caching
     /// mark prices.
-    function isAllSafe(address[] memory traderList) external view returns (bool);
+    function isAllSafe(address[] calldata traderList) external view returns (bool);
 
     /// @notice Get funding rate of a perpetual market.
     /// Funding rate is a 1e18 based decimal.

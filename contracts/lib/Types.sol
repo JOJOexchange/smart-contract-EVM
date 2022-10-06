@@ -122,4 +122,6 @@ library Types {
         int256[] creditChangeList;
         int256 orderSenderFee;
     }
+
+    uint256 constant ONE = 10**18;
 }

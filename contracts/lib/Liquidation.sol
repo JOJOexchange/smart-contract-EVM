@@ -76,7 +76,7 @@ library Liquidation {
             exposure += exposureIncrement;
             maintenanceMargin +=
                 (exposureIncrement * params.liquidationThreshold) /
-                10**18;
+                Types.ONE;
 
             unchecked {
                 ++i;
@@ -173,7 +173,7 @@ library Liquidation {
                 maintenanceMargin +=
                     (paperAmount.decimalMul(markPrice).abs() *
                         params.liquidationThreshold) /
-                    10**18;
+                    Types.ONE;
                 netValue += paperAmount.decimalMul(markPrice) + credit;
                 unchecked {
                     ++j;
@@ -251,7 +251,7 @@ library Liquidation {
                     creditAmountPrime;
                 maintenanceMarginPrime += int256(
                     (paperAmountPrime.decimalMul(price).abs() *
-                        params.liquidationThreshold) / 10**18
+                        params.liquidationThreshold) / Types.ONE
                 );
             }
         }
@@ -259,8 +259,8 @@ library Liquidation {
             trader
         );
         int256 multiplier = paperAmount > 0
-            ? int256(10**18 - state.perpRiskParams[perp].liquidationThreshold)
-            : int256(10**18 + state.perpRiskParams[perp].liquidationThreshold);
+            ? int256(Types.ONE - state.perpRiskParams[perp].liquidationThreshold)
+            : int256(Types.ONE + state.perpRiskParams[perp].liquidationThreshold);
         int256 liqPrice = (maintenanceMarginPrime -
             netValuePrime -
             creditAmount).decimalDiv(paperAmount).decimalDiv(multiplier);
@@ -303,7 +303,7 @@ library Liquidation {
         // get price
         Types.RiskParams storage params = state.perpRiskParams[perp];
         uint256 price = IMarkPriceSource(params.markPriceSource).getMarkPrice();
-        uint256 priceOffset = (price * params.liquidationPriceOff) / 10**18;
+        uint256 priceOffset = (price * params.liquidationPriceOff) / Types.ONE;
         price = liqtorPaperChange > 0
             ? price - priceOffset
             : price + priceOffset;
@@ -312,7 +312,7 @@ library Liquidation {
         liqtorCreditChange = -1 * liqtorPaperChange.decimalMul(int256(price));
         insuranceFee =
             (liqtorCreditChange.abs() * params.insuranceFeeRate) /
-            10**18;
+            Types.ONE;
     }
 
     /// @notice execute a liquidation request

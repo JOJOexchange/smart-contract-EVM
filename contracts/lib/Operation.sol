@@ -30,6 +30,8 @@ library Operation {
         bool isValid
     );
 
+    event SetSecondaryAsset(address secondaryAsset);
+
     event UpdatePerpRiskParams(address indexed perp, Types.RiskParams param);
 
     event UpdateFundingRate(
@@ -137,5 +139,6 @@ library Operation {
             Errors.SECONDARY_ASSET_ALREASY_EXIST
         );
         state.secondaryAsset = _secondaryAsset;
+        emit SetSecondaryAsset(_secondaryAsset);
     }
 }

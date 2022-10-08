@@ -230,7 +230,8 @@ library Liquidation {
             Then:
                 liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/multiplier
             
-            If liqPrice<0, it should be considered as absolutely safe or being liquidated. 
+            If liqPrice<0, it should be considered as the position can never be
+            liquidated (absolutely safe) or being liquidated at the present if return 0.
         */
         int256 maintenanceMarginPrime;
         int256 netValuePrime = state.primaryCredit[trader] +

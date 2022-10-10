@@ -24,18 +24,26 @@ interface IChainlink {
 contract ChainlinkExpandAdaptor {
     address public immutable chainlink;
     uint256 public immutable decimalsCorrection;
+    uint256 public immutable heartbeatInterval;
 
     constructor(
         address _chainlink,
-        uint256 _decimalsCorrection
+        uint256 _decimalsCorrection,
+        uint256 _heartbeatInterval
     ) {
         chainlink = _chainlink;
         decimalsCorrection = 10**_decimalsCorrection;
+        heartbeatInterval = _heartbeatInterval;
     }
 
-    function getMarkPrice() external view returns (uint256) {
-        return
-            (uint256(IChainlink(chainlink).latestAnswer()) * 1e18) /
-            decimalsCorrection;
+    function getMarkPrice() external view returns (uint256 price) {
+        int256 rawPrice;
+        uint256 updatedAt;
+        (, rawPrice, , updatedAt, ) = IChainlink(chainlink).latestRoundData();
+        require(
+            block.timestamp - updatedAt <= heartbeatInterval,
+            "ORACLE_HEARTBEAT_FAILED"
+        );
+        return (uint256(rawPrice) * 1e18) / decimalsCorrection;
     }
 }

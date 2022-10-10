@@ -9,18 +9,17 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./JOJOStorage.sol";
 import "../utils/Errors.sol";
+import "../intf/IDealer.sol";
 import "../lib/Types.sol";
-import "../lib/Liquidation.sol";
 import "../lib/Operation.sol";
 
 /// @notice Owner-only functions
-abstract contract JOJOOperation is JOJOStorage {
+abstract contract JOJOOperation is JOJOStorage, IDealer {
     using SafeERC20 for IERC20;
 
     // ========== params updates ==========
 
-    /// @notice Update multiple funding rate at once.
-    /// Can only be called by funding rate keeper.
+    /// @inheritdoc IDealer
     function updateFundingRate(
         address[] calldata perpList,
         int256[] calldata rateList

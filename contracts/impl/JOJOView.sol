@@ -16,7 +16,7 @@ import "../lib/Trading.sol";
 abstract contract JOJOView is JOJOStorage, IDealer {
     // ========== simple read state ==========
 
-    /// @param perp the address of perpetual contract market
+    /// @inheritdoc IDealer
     function getRiskParams(address perp)
         external
         view
@@ -25,18 +25,17 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         params = state.perpRiskParams[perp];
     }
 
-    /// @notice Return all registered perpetual contract market.
+    /// @inheritdoc IDealer
     function getAllRegisteredPerps() external view returns (address[] memory) {
         return state.registeredPerp;
     }
 
-    /// @notice Return mark price of a perpetual market.
-    /// price is a 1e18 based decimal.
+    /// @inheritdoc IDealer
     function getMarkPrice(address perp) external view returns (uint256) {
         return Liquidation.getMarkPrice(state, perp);
     }
 
-    /// @notice Get all open positions of the trader.
+    /// @inheritdoc IDealer
     function getPositions(address trader)
         external
         view
@@ -45,9 +44,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.openPositions[trader];
     }
 
-    /// @notice Return the credit details of the trader.
-    /// You cannot use credit as net value or net margin of a trader.
-    /// The net value of positions would also be included.
+    /// @inheritdoc IDealer
     function getCreditOf(address trader)
         external
         view
@@ -66,6 +63,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         executionTimestamp = state.withdrawExecutionTimestamp[trader];
     }
 
+    /// @inheritdoc IDealer
     function isOrderSenderValid(address orderSender)
         external
         view
@@ -74,6 +72,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.validOrderSender[orderSender];
     }
 
+    /// @inheritdoc IDealer
     function isOperatorValid(address client, address operator)
         external
         view
@@ -103,9 +102,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return IPerpetual(perp).getFundingRate();
     }
 
-    /// @notice Get the risk profile data of a trader.
-    /// @return netValue net value of trader including credit amount
-    /// @return exposure open position value of the trader across all markets
+    /// @inheritdoc IDealer
     function getTraderRisk(address trader)
         external
         view
@@ -124,10 +121,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
             int256(state.secondaryCredit[trader]);
     }
 
-    /// @notice Get liquidation price of a position
-    /// @dev This function is for directional use. The margin of error is typically
-    /// within 10 wei.
-    /// @return liquidationPrice equals 0 if there is no liquidation price.
+    /// @inheritdoc IDealer
     function getLiquidationPrice(address trader, address perp)
         external
         view
@@ -136,8 +130,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation.getLiquidationPrice(state, trader, perp);
     }
 
-    /// @notice a view version of requestLiquidation, liquidators can use
-    /// this function to check how much you have to pay in advance.
+    /// @inheritdoc IDealer
     function getLiquidationCost(
         address perp,
         address liquidatedTrader,
@@ -158,8 +151,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     // ========== order related ==========
 
-    /// @notice Get filled paper amount of an order to avoid double matching.
-    /// @return filledAmount includes paper amount
+    /// @inheritdoc IDealer
     function getOrderFilledAmount(bytes32 orderHash)
         external
         view

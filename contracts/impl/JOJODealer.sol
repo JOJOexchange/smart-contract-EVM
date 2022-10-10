@@ -9,7 +9,6 @@ pragma experimental ABIEncoderV2;
 import "./JOJOView.sol";
 import "./JOJOExternal.sol";
 import "./JOJOOperation.sol";
-import "../lib/EIP712.sol";
 
 /// @notice Top entrance. For implementation of specific functions:
 /// view functions -> JOJOView

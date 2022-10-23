@@ -25,6 +25,8 @@ contract Perpetual is Ownable, IPerpetual {
         for most transactions. But other than storing paper 
         and reduced credit values, we use int256 to achieve 
         higher accuracy of calculation.
+
+        Normally, paper amount will be a 1e18 based decimal.
     */
     struct balance {
         int128 paper;

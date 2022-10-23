@@ -1,0 +1,54 @@
+{
+  "network": "bsctest",
+  "Dealer": {
+    "Dealer": "0x1b77723c089013411d27CD77a89fc32D709cd564",
+    "Liquidation": "0xC21b61C600562869E2A92f9afF50Deaa4b16D7AA",
+    "Funding": "0xf97dc7f10507bF8414fB2c427cfe8530ea9Ac6B4",
+    "Operation": "0xaD4fACAe38BAD016d5932d20679d8600B54292f9"
+  },
+  "PerpetualList": [
+    {
+      "Perpetual": "0x495e7399bA375575389EF6498924B7Ce2Ccd5826",
+      "Name": "BTCUSDC",
+      "MarkPriceSource": "0x6FE14489A256C8700438F0248447D66697Ea5Cc8",
+      "MarkPriceEventTrigger": "0xaaf337687be186cae90db1230d4c31567beb32ef"
+    },
+    {
+      "Perpetual": "0x527936b87d69923bE01Dd56Fb76f37b4Bc7b04B2",
+      "Name": "ETHUSDC",
+      "MarkPriceSource": "0x9EB208C2930852ee8bd8956052b4122Eda0EE6C6",
+      "MarkPriceEventTrigger": "0xa69753a65669116bce927a5f0a3c4f1cb5c8f8b2"
+    },
+    {
+      "Perpetual": "0xd5a346a48469A2688a0B6a50646cf0e52C3bcC7E",
+      "Name": "BNBUSDC",
+      "MarkPriceSource": "0x5b7a71fBF9FB5B1F643DC90317F0fA131455458a",
+      "MarkPriceEventTrigger": "0xdbd22686749275932bf35d9a893da23505cc2804",
+      "Description": "For list & delist test"
+    },
+    {
+      "Perpetual": "0x044f98B08b8600bc9DF0803a9AFA27971Ecf66d2",
+      "Name": "BANAUSDC",
+      "MarkPriceSource": "0xB2697c6B95a4d948Fe6138881875224e21910BE7",
+      "MarkPriceEventTrigger": "0xB2697c6B95a4d948Fe6138881875224e21910BE7",
+      "Description": "Volatile price source used for settlement failure test"
+    },
+    {
+      "Perpetual": "0x45718248ac4C2f107eBb0B84BEA08183F6CC67D2",
+      "Name": "LIQUSDC",
+      "MarkPriceSource": "0x5f9Bbd1B5616ebAcb202A6c6A4f57C4A5FC1F992",
+      "MarkPriceEventTrigger": "0x5f9Bbd1B5616ebAcb202A6c6A4f57C4A5FC1F992",
+      "Description": "Auto price oracle used for liquidation test"
+    }
+  ],
+  "SubaccountFactory": "0x97B45f3c1C6EABC80f33443266f46d42aAA13945",
+  "PrimaryAsset": "0x2a2e4a5A177485487210f47645Fe4032c0285007",
+  "PrimaryAssetDecimal": 18,
+  "SecondaryAsset": "0x1A8D5608217d7D303E464060924791627143d1BA",
+  "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",
+  "Owner": "0x9999159ac03167762E7476F008796F6e7DefFad5",
+  "FundingRateUpdateLimiter": "0x077d6096AEd8f2c6522670E615FaAfDe2C61195E",
+  "FundingRateKeeper": "0x88887Fab71016660Cf4CA3EE8f843D99D297986E",
+  "OrderSender": "0x7777405dB28BcAc40F6FD2AABc62751384aAD38c",
+  "WithdrawTimelock": 15
+}

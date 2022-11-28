@@ -33,7 +33,7 @@ contract Subaccount {
     }
 
     // ========== event ==========
-    event ExecuteTransaction(address indexed owner, address operator);
+    event ExecuteTransaction(address indexed owner, address operator, address to, bytes data, uint256 value);
 
     // ========== functions ==========
 
@@ -43,9 +43,10 @@ contract Subaccount {
         owner = _owner;
     }
 
-    function execute(address to, bytes calldata data, uint256 value) external onlyOwner {
-        (bool success, ) = to.call{value: value}(data);
+    function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
+        (bool success, bytes memory returnData) = to.call{value: value}(data);
         require(success, "tx failed");
-        emit ExecuteTransaction(owner, address(this));
+        emit ExecuteTransaction(owner, address(this), to, data, value);
+        return returnData;
     }
 }

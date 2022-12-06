@@ -33,7 +33,7 @@ contract Subaccount {
     }
 
     // ========== event ==========
-    event ExecuteTransaction(address indexed owner, address operator, address to, bytes data, uint256 value);
+    event ExecuteTransaction(address indexed owner, address subaccount, address to, bytes data, uint256 value);
 
     // ========== functions ==========
 

@@ -45,7 +45,14 @@ contract Subaccount {
 
     function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
         (bool success, bytes memory returnData) = to.call{value: value}(data);
-        require(success, "tx failed");
+        if (success == false) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize()
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
         emit ExecuteTransaction(owner, address(this), to, data, value);
         return returnData;
     }

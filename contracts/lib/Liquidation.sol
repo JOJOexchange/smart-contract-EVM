@@ -126,11 +126,10 @@ library Liquidation {
 
     /// @dev A gas saving way to check multi traders' safety status
     /// by caching mark prices
-    function _isAllSafe(Types.State storage state, address[] calldata traderList)
-        internal
-        view
-        returns (bool)
-    {
+    function _isAllSafe(
+        Types.State storage state,
+        address[] calldata traderList
+    ) internal view returns (bool) {
         // cache mark price
         uint256 totalPerpNum = state.registeredPerp.length;
         address[] memory perpList = new address[](totalPerpNum);
@@ -199,10 +198,6 @@ library Liquidation {
         address trader,
         address perp
     ) external view returns (uint256 liquidationPrice) {
-        if (!state.hasPosition[trader][perp]) {
-            return 0;
-        }
-
         /*
             To avoid liquidation, we need:
             netValue >= maintenanceMargin
@@ -259,9 +254,16 @@ library Liquidation {
         (int256 paperAmount, int256 creditAmount) = IPerpetual(perp).balanceOf(
             trader
         );
+        if (paperAmount == 0) {
+            return 0;
+        }
         int256 multiplier = paperAmount > 0
-            ? int256(Types.ONE - state.perpRiskParams[perp].liquidationThreshold)
-            : int256(Types.ONE + state.perpRiskParams[perp].liquidationThreshold);
+            ? int256(
+                Types.ONE - state.perpRiskParams[perp].liquidationThreshold
+            )
+            : int256(
+                Types.ONE + state.perpRiskParams[perp].liquidationThreshold
+            );
         int256 liqPrice = (maintenanceMarginPrime -
             netValuePrime -
             creditAmount).decimalDiv(paperAmount).decimalDiv(multiplier);
@@ -334,10 +336,10 @@ library Liquidation {
         )
     {
         require(
-                executor == liquidator ||
-                    state.operatorRegistry[liquidator][executor],
-                Errors.INVALID_LIQUIDATION_EXECUTOR
-            );
+            executor == liquidator ||
+                state.operatorRegistry[liquidator][executor],
+            Errors.INVALID_LIQUIDATION_EXECUTOR
+        );
         require(
             liquidatedTrader != liquidator,
             Errors.SELF_LIQUIDATION_NOT_ALLOWED

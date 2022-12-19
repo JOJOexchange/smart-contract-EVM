@@ -30,9 +30,6 @@ library Types {
         address[] registeredPerp;
         // all open positions of a trader
         mapping(address => address[]) openPositions;
-        // To quickly search if a trader has open position:
-        // trader => perpetual contract address => hasPosition
-        mapping(address => mapping(address => bool)) hasPosition;
         // For offchain pnl calculation, serial number +1 whenever 
         // position is fully closed.
         // trader => perpetual contract address => current serial Num

@@ -57,7 +57,7 @@ describe("operations", async () => {
     ).to.be.revertedWith("JOJO_PERP_NOT_REGISTERED");
 
     await expect(
-      context.dealer.requestLiquidation(context.traderList[0].address, context.traderList[0].address, 0)
+      context.dealer.requestLiquidation(context.traderList[0].address, context.traderList[1].address, context.traderList[0].address, 0)
     ).to.be.revertedWith("JOJO_PERP_NOT_REGISTERED");
 
     await expect(

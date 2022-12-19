@@ -10,19 +10,12 @@ import "../utils/Errors.sol";
 import "./Types.sol";
 
 library Position {
-
     // ========== position register ==========
 
     /// @notice add position when trade or liquidation happen
     /// msg.sender is the perpetual contract
-    function _openPosition(
-        Types.State storage state,
-        address trader
-    ) internal {
-        if (!state.hasPosition[trader][msg.sender]) {
-            state.hasPosition[trader][msg.sender] = true;
-            state.openPositions[trader].push(msg.sender);
-        }
+    function _openPosition(Types.State storage state, address trader) internal {
+        state.openPositions[trader].push(msg.sender);
     }
 
     /// @notice realize pnl and remove position from the registry
@@ -32,7 +25,6 @@ library Position {
         address trader,
         int256 pnl
     ) internal {
-        state.hasPosition[trader][msg.sender] = false;
         state.primaryCredit[trader] += pnl;
         state.positionSerialNum[trader][msg.sender] += 1;
 

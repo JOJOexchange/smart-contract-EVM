@@ -205,6 +205,7 @@ describe("Liquidation", () => {
       await perp0
         .connect(liquidator)
         .liquidate(
+          liquidator.address,
           trader1.address,
           utils.parseEther("2"),
           utils.parseEther("-50000")
@@ -230,6 +231,7 @@ describe("Liquidation", () => {
       await perp0
         .connect(liquidator)
         .liquidate(
+          liquidator.address,
           trader1.address,
           utils.parseEther("1"),
           utils.parseEther("-25000")
@@ -261,6 +263,7 @@ describe("Liquidation", () => {
       await perp0
         .connect(liquidator)
         .liquidate(
+          liquidator.address,
           trader1.address,
           utils.parseEther("0.01"),
           utils.parseEther("-250")
@@ -274,6 +277,7 @@ describe("Liquidation", () => {
         perp0
           .connect(liquidator)
           .liquidate(
+            liquidator.address,
             trader1.address,
             utils.parseEther("2"),
             utils.parseEther("-40000")
@@ -298,6 +302,7 @@ describe("Liquidation", () => {
       await perp0
         .connect(liquidator)
         .liquidate(
+          liquidator.address,
           trader2.address,
           utils.parseEther("-2"),
           utils.parseEther("50000")
@@ -326,6 +331,7 @@ describe("Liquidation", () => {
       await perp0
         .connect(liquidator)
         .liquidate(
+          liquidator.address,
           trader2.address,
           utils.parseEther("-0.01"),
           utils.parseEther("300")
@@ -339,6 +345,7 @@ describe("Liquidation", () => {
         perp0
           .connect(liquidator)
           .liquidate(
+            liquidator.address,
             trader2.address,
             utils.parseEther("-2"),
             utils.parseEther("80000")
@@ -348,6 +355,7 @@ describe("Liquidation", () => {
         perp0
           .connect(liquidator)
           .liquidate(
+            liquidator.address,
             trader2.address,
             utils.parseEther("2"),
             utils.parseEther("-80000")
@@ -359,6 +367,7 @@ describe("Liquidation", () => {
       await perp0
         .connect(liquidator)
         .liquidate(
+          liquidator.address,
           trader1.address,
           utils.parseEther("1"),
           utils.parseEther("-50000")
@@ -369,6 +378,7 @@ describe("Liquidation", () => {
         perp0
           .connect(liquidator)
           .liquidate(
+            liquidator.address,
             trader1.address,
             utils.parseEther("1"),
             utils.parseEther("-50000")
@@ -383,6 +393,7 @@ describe("Liquidation", () => {
         await perp0
           .connect(liquidator)
           .liquidate(
+            liquidator.address,
             trader1.address,
             utils.parseEther("0.99"),
             utils.parseEther("-50000")
@@ -400,6 +411,7 @@ describe("Liquidation", () => {
           perp0
             .connect(liquidator)
             .liquidate(
+              liquidator.address,
               trader1.address,
               utils.parseEther("0.01"),
               utils.parseEther("-500")
@@ -417,6 +429,7 @@ describe("Liquidation", () => {
           perp0
             .connect(liquidator)
             .liquidate(
+              liquidator.address,
               trader1.address,
               utils.parseEther("0.01"),
               utils.parseEther("-500")
@@ -429,6 +442,7 @@ describe("Liquidation", () => {
             .connect(trader1)
             .liquidate(
               trader1.address,
+              trader1.address,
               utils.parseEther("0.01"),
               utils.parseEther("-500")
             )
@@ -439,6 +453,7 @@ describe("Liquidation", () => {
           context.perpList[1]
             .connect(liquidator)
             .liquidate(
+              liquidator.address,
               trader1.address,
               utils.parseEther("0.01"),
               utils.parseEther("-500")
@@ -449,6 +464,7 @@ describe("Liquidation", () => {
         await perp0
           .connect(liquidator)
           .liquidate(
+            liquidator.address,
             trader1.address,
             utils.parseEther("0.01"),
             utils.parseEther("-500")

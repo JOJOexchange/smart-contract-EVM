@@ -174,7 +174,7 @@ describe("Funding rate", () => {
     ).to.be.revertedWith("JOJO_ARRAY_LENGTH_NOT_SAME");
   });
 
-  it.only("limiter", async () => {
+  it("limiter", async () => {
     let limiter: Contract = await (
       await ethers.getContractFactory("FundingRateUpdateLimiter")
     ).deploy(context.dealer.address, 3);

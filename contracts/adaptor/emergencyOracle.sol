@@ -7,6 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /// @notice emergency fallback oracle.
 /// Using when the third party oracle is not available.
@@ -33,7 +34,7 @@ contract EmergencyOracle is Ownable{
 
     function setMarkPrice(uint256 newPrice) external onlyOwner {
         price = newPrice;
-        emit AnswerUpdated(int256(price), roundId, block.timestamp);
+        emit AnswerUpdated(SafeCast.toInt256(price), roundId, block.timestamp);
         roundId += 1;
     }
 }

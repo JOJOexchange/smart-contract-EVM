@@ -7,6 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../intf/IDealer.sol";
 import "../intf/IPerpetual.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -189,8 +190,8 @@ contract Perpetual is Ownable, IPerpetual {
         int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
             int256(balanceMap[trader].reducedCredit) +
             creditChange;
-        int128 newPaper = balanceMap[trader].paper + int128(paperChange);
-        int128 newReducedCredit = int128(
+        int128 newPaper = balanceMap[trader].paper + SafeCast.toInt128(paperChange);
+        int128 newReducedCredit = SafeCast.toInt128(
             credit - int256(newPaper).decimalMul(rate)
         );
         balanceMap[trader].paper = newPaper;

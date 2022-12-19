@@ -7,6 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../intf/IPerpetual.sol";
 import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -66,7 +67,7 @@ library Funding {
                 address(this),
                 primaryAmount
             );
-            state.primaryCredit[to] += int256(primaryAmount);
+            state.primaryCredit[to] += SafeCast.toInt256(primaryAmount);
         }
         if (secondaryAmount > 0) {
             IERC20(state.secondaryAsset).safeTransferFrom(
@@ -133,9 +134,9 @@ library Funding {
         bool isInternal
     ) private {
         if (primaryAmount > 0) {
-            state.primaryCredit[payer] -= int256(primaryAmount);
+            state.primaryCredit[payer] -= SafeCast.toInt256(primaryAmount);
             if (isInternal) {
-                state.primaryCredit[to] += int256(primaryAmount);
+                state.primaryCredit[to] += SafeCast.toInt256(primaryAmount);
             } else {
                 IERC20(state.primaryAsset).safeTransfer(to, primaryAmount);
             }

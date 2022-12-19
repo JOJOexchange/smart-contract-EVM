@@ -320,6 +320,7 @@ library Liquidation {
     function requestLiquidation(
         Types.State storage state,
         address perp,
+        address executor,
         address liquidator,
         address liquidatedTrader,
         int256 requestPaperAmount
@@ -332,6 +333,11 @@ library Liquidation {
             int256 liqedCreditChange
         )
     {
+        require(
+                executor == liquidator ||
+                    state.operatorRegistry[liquidator][executor],
+                Errors.INVALID_LIQUIDATION_EXECUTOR
+            );
         require(
             liquidatedTrader != liquidator,
             Errors.SELF_LIQUIDATION_NOT_ALLOWED

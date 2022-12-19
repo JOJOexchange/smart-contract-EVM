@@ -115,6 +115,7 @@ contract Perpetual is Ownable, IPerpetual {
 
     /// @inheritdoc IPerpetual
     function liquidate(
+        address liquidator,
         address liquidatedTrader,
         int256 requestPaper,
         int256 expectCredit
@@ -130,6 +131,7 @@ contract Perpetual is Ownable, IPerpetual {
             liqedCreditChange
         ) = IDealer(owner()).requestLiquidation(
             msg.sender,
+            liquidator,
             liquidatedTrader,
             requestPaper
         );

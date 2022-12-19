@@ -39,6 +39,7 @@ interface IPerpetual {
     /// @return liqtorPaperChange is the final executed change of liquidator's paper amount
     /// @return liqtorCreditChange is the final executed change of liquidator's credit amount
     function liquidate(
+        address liquidator,
         address liquidatedTrader,
         int256 requestPaper,
         int256 expectCredit

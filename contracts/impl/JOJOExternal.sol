@@ -62,6 +62,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
 
     /// @inheritdoc IDealer
     function requestLiquidation(
+        address executor,
         address liquidator,
         address liquidatedTrader,
         int256 requestPaperAmount
@@ -79,6 +80,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             Liquidation.requestLiquidation(
                 state,
                 msg.sender,
+                executor,
                 liquidator,
                 liquidatedTrader,
                 requestPaperAmount

@@ -79,6 +79,7 @@ interface IDealer {
     /// @param requestPaperAmount is the size that the liquidator wants to take.
     /// Positive if the position is long, negative if the position is short.
     function requestLiquidation(
+        address executor,
         address liquidator,
         address liquidatedTrader,
         int256 requestPaperAmount

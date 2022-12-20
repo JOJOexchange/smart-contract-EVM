@@ -2,12 +2,12 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: Apache-2.0
 */
-import "../intf/IDealer.sol";
 
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @notice Subaccount can help its owner manage risk and positions.
 /// You can open orders with isolated positions via Subaccount.
@@ -23,7 +23,6 @@ contract Subaccount {
        deployment solution.
     */
     address public owner;
-    address public dealer;
     bool public initialized;
 
     // ========== modifier ==========
@@ -33,48 +32,28 @@ contract Subaccount {
         _;
     }
 
+    // ========== event ==========
+    event ExecuteTransaction(address indexed owner, address subaccount, address to, bytes data, uint256 value);
+
     // ========== functions ==========
 
-    function init(address _owner, address _dealer) external {
+    function init(address _owner) external {
         require(!initialized, "ALREADY INITIALIZED");
         initialized = true;
         owner = _owner;
-        dealer = _dealer;
-        IDealer(dealer).setOperator(owner, true);
     }
 
-    /// @param isValid authorize operator if value is true
-    /// unauthorize operator if value is false
-    function setOperator(address operator, bool isValid) external onlyOwner {
-        IDealer(dealer).setOperator(operator, isValid);
-    }
-
-    /*
-        Subaccount can only withdraw asset to its owner account.
-        No deposit related function is supported in subaccount because the owner can
-        transfer fund to subaccount directly in the Dealer contract. 
-    */
-
-    /// @param primaryAmount The amount of primary asset you want to withdraw
-    /// @param secondaryAmount The amount of secondary asset you want to withdraw
-    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
-        external
-        onlyOwner
-    {
-        IDealer(dealer).requestWithdraw(primaryAmount, secondaryAmount);
-    }
-
-    /// @notice Always withdraw to owner, no matter who fund this subaccount
-    function executeWithdraw(address to, bool isInternal) external onlyOwner {
-        IDealer(dealer).executeWithdraw(to, isInternal);
-    }
-
-    /// @notice retrieve asset
-    function retrieve(
-        address to,
-        address token,
-        uint256 amount
-    ) external onlyOwner {
-        IERC20(token).transfer(to, amount);
+    function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
+        (bool success, bytes memory returnData) = to.call{value: value}(data);
+        if (success == false) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize()
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
+        emit ExecuteTransaction(owner, address(this), to, data, value);
+        return returnData;
     }
 }

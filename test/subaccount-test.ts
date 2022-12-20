@@ -44,7 +44,7 @@ describe("Subaccount", () => {
 
     registry = await (
       await ethers.getContractFactory("SubaccountFactory")
-    ).deploy(context.dealer.address);
+    ).deploy();
 
     await registry.connect(trader1).newSubaccount();
     await registry.connect(trader1).newSubaccount();
@@ -65,8 +65,9 @@ describe("Subaccount", () => {
       )[0]
     );
 
-    await trader1Sub.connect(trader1).setOperator(op.address, true);
-    await trader2Sub.connect(trader2).setOperator(op.address, true);
+    let setOperatorData = await context.dealer.getSetOperatorData(op.address, true);
+    await trader1Sub.connect(trader1).execute(context.dealer.address, setOperatorData, 0);
+    await trader2Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0);
   });
 
   it("check registry", async () => {
@@ -82,7 +83,8 @@ describe("Subaccount", () => {
     expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
       .to.be.true;
 
-    await trader1Sub.connect(trader1).setOperator(op.address, false);
+    let setOperatorData = await context.dealer.getSetOperatorData(op.address, false);
+    await trader1Sub.connect(trader1).execute(context.dealer.address, setOperatorData, 0);
 
     expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
       .to.be.false;
@@ -97,11 +99,12 @@ describe("Subaccount", () => {
         trader1Sub.address
       );
     await checkCredit(context, trader1Sub.address, "10", "20");
+    let requestWithdrawData = await context.dealer.getRequestWithdrawData(utils.parseEther("10"), utils.parseEther("20"));
+    let executeWithdrawData = await context.dealer.getExecuteWithdrawData(trader1.address, false);
 
     await trader1Sub
-      .connect(trader1)
-      .requestWithdraw(utils.parseEther("10"), utils.parseEther("20"));
-    await trader1Sub.connect(trader1).executeWithdraw(trader1.address, false);
+      .connect(trader1).execute(context.dealer.address, requestWithdrawData, 0);
+    await trader1Sub.connect(trader1).execute(context.dealer.address, executeWithdrawData, 0);
     await checkCredit(context, trader1Sub.address, "0", "0");
     await checkPrimaryAsset(context, trader1.address, "1000000");
     await checkSecondaryAsset(context, trader1.address, "1000000");
@@ -152,41 +155,23 @@ describe("Subaccount", () => {
   });
 
   it("revert cases", async () => {
+
+    let setOperatorData = await context.dealer.getSetOperatorData(op.address, true);
     await expect(
-      trader1Sub.connect(trader2).setOperator(trader2.address, true)
+      trader1Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0)
+    ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    let requestWithdrawData = await context.dealer.getRequestWithdrawData("10", "10");
+    let executeWithdrawData = await context.dealer.getExecuteWithdrawData(trader2.address, false);
+    await expect(
+      trader1Sub.connect(trader2).execute(context.dealer.address, requestWithdrawData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
-      trader1Sub.connect(trader2).requestWithdraw("10", "10")
+      trader1Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
     await expect(
-      trader1Sub.connect(trader2).executeWithdraw(trader2.address, false)
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-    await expect(
-      trader1Sub.connect(trader1).init(trader2.address, context.dealer.address)
+      trader1Sub.connect(trader1).init(trader2.address)
     ).to.be.revertedWith("ALREADY INITIALIZED");
   });
 
-  it("retrieve asset", async () => {
-    await expect(
-      trader1.sendTransaction({
-        to: trader1Sub.address,
-        value: parseEther("0.1"),
-        gasLimit: 50000,
-      })
-    ).reverted;
-
-    await context.primaryAsset.mint([trader1Sub.address], [parseEther("1")]);
-    await expect(
-      trader1Sub.retrieve(
-        trader1.address,
-        context.primaryAsset.address,
-        parseEther("1")
-      )
-    ).to.be.revertedWith("Ownable: caller is not the owner");
-    await trader1Sub
-      .connect(trader1)
-      .retrieve(trader1.address, context.primaryAsset.address, parseEther("1"));
-    const balance = await context.primaryAsset.balanceOf(trader1.address);
-    expect(balance).to.equal(parseEther("1000001"));
-  });
 });

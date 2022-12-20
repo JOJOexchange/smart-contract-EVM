@@ -159,4 +159,30 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     {
         filledAmount = state.orderFilledPaperAmount[orderHash];
     }
+
+//    ---------------------encode data---------------------
+
+    function getSetOperatorData(address operator, bool isValid)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSignature("setOperator(address,bool)", operator, isValid);
+    }
+
+    function getRequestWithdrawData(uint256 primaryAmount, uint256 secondaryAmount)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSignature("requestWithdraw(uint256,uint256)", primaryAmount, secondaryAmount);
+    }
+
+    function getExecuteWithdrawData(address to, bool isInternal)
+        external
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSignature("executeWithdraw(address,bool)", to, isInternal);
+    }
 }

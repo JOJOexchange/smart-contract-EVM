@@ -127,6 +127,6 @@ describe("decimal6", async () => {
     ).deploy("USDW", "USDW", 12);
     await expect(
       dealer.setSecondaryAsset(wrongSecondaryAsset.address)
-    ).revertedWith("SECONDARY_ASSET_DECIMAL_WRONG")
+    ).revertedWith("JOJO_SECONDARY_ASSET_DECIMAL_WRONG")
   })
 });

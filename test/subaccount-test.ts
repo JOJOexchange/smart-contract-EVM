@@ -65,7 +65,7 @@ describe("Subaccount", () => {
       )[0]
     );
 
-    let setOperatorData = await context.dealer.getSetOperatorData(op.address, true);
+    let setOperatorData = await context.dealer.getSetOperatorCallData(op.address, true);
     await trader1Sub.connect(trader1).execute(context.dealer.address, setOperatorData, 0);
     await trader2Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0);
   });
@@ -83,7 +83,7 @@ describe("Subaccount", () => {
     expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
       .to.be.true;
 
-    let setOperatorData = await context.dealer.getSetOperatorData(op.address, false);
+    let setOperatorData = await context.dealer.getSetOperatorCallData(op.address, false);
     await trader1Sub.connect(trader1).execute(context.dealer.address, setOperatorData, 0);
 
     expect(await context.dealer.isOperatorValid(trader1Sub.address, op.address))
@@ -99,8 +99,8 @@ describe("Subaccount", () => {
         trader1Sub.address
       );
     await checkCredit(context, trader1Sub.address, "10", "20");
-    let requestWithdrawData = await context.dealer.getRequestWithdrawData(utils.parseEther("10"), utils.parseEther("20"));
-    let executeWithdrawData = await context.dealer.getExecuteWithdrawData(trader1.address, false);
+    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData(utils.parseEther("10"), utils.parseEther("20"));
+    let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader1.address, false);
 
     await trader1Sub
       .connect(trader1).execute(context.dealer.address, requestWithdrawData, 0);
@@ -156,13 +156,13 @@ describe("Subaccount", () => {
 
   it("revert cases", async () => {
 
-    let setOperatorData = await context.dealer.getSetOperatorData(op.address, true);
+    let setOperatorData = await context.dealer.getSetOperatorCallData(op.address, true);
     await expect(
       trader1Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    let requestWithdrawData = await context.dealer.getRequestWithdrawData("10", "10");
-    let executeWithdrawData = await context.dealer.getExecuteWithdrawData(trader2.address, false);
+    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData("10", "10");
+    let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader2.address, false);
     await expect(
       trader1Sub.connect(trader2).execute(context.dealer.address, requestWithdrawData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");

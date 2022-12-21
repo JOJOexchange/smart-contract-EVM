@@ -261,7 +261,6 @@ library Liquidation {
         int256 multiplier = paperAmount > 0
             ? SafeCast.toInt256(
                 Types.ONE - state.perpRiskParams[perp].liquidationThreshold
-
             )
             : SafeCast.toInt256(
                 Types.ONE + state.perpRiskParams[perp].liquidationThreshold

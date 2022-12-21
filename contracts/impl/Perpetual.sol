@@ -162,8 +162,8 @@ contract Perpetual is Ownable, IPerpetual {
         }
 
         _settle(liquidatedTrader, liqedPaperChange, liqedCreditChange);
-        _settle(msg.sender, liqtorPaperChange, liqtorCreditChange);
-        require(IDealer(owner()).isSafe(msg.sender), "LIQUIDATOR_NOT_SAFE");
+        _settle(liquidator, liqtorPaperChange, liqtorCreditChange);
+        require(IDealer(owner()).isSafe(liquidator), "LIQUIDATOR_NOT_SAFE");
         if (balanceMap[liquidatedTrader].paper == 0) {
             IDealer(owner()).handleBadDebt(liquidatedTrader);
         }

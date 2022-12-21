@@ -190,6 +190,35 @@ describe("Liquidation", () => {
       await context.priceSourceList[0].setMarkPrice(utils.parseEther("20600"));
       // trader1 net value = 9985 - 9400 = 585
     });
+    it("operator call liquidation", async () => {
+      let operator = trader2;
+      await expect(
+        perp0
+          .connect(operator)
+          .liquidate(
+            liquidator.address,
+            trader1.address,
+            utils.parseEther("0.01"),
+            utils.parseEther("-500")
+          )
+      ).to.be.revertedWith("JOJO_INVALID_LIQUIDATION_EXECUTOR");
+      await context.dealer
+        .connect(liquidator)
+        .setOperator(operator.address, true);
+      await perp0
+        .connect(operator)
+        .liquidate(
+          liquidator.address,
+          trader1.address,
+          utils.parseEther("2"),
+          utils.parseEther("-50000")
+        );
+      await checkBalance(perp0, liquidator.address, "1", "-20394");
+      await checkBalance(perp0, trader1.address, "0", "0");
+      await checkCredit(context, insurance, "203.94", "0");
+      await checkCredit(context, trader1.address, "-4824.94", "5000");
+      expect(await context.dealer.isSafe(trader1.address)).to.be.true;
+    });
     it("single liquidation > total position", async () => {
       const liquidatorChange = await context.dealer.getLiquidationCost(
         perp0.address,

@@ -253,5 +253,25 @@ describe("Funding", () => {
         context.dealer.connect(trader1).executeWithdraw(trader1Address, false)
       ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
     });
+
+    it("cast revert cases", async () => {
+      await context.dealer
+        .connect(trader1)
+        .deposit(
+          utils.parseEther("1000000"),
+          utils.parseEther("1000000"),
+          trader1Address
+        );
+      await context.dealer
+        .connect(trader1)
+        .requestWithdraw(
+          "0x8000000000000000000000000000000000000000000000000000000000000000",
+          "0x0"
+        );
+      await timeJump(50);
+      await expect(
+        context.dealer.connect(trader1).executeWithdraw(trader2Address, true)
+      ).to.be.revertedWith("SafeCast: value doesn't fit in an int256");
+    });
   });
 });

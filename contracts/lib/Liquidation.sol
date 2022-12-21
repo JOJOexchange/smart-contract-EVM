@@ -6,6 +6,7 @@
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../intf/IPerpetual.sol";
 import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -67,7 +68,7 @@ library Liquidation {
             Types.RiskParams storage params = state.perpRiskParams[
                 state.openPositions[trader][i]
             ];
-            int256 price = int256(
+            int256 price = SafeCast.toInt256(
                 IMarkPriceSource(params.markPriceSource).getMarkPrice()
             );
 
@@ -99,8 +100,8 @@ library Liquidation {
         return
             netPositionValue +
                 state.primaryCredit[trader] +
-                int256(state.secondaryCredit[trader]) >=
-            int256(maintenanceMargin);
+                SafeCast.toInt256(state.secondaryCredit[trader]) >=
+            SafeCast.toInt256(maintenanceMargin);
     }
 
     /// @notice More strict than _isSafe.
@@ -120,8 +121,8 @@ library Liquidation {
             netPositionValue + state.primaryCredit[trader] >= 0 &&
             netPositionValue +
                 state.primaryCredit[trader] +
-                int256(state.secondaryCredit[trader]) >=
-            int256(maintenanceMargin);
+                SafeCast.toInt256(state.secondaryCredit[trader]) >=
+            SafeCast.toInt256(maintenanceMargin);
     }
 
     /// @dev A gas saving way to check multi traders' safety status
@@ -140,7 +141,7 @@ library Liquidation {
             address trader = traderList[i];
             uint256 maintenanceMargin;
             int256 netValue = state.primaryCredit[trader] +
-                int256(state.secondaryCredit[trader]);
+                SafeCast.toInt256(state.secondaryCredit[trader]);
 
             // go through all open positions
             for (uint256 j = 0; j < state.openPositions[trader].length; ) {
@@ -155,7 +156,7 @@ library Liquidation {
                     }
                     // if not, query mark price and cache it
                     if (perpList[k] == address(0)) {
-                        markPrice = int256(
+                        markPrice = SafeCast.toInt256(
                             IMarkPriceSource(params.markPriceSource)
                                 .getMarkPrice()
                         );
@@ -180,7 +181,7 @@ library Liquidation {
             }
 
             // return false if any one of traders is lack of collateral
-            if (netValue < int256(maintenanceMargin)) {
+            if (netValue < SafeCast.toInt256(maintenanceMargin)) {
                 return false;
             }
 
@@ -230,7 +231,7 @@ library Liquidation {
         */
         int256 maintenanceMarginPrime;
         int256 netValuePrime = state.primaryCredit[trader] +
-            int256(state.secondaryCredit[trader]);
+            SafeCast.toInt256(state.secondaryCredit[trader]);
         for (uint256 i = 0; i < state.openPositions[trader].length; i++) {
             address p = state.openPositions[trader][i];
             if (perp != p) {
@@ -239,13 +240,13 @@ library Liquidation {
                     int256 creditAmountPrime
                 ) = IPerpetual(p).balanceOf(trader);
                 Types.RiskParams storage params = state.perpRiskParams[p];
-                int256 price = int256(
+                int256 price = SafeCast.toInt256(
                     IMarkPriceSource(params.markPriceSource).getMarkPrice()
                 );
                 netValuePrime +=
                     paperAmountPrime.decimalMul(price) +
                     creditAmountPrime;
-                maintenanceMarginPrime += int256(
+                maintenanceMarginPrime += SafeCast.toInt256(
                     (paperAmountPrime.decimalMul(price).abs() *
                         params.liquidationThreshold) / Types.ONE
                 );
@@ -258,10 +259,11 @@ library Liquidation {
             return 0;
         }
         int256 multiplier = paperAmount > 0
-            ? int256(
+            ? SafeCast.toInt256(
                 Types.ONE - state.perpRiskParams[perp].liquidationThreshold
+
             )
-            : int256(
+            : SafeCast.toInt256(
                 Types.ONE + state.perpRiskParams[perp].liquidationThreshold
             );
         int256 liqPrice = (maintenanceMarginPrime -
@@ -312,7 +314,9 @@ library Liquidation {
             : price + priceOffset;
 
         // calculate credit change
-        liqtorCreditChange = -1 * liqtorPaperChange.decimalMul(int256(price));
+        liqtorCreditChange =
+            -1 *
+            liqtorPaperChange.decimalMul(SafeCast.toInt256(price));
         insuranceFee =
             (liqtorCreditChange.abs() * params.insuranceFeeRate) /
             Types.ONE;
@@ -355,10 +359,10 @@ library Liquidation {
             liquidatedTrader,
             requestPaperAmount
         );
-        state.primaryCredit[state.insurance] += int256(insuranceFee);
+        state.primaryCredit[state.insurance] += SafeCast.toInt256(insuranceFee);
 
         // liquidated trader balance change
-        liqedCreditChange = liqtorCreditChange * -1 - int256(insuranceFee);
+        liqedCreditChange = liqtorCreditChange * -1 - SafeCast.toInt256(insuranceFee);
         liqedPaperChange = liqtorPaperChange * -1;
 
         // events

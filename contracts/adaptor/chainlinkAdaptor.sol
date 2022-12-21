@@ -6,6 +6,8 @@
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 interface IChainlink {
     function latestRoundData()
         external
@@ -44,6 +46,6 @@ contract ChainlinkExpandAdaptor {
             block.timestamp - updatedAt <= heartbeatInterval,
             "ORACLE_HEARTBEAT_FAILED"
         );
-        return (uint256(rawPrice) * 1e18) / decimalsCorrection;
+        return (SafeCast.toUint256(rawPrice) * 1e18) / decimalsCorrection;
     }
 }

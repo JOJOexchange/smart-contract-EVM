@@ -7,6 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../intf/IPerpetual.sol";
 import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -98,11 +99,11 @@ library Trading {
 
                 // calculate matching result, use maker's price
                 int256 paperChange = orderList[i].paperAmount > 0
-                    ? int256(matchPaperAmount[i])
-                    : -1 * int256(matchPaperAmount[i]);
+                    ? SafeCast.toInt256(matchPaperAmount[i])
+                    : -1 * SafeCast.toInt256(matchPaperAmount[i]);
                 int256 creditChange = (paperChange *
                     orderList[i].creditAmount) / orderList[i].paperAmount;
-                int256 fee = int256(creditChange.abs()).decimalMul(
+                int256 fee = SafeCast.toInt256(creditChange.abs()).decimalMul(
                     _info2MakerFeeRate(orderList[i].info)
                 );
                 // serialNum is used for frontend level PNL calculation
@@ -133,7 +134,7 @@ library Trading {
         // trading fee calculation
         {
             // calculate takerFee based on taker's credit matching amount
-            int256 takerFee = int256(result.creditChangeList[0].abs())
+            int256 takerFee = SafeCast.toInt256(result.creditChangeList[0].abs())
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;

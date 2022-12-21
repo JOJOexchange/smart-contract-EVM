@@ -5,6 +5,7 @@
     DO NOT DEPLOY IN PRODUCTION ENV
 */
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
@@ -32,6 +33,6 @@ contract TestVolatilePriceSource is Ownable {
         price = newPrice;
         roundId++;
         updatedAt = block.timestamp;
-        emit AnswerUpdated(int256(price), roundId, updatedAt);
+        emit AnswerUpdated(SafeCast.toInt256(price), roundId, updatedAt);
     }
 }

@@ -7,6 +7,7 @@ pragma solidity 0.8.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./JOJOStorage.sol";
 import "../utils/Errors.sol";
 import "../intf/IDealer.sol";
@@ -118,7 +119,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         netValue =
             positionNetValue +
             state.primaryCredit[trader] +
-            int256(state.secondaryCredit[trader]);
+            SafeCast.toInt256(state.secondaryCredit[trader]);
     }
 
     /// @inheritdoc IDealer

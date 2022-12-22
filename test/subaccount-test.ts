@@ -161,11 +161,24 @@ describe("Subaccount", () => {
       trader1Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData("10", "10");
+    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData("15", "10");
     let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader2.address, false);
     await expect(
       trader1Sub.connect(trader2).execute(context.dealer.address, requestWithdrawData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
+
+    //expect from the JOJODealer code
+    await context.dealer
+        .connect(trader1)
+        .deposit("10", "10", trader1Sub.address);
+    await context.dealer
+        .connect(trader2)
+        .deposit("10", "10", trader2Sub.address);
+    await trader1Sub.connect(trader1).execute(context.dealer.address, requestWithdrawData, 0);
+    await expect(
+        trader1Sub.connect(trader1).execute(context.dealer.address, executeWithdrawData, 0)
+    ).to.be.revertedWith("JOJO_ACCOUNT_NOT_SAFE");
+
     await expect(
       trader1Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");

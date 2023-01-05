@@ -58,15 +58,18 @@ library Trading {
             uint256 uniqueTraderNum = 2;
             uint256 totalMakerFilledPaper = matchPaperAmount[1];
             // start from the second maker, which is the third trader
-            for (uint256 i = 2; i < orderList.length; i++) {
+            for (uint256 i = 2; i < orderList.length;) {
                 totalMakerFilledPaper += matchPaperAmount[i];
                 if (orderList[i].signer > orderList[i - 1].signer) {
-                    uniqueTraderNum += 1;
+                    uniqueTraderNum = uniqueTraderNum + 1;
                 } else {
                     require(
                         orderList[i].signer == orderList[i - 1].signer,
                         Errors.ORDER_WRONG_SORTING
                     );
+                }
+                unchecked {
+                    ++i;
                 }
             }
             // taker match amount must equals summary of makers' match amount
@@ -93,7 +96,7 @@ library Trading {
 
                 // new maker, currentTraderIndex +1
                 if (i >= 2 && orderList[i].signer != orderList[i - 1].signer) {
-                    currentTraderIndex += 1;
+                    currentTraderIndex = currentTraderIndex + 1;
                     result.traderList[currentTraderIndex] = orderList[i].signer;
                 }
 

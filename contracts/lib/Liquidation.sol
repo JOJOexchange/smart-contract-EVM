@@ -232,7 +232,7 @@ library Liquidation {
         int256 maintenanceMarginPrime;
         int256 netValuePrime = state.primaryCredit[trader] +
             SafeCast.toInt256(state.secondaryCredit[trader]);
-        for (uint256 i = 0; i < state.openPositions[trader].length; i++) {
+        for (uint256 i = 0; i < state.openPositions[trader].length; ) {
             address p = state.openPositions[trader][i];
             if (perp != p) {
                 (
@@ -250,6 +250,9 @@ library Liquidation {
                     (paperAmountPrime.decimalMul(price).abs() *
                         params.liquidationThreshold) / Types.ONE
                 );
+            }
+            unchecked {
+                ++i;
             }
         }
         (int256 paperAmount, int256 creditAmount) = IPerpetual(perp).balanceOf(

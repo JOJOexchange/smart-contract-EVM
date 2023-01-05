@@ -39,7 +39,7 @@ contract FundingRateUpdateLimiter is Ownable {
         address[] calldata perpList,
         int256[] calldata rateList
     ) external onlyOwner {
-        for (uint256 i = 0; i < perpList.length; i++) {
+        for (uint256 i = 0; i < perpList.length;) {
             address perp = perpList[i];
             int256 oldRate = IPerpetual(perp).getFundingRate();
             uint256 maxChange = getMaxChange(perp);
@@ -48,6 +48,9 @@ contract FundingRateUpdateLimiter is Ownable {
                 "FUNDING_RATE_CHANGE_TOO_MUCH"
             );
             fundingRateUpdateTimestamp[perp] = block.timestamp;
+            unchecked {
+                ++i;
+            }
         }
 
         IDealer(dealer).updateFundingRate(perpList, rateList);

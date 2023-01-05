@@ -202,7 +202,7 @@ contract Perpetual is Ownable, IPerpetual {
         if (isNewPosition) {
             IDealer(owner()).openPosition(trader);
         }
-        if (balanceMap[trader].paper == 0) {
+        if (newPaper == 0) {
             // realize PNL
             IDealer(owner()).realizePnl(
                 trader,

@@ -50,12 +50,15 @@ library Operation {
     ) external {
         if (state.perpRiskParams[perp].isRegistered && !param.isRegistered) {
             // remove perp
-            for (uint256 i; i < state.registeredPerp.length; i++) {
+            for (uint256 i; i < state.registeredPerp.length;) {
                 if (state.registeredPerp[i] == perp) {
                     state.registeredPerp[i] = state.registeredPerp[
                         state.registeredPerp.length - 1
                     ];
                     state.registeredPerp.pop();
+                }
+                unchecked {
+                    ++i;
                 }
             }
         }
@@ -80,10 +83,13 @@ library Operation {
             perpList.length == rateList.length,
             Errors.ARRAY_LENGTH_NOT_SAME
         );
-        for (uint256 i = 0; i < perpList.length; i++) {
+        for (uint256 i = 0; i < perpList.length;) {
             int256 oldRate = IPerpetual(perpList[i]).getFundingRate();
             IPerpetual(perpList[i]).updateFundingRate(rateList[i]);
             emit UpdateFundingRate(perpList[i], oldRate, rateList[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 

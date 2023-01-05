@@ -29,11 +29,14 @@ library Position {
         state.positionSerialNum[trader][msg.sender] += 1;
 
         address[] storage positionList = state.openPositions[trader];
-        for (uint256 i = 0; i < positionList.length; i++) {
+        for (uint256 i = 0; i < positionList.length;) {
             if (positionList[i] == msg.sender) {
                 positionList[i] = positionList[positionList.length - 1];
                 positionList.pop();
                 break;
+            }
+            unchecked {
+                ++i;
             }
         }
     }

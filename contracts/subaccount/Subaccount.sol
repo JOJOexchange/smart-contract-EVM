@@ -44,7 +44,7 @@ contract Subaccount {
 
     function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
         (bool success, bytes memory returnData) = to.call{value: value}(data);
-        if (success == false) {
+        if (!success) {
             assembly {
                 let ptr := mload(0x40)
                 let size := returndatasize()

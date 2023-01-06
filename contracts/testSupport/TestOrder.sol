@@ -6,7 +6,6 @@
 */
 
 pragma solidity 0.8.9;
-pragma experimental ABIEncoderV2;
 
 import "../lib/EIP712.sol";
 import "../lib/Types.sol";

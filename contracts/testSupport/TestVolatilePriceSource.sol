@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 pragma solidity 0.8.9;
-pragma experimental ABIEncoderV2;
 
 // To produce super volatile market change for failed cases test
 contract TestVolatilePriceSource is Ownable {

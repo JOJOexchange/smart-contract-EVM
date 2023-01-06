@@ -4,7 +4,6 @@
 */
 
 pragma solidity 0.8.9;
-pragma experimental ABIEncoderV2;
 
 import "../utils/Errors.sol";
 import "./Types.sol";

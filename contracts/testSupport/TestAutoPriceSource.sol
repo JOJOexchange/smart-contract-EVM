@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 pragma solidity 0.8.9;
-pragma experimental ABIEncoderV2;
 
 contract TestAutoPriceSource is Ownable {
     uint256 public price;

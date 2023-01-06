@@ -41,7 +41,7 @@ library Trading {
     /// @notice calculate balance changes
     /// @dev Every matching contains 1 taker order and 
     /// at least 1 maker order.
-    /// orderList[0] is taker order and all others are taker orders.
+    /// orderList[0] is taker order and all others are maker orders.
     /// Maker orders should be sorted by signer addresses in ascending.
     /// So that the function could merge orders to save gas.
     function _matchOrders(

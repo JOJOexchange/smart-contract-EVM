@@ -62,7 +62,7 @@ library Types {
         address signer;
         // positive(negative) if you want to open long(short) position
         int128 paperAmount;
-        // negative(positive) if you want to open short(long) position
+        // negative(positive) if you want to open long(short) position
         int128 creditAmount;
         /*
             ╔═══════════════════╤═════════╗

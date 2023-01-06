@@ -43,6 +43,7 @@ contract Subaccount {
     }
 
     function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
+        require(to != address(0));
         (bool success, bytes memory returnData) = to.call{value: value}(data);
         if (!success) {
             assembly {

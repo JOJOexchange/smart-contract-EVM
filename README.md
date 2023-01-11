@@ -12,7 +12,7 @@ JOJO is a decentralized perpetual contract exchange based on an off-chain matchi
 # Smart contract overview
 We will walk you through a comprehensive understanding of the whole perpetual contract system. 
 
-We don't expect this readme to explain the entire contract system. We just want to show you where to find the corresponding code for each function. There are enough commetns in the code to explain all the details.
+We don't expect this readme to explain the entire contract system. We just want to show you where to find the corresponding code for each function. There are enough comments in the code to explain all the details.
 
 There are only two core smart contracts: [Perpetual.sol](./contracts/impl/Perpetual.sol) & [JOJODealer.sol](./contracts/impl/JOJODealer.sol).
 
@@ -118,7 +118,7 @@ JOJODealer has four main features below:
 - Virtual credit
 
 ## Trading: Off-chain matching, on-chain settlement
-JOJODealer uses the orderbook model to provide liquidity. Orders are placed, canceled and mathced off-chain, while the final settlement occurs on-chain. This architecture is similar to 0xProtocol, which allows for an excellent trading experience while keeping the system decentralized enough.
+JOJODealer uses the orderbook model to provide liquidity. Orders are placed, canceled and matched off-chain, while the final settlement occurs on-chain. This architecture is similar to 0xProtocol, which allows for an excellent trading experience while keeping the system decentralized enough.
 
 It is implemented by users signing orders and sending them to JOJO's server. Whenever orders are matched, JOJO's server submits these orders to the blockchain and immediately notifies the user on the front end.
 
@@ -163,4 +163,4 @@ Subaccounts can help you seperate positions and risks. You can also give trading
 
 ## Insurance
 For each liquidation, an insurance fee is charged. When there is a bad debt, it will be covered by insurance fund. 
-If the insurance account is not sufficient to cover the bad debt, the insurnace fund will stay negative until it is paid off.
+If the insurance account is not sufficient to cover the bad debt, the insurance fund will stay negative until it is paid off.

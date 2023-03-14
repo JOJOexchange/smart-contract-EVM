@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -21,7 +21,7 @@ contract FundingRateUpdateLimiter is Ownable {
     // dealer
     address immutable dealer;
     // max speed multiplier, should be 1/2/3/4/5..., no decimal
-    // funding rate max daily change will be limited to 
+    // funding rate max daily change will be limited to
     // speedMultiplier*liquidationThreshold
     // e.d 3 * 3% = 9%
     uint8 immutable speedMultiplier;
@@ -38,7 +38,7 @@ contract FundingRateUpdateLimiter is Ownable {
         address[] calldata perpList,
         int256[] calldata rateList
     ) external onlyOwner {
-        for (uint256 i = 0; i < perpList.length;) {
+        for (uint256 i = 0; i < perpList.length; ) {
             address perp = perpList[i];
             int256 oldRate = IPerpetual(perp).getFundingRate();
             uint256 maxChange = getMaxChange(perp);

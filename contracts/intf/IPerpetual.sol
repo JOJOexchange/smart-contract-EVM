@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -11,10 +11,9 @@ interface IPerpetual {
     /// negative when the trader holds a short position.
     /// @return credit is not related to position direction or entry price,
     /// only used to calculate risk ratio and net value.
-    function balanceOf(address trader)
-        external
-        view
-        returns (int256 paper, int256 credit);
+    function balanceOf(
+        address trader
+    ) external view returns (int256 paper, int256 credit);
 
     /// @notice Match and settle orders.
     /// @dev tradeData will be forwarded to the Dealer contract and waiting

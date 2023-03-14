@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -49,7 +49,7 @@ library Operation {
     ) external {
         if (state.perpRiskParams[perp].isRegistered && !param.isRegistered) {
             // remove perp
-            for (uint256 i; i < state.registeredPerp.length;) {
+            for (uint256 i; i < state.registeredPerp.length; ) {
                 if (state.registeredPerp[i] == perp) {
                     state.registeredPerp[i] = state.registeredPerp[
                         state.registeredPerp.length - 1
@@ -82,7 +82,7 @@ library Operation {
             perpList.length == rateList.length,
             Errors.ARRAY_LENGTH_NOT_SAME
         );
-        for (uint256 i = 0; i < perpList.length;) {
+        for (uint256 i = 0; i < perpList.length; ) {
             int256 oldRate = IPerpetual(perpList[i]).getFundingRate();
             IPerpetual(perpList[i]).updateFundingRate(rateList[i]);
             emit UpdateFundingRate(perpList[i], oldRate, rateList[i]);
@@ -92,17 +92,19 @@ library Operation {
         }
     }
 
-    function setFundingRateKeeper(Types.State storage state, address newKeeper)
-        external
-    {
+    function setFundingRateKeeper(
+        Types.State storage state,
+        address newKeeper
+    ) external {
         address oldKeeper = state.fundingRateKeeper;
         state.fundingRateKeeper = newKeeper;
         emit SetFundingRateKeeper(oldKeeper, newKeeper);
     }
 
-    function setInsurance(Types.State storage state, address newInsurance)
-        external
-    {
+    function setInsurance(
+        Types.State storage state,
+        address newInsurance
+    ) external {
         address oldInsurance = state.insurance;
         state.insurance = newInsurance;
         emit SetInsurance(oldInsurance, newInsurance);

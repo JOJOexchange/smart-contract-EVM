@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -50,7 +50,10 @@ library Liquidation {
 
     // ========== trader safety check ==========
 
-    function getTotalExposure(Types.State storage state, address trader)
+    function getTotalExposure(
+        Types.State storage state,
+        address trader
+    )
         public
         view
         returns (
@@ -84,11 +87,10 @@ library Liquidation {
         }
     }
 
-    function _isSafe(Types.State storage state, address trader)
-        internal
-        view
-        returns (bool)
-    {
+    function _isSafe(
+        Types.State storage state,
+        address trader
+    ) internal view returns (bool) {
         (
             int256 netPositionValue,
             ,
@@ -106,11 +108,10 @@ library Liquidation {
     /// @notice More strict than _isSafe.
     /// Additional requirement: netPositionValue + primaryCredit >= 0
     /// used when traders transfer out primary credit.
-    function _isSolidSafe(Types.State storage state, address trader)
-        internal
-        view
-        returns (bool)
-    {
+    function _isSolidSafe(
+        Types.State storage state,
+        address trader
+    ) internal view returns (bool) {
         (
             int256 netPositionValue,
             ,
@@ -363,7 +364,10 @@ library Liquidation {
         state.primaryCredit[state.insurance] += SafeCast.toInt256(insuranceFee);
 
         // liquidated trader balance change
-        liqedCreditChange = liqtorCreditChange * -1 - SafeCast.toInt256(insuranceFee);
+        liqedCreditChange =
+            liqtorCreditChange *
+            -1 -
+            SafeCast.toInt256(insuranceFee);
         liqedPaperChange = liqtorPaperChange * -1;
 
         // events
@@ -387,18 +391,18 @@ library Liquidation {
         emit ChargeInsurance(perp, liquidatedTrader, insuranceFee);
     }
 
-    function getMarkPrice(Types.State storage state, address perp)
-        external
-        view
-        returns (uint256 price)
-    {
+    function getMarkPrice(
+        Types.State storage state,
+        address perp
+    ) external view returns (uint256 price) {
         price = IMarkPriceSource(state.perpRiskParams[perp].markPriceSource)
             .getMarkPrice();
     }
 
-    function handleBadDebt(Types.State storage state, address liquidatedTrader)
-        external
-    {
+    function handleBadDebt(
+        Types.State storage state,
+        address liquidatedTrader
+    ) external {
         if (
             state.openPositions[liquidatedTrader].length == 0 &&
             !Liquidation._isSafe(state, liquidatedTrader)

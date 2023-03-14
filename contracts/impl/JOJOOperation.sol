@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -29,10 +29,10 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
     /// @notice Set risk parameters for a perpetual market.
     /// @param param market will be ready to trade if param.isRegistered value is true.
     /// This market will not be opened if param.isRegistered value is false.
-    function setPerpRiskParams(address perp, Types.RiskParams calldata param)
-        external
-        onlyOwner
-    {
+    function setPerpRiskParams(
+        address perp,
+        Types.RiskParams calldata param
+    ) external onlyOwner {
         Operation.setPerpRiskParams(state, perp, param);
     }
 
@@ -44,17 +44,16 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
         Operation.setInsurance(state, newInsurance);
     }
 
-    function setWithdrawTimeLock(uint256 newWithdrawTimeLock)
-        external
-        onlyOwner
-    {
+    function setWithdrawTimeLock(
+        uint256 newWithdrawTimeLock
+    ) external onlyOwner {
         Operation.setWithdrawTimeLock(state, newWithdrawTimeLock);
     }
 
-    function setOrderSender(address orderSender, bool isValid)
-        external
-        onlyOwner
-    {
+    function setOrderSender(
+        address orderSender,
+        bool isValid
+    ) external onlyOwner {
         Operation.setOrderSender(state, orderSender, isValid);
     }
 

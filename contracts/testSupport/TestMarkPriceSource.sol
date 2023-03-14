@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
     ONLY FOR TEST
     DO NOT DEPLOY IN PRODUCTION ENV
 */
@@ -14,7 +14,11 @@ contract TestMarkPriceSource is Ownable {
     uint256 public updatedAt;
     uint256 public roundId;
 
-    event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
+    event AnswerUpdated(
+        int256 indexed current,
+        uint256 indexed roundId,
+        uint256 updatedAt
+    );
 
     function getMarkPrice() external view returns (uint256) {
         return price;
@@ -22,7 +26,7 @@ contract TestMarkPriceSource is Ownable {
 
     function setMarkPrice(uint256 newPrice) external onlyOwner {
         price = newPrice;
-        roundId ++;
+        roundId++;
         updatedAt = block.timestamp;
         emit AnswerUpdated(SafeCast.toInt256(price), roundId, updatedAt);
     }

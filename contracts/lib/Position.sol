@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -28,7 +28,7 @@ library Position {
         state.positionSerialNum[trader][msg.sender] += 1;
 
         address[] storage positionList = state.openPositions[trader];
-        for (uint256 i = 0; i < positionList.length;) {
+        for (uint256 i = 0; i < positionList.length; ) {
             if (positionList[i] == msg.sender) {
                 positionList[i] = positionList[positionList.length - 1];
                 positionList.pop();

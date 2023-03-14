@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
     ONLY FOR TEST
     DO NOT DEPLOY IN PRODUCTION ENV
 */
@@ -11,22 +11,19 @@ import "../lib/EIP712.sol";
 import "../lib/Types.sol";
 
 contract TestOrder {
-    function getOrderHash(bytes32 domainSeparator, Types.Order memory order)
-        external
-        pure
-        returns (bytes32 orderHash)
-    {
+    function getOrderHash(
+        bytes32 domainSeparator,
+        Types.Order memory order
+    ) external pure returns (bytes32 orderHash) {
         orderHash = EIP712._hashTypedDataV4(
             domainSeparator,
             _structHash(order)
         );
     }
 
-    function _structHash(Types.Order memory order)
-        private
-        pure
-        returns (bytes32 structHash)
-    {
+    function _structHash(
+        Types.Order memory order
+    ) private pure returns (bytes32 structHash) {
         /*
             To save gas, we use assembly to implement the function:
 

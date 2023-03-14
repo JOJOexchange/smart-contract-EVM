@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -32,7 +32,13 @@ contract Subaccount {
     }
 
     // ========== event ==========
-    event ExecuteTransaction(address indexed owner, address subaccount, address to, bytes data, uint256 value);
+    event ExecuteTransaction(
+        address indexed owner,
+        address subaccount,
+        address to,
+        bytes data,
+        uint256 value
+    );
 
     // ========== functions ==========
 
@@ -42,7 +48,11 @@ contract Subaccount {
         owner = _owner;
     }
 
-    function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
+    function execute(
+        address to,
+        bytes calldata data,
+        uint256 value
+    ) external onlyOwner returns (bytes memory) {
         require(to != address(0));
         (bool success, bytes memory returnData) = to.call{value: value}(data);
         if (!success) {

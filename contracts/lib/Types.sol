@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -29,7 +29,7 @@ library Types {
         address[] registeredPerp;
         // all open positions of a trader
         mapping(address => address[]) openPositions;
-        // For offchain pnl calculation, serial number +1 whenever 
+        // For offchain pnl calculation, serial number +1 whenever
         // position is fully closed.
         // trader => perpetual contract address => current serial Num
         mapping(address => mapping(address => uint256)) positionSerialNum;
@@ -99,7 +99,7 @@ library Types {
             1e18 based decimal.
         */
         uint256 liquidationPriceOff;
-        // The insurance fee rate charged from liquidation. 
+        // The insurance fee rate charged from liquidation.
         // 1E18 based decimal.
         uint256 insuranceFeeRate;
         // price source of mark price
@@ -119,5 +119,5 @@ library Types {
         int256 orderSenderFee;
     }
 
-    uint256 constant ONE = 10**18;
+    uint256 constant ONE = 10 ** 18;
 }

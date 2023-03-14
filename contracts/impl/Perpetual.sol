@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -70,11 +70,9 @@ contract Perpetual is Ownable, IPerpetual {
     */
 
     /// @inheritdoc IPerpetual
-    function balanceOf(address trader)
-        external
-        view
-        returns (int256 paper, int256 credit)
-    {
+    function balanceOf(
+        address trader
+    ) external view returns (int256 paper, int256 credit) {
         paper = int256(balanceMap[trader].paper);
         credit =
             paper.decimalMul(fundingRate) +
@@ -191,7 +189,8 @@ contract Perpetual is Ownable, IPerpetual {
         int256 credit = int256(balanceMap[trader].paper).decimalMul(rate) +
             int256(balanceMap[trader].reducedCredit) +
             creditChange;
-        int128 newPaper = balanceMap[trader].paper + SafeCast.toInt128(paperChange);
+        int128 newPaper = balanceMap[trader].paper +
+            SafeCast.toInt128(paperChange);
         int128 newReducedCredit = SafeCast.toInt128(
             credit - int256(newPaper).decimalMul(rate)
         );

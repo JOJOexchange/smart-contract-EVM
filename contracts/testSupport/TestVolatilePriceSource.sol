@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
     ONLY FOR TEST
     DO NOT DEPLOY IN PRODUCTION ENV
 */

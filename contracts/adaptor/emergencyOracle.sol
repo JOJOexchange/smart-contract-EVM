@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 /// @notice emergency fallback oracle.
 /// Using when the third party oracle is not available.
-contract EmergencyOracle is Ownable{
+contract EmergencyOracle is Ownable {
     uint256 public price;
     uint256 public roundId;
     string public description;

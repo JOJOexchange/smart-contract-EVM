@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -32,18 +32,18 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
-        external
-        nonReentrant
-    {
+    function requestWithdraw(
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    ) external nonReentrant {
         Funding.requestWithdraw(state, primaryAmount, secondaryAmount);
     }
 
     /// @inheritdoc IDealer
-    function executeWithdraw(address to, bool isInternal)
-        external
-        nonReentrant
-    {
+    function executeWithdraw(
+        address to,
+        bool isInternal
+    ) external nonReentrant {
         Funding.executeWithdraw(state, to, isInternal);
     }
 
@@ -92,15 +92,18 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function realizePnl(address trader, int256 pnl)
-        external
-        onlyRegisteredPerp
-    {
+    function realizePnl(
+        address trader,
+        int256 pnl
+    ) external onlyRegisteredPerp {
         Position._realizePnl(state, trader, pnl);
     }
 
     /// @inheritdoc IDealer
-    function approveTrade(address orderSender, bytes calldata tradeData)
+    function approveTrade(
+        address orderSender,
+        bytes calldata tradeData
+    )
         external
         onlyRegisteredPerp
         returns (

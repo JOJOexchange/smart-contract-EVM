@@ -1,6 +1,6 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: Apache-2.0
+     SPDX-License-Identifier: BUSL-1.1
 */
 
 pragma solidity 0.8.9;
@@ -31,11 +31,10 @@ library EIP712 {
             );
     }
 
-    function _hashTypedDataV4(bytes32 domainSeparator, bytes32 structHash)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function _hashTypedDataV4(
+        bytes32 domainSeparator,
+        bytes32 structHash
+    ) internal pure returns (bytes32) {
         return ECDSA.toTypedDataHash(domainSeparator, structHash);
     }
 }

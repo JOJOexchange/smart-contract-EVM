@@ -22,7 +22,7 @@ contract UniswapPriceAdaptor is Ownable{
     // query period
     uint32 public period;
     address public priceFeedOracle;
-    uint256 impact;
+    uint256 public impact;
 
 
     event UpdatePools(address[] oldPools, address[] newPools);
@@ -35,7 +35,8 @@ contract UniswapPriceAdaptor is Ownable{
         address _quoteToken,
         address[] memory _pools,
         uint32 _period,
-        address _priceFeedOracle
+        address _priceFeedOracle,
+        uint256 _impact
     ) {
         UNISWAP_V3_ORACLE = IStaticOracle(_uniswapAdaptor);
         decimal = _decimal;
@@ -44,6 +45,7 @@ contract UniswapPriceAdaptor is Ownable{
         pools = _pools;
         period = _period;
         priceFeedOracle = _priceFeedOracle;
+        impact = _impact;
     }
 
     function getMarkPrice() external view returns (uint256) {
@@ -62,5 +64,9 @@ contract UniswapPriceAdaptor is Ownable{
     function updatePeriod(uint32 newPeriod) external onlyOwner {
         emit UpdatePeriod(period, newPeriod);
         period = newPeriod;
+    }
+
+    function updateImpact(uint32 newImpact) external onlyOwner {
+        impact = newImpact;
     }
 }

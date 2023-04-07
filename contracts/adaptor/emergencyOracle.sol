@@ -14,6 +14,7 @@ contract EmergencyOracle is Ownable{
     uint256 public price;
     uint256 public roundId;
     string public description;
+    bool public turnOn;
 
     // Align with chainlink
     event AnswerUpdated(
@@ -28,7 +29,12 @@ contract EmergencyOracle is Ownable{
     }
 
     function getMarkPrice() external view returns (uint256) {
+        require(turnOn, "the emergency oracle is close");
         return price;
+    }
+
+    function turnOnOracle() external onlyOwner {
+        turnOn = true;
     }
 
     function setMarkPrice(uint256 newPrice) external onlyOwner {

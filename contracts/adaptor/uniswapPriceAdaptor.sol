@@ -25,6 +25,7 @@ contract UniswapPriceAdaptor is Ownable{
 
     event UpdatePools(address[] oldPools, address[] newPools);
     event UpdatePeriod(uint32 oldPeriod, uint32 newPeriod);
+    event UpdateImpact(uint32 oldImpact, uint32 newImpact);
 
     constructor(
         address _uniswapAdaptor,
@@ -58,6 +59,7 @@ contract UniswapPriceAdaptor is Ownable{
     }
 
     function updateImpact(uint32 newImpact) external onlyOwner {
+        emit UpdateImpact(impact, newImpact);
         impact = newImpact;
     }
 }

@@ -37,6 +37,10 @@ contract EmergencyOracle is Ownable{
         turnOn = true;
     }
 
+    function turnOffOracle() external onlyOwner {
+        turnOn = false;
+    }
+
     function setMarkPrice(uint256 newPrice) external onlyOwner {
         price = newPrice;
         emit AnswerUpdated(SafeCast.toInt256(price), roundId, block.timestamp);

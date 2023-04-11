@@ -25,7 +25,7 @@ contract UniswapPriceAdaptor is Ownable{
 
     event UpdatePools(address[] oldPools, address[] newPools);
     event UpdatePeriod(uint32 oldPeriod, uint32 newPeriod);
-    event UpdateImpact(uint32 oldImpact, uint32 newImpact);
+    event UpdateImpact(uint256 oldImpact, uint256 newImpact);
 
     constructor(
         address _uniswapAdaptor,

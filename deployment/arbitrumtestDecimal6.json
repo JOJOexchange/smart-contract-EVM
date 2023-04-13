@@ -1,0 +1,47 @@
+{
+  "network": "arbitrum test",
+  "Dealer": {
+    "Dealer": "0xFfD3B82971dAbccb3219d16b6EB2DB134bf55300",
+    "Liquidation": "0x040223Ca2dDc02146Ca89C41256094CDE08C0731",
+    "Funding": "0x9D7A777132fd19773271992A3D9eD9FaF86C1e04",
+    "Operation": "0xb0Ef7233eB9108652f8823256B51C6Db05C160aF"
+  },
+  "PerpetualList": [
+    {
+      "Perpetual": "0x6558be57DAD2C41fCad8055079A7290356eD3e37",
+      "Name": "BTCUSDC",
+      "MarkPriceSource": "0x3600bCCa750fB0de12dFF2D3727eb10e10De561c",
+      "MarkPriceEventTrigger": "0x23962E98d778f14a626F908Fa744Cf1eE177Ebd7"
+    },
+    {
+      "Perpetual": "0x7Ba901E4617d91ff0aEd698b78C6D828F30E9c1D",
+      "Name": "ETHUSDC",
+      "MarkPriceSource": "0x314dFE2FDc421a2b1B069B0Ff03E2cE6284558F7",
+      "MarkPriceEventTrigger": "0xc975defb12c5e83f2c7e347831126cf136196447"
+    },
+    {
+      "Perpetual": "0x527936b87d69923bE01Dd56Fb76f37b4Bc7b04B2",
+      "Name": "ARBUSDC",
+      "MarkPriceSource": "0x495e7399bA375575389EF6498924B7Ce2Ccd5826",
+      "MarkPriceEventTrigger": "0x495e7399bA375575389EF6498924B7Ce2Ccd5826",
+      "Description": "ARB"
+    },
+    {
+      "Perpetual": "0x5F8E53F1306426Ebd665FB800742D740E3d0AcD1",
+      "Name": "LIQUSDC",
+      "MarkPriceSource": "0x85CB137033DffD36B7B32048C2Ec42cf39cf2ee5",
+      "MarkPriceEventTrigger": "0x85CB137033DffD36B7B32048C2Ec42cf39cf2ee5",
+      "Description": "Auto price oracle used for liquidation test"
+    }
+  ],
+  "SubaccountFactory": "0x741654C43DC0562958E0b3c172F93f4bd54400F9",
+  "PrimaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
+  "PrimaryAssetDecimal": 6,
+  "SecondaryAsset": "0x834D14F87700e5fFc084e732c7381673133cdbcC",
+  "Insurance": "0x6666c386c4D25AEb5dc21cd38884012C8b3A6725",
+  "Owner": "0x9999159ac03167762E7476F008796F6e7DefFad5",
+  "FundingRateUpdateLimiter": "0xF4D89ED963eaf4656b868de838FC46CB4f0407E9",
+  "FundingRateKeeper": "0x88887Fab71016660Cf4CA3EE8f843D99D297986E",
+  "OrderSender": "0x7777405dB28BcAc40F6FD2AABc62751384aAD38c",
+  "WithdrawTimelock": 5
+}

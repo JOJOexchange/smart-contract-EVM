@@ -12,7 +12,8 @@ coverage/
 interact/
 joscelynTest/
 .gitmodules
-
+script/
+broadcast/
 # VIM
 *.swo
 *.swp

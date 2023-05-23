@@ -58,7 +58,7 @@ contract UniswapPriceAdaptor is Ownable{
         period = newPeriod;
     }
 
-    function updateImpact(uint32 newImpact) external onlyOwner {
+    function updateImpact(uint256 newImpact) external onlyOwner {
         emit UpdateImpact(impact, newImpact);
         impact = newImpact;
     }

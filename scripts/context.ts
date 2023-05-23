@@ -83,6 +83,7 @@ export async function basicContext(): Promise<Context> {
   ).deploy(primaryAsset.address);
   await dealer.setSecondaryAsset(secondaryAsset.address);
   await dealer.setInsurance(insuranceAddress);
+  await dealer.setMaxPositionAmount(10);
   await dealer.setFundingRateKeeper(ownerAddress);
   await dealer.setOrderSender(ownerAddress, true);
 

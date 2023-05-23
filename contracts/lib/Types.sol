@@ -44,6 +44,7 @@ library Types {
         address insurance;
         // funding rate keeper, normally an EOA account
         address fundingRateKeeper;
+        uint256 maxPositionAmount;
     }
 
     struct Order {

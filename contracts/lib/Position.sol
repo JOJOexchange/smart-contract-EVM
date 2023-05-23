@@ -14,6 +14,7 @@ library Position {
     /// @notice add position when trade or liquidation happen
     /// msg.sender is the perpetual contract
     function _openPosition(Types.State storage state, address trader) internal {
+        require(state.openPositions[trader].length < state.maxPositionAmount, Errors.POSITION_AMOUNT_REACH_UPPER_LIMIT);
         state.openPositions[trader].push(msg.sender);
     }
 

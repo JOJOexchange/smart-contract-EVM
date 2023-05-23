@@ -17,6 +17,8 @@ library Operation {
 
     event SetInsurance(address oldInsurance, address newInsurance);
 
+    event SetMaxPositionAmount(uint256 oldMaxPositionAmount, uint256 newMaxPositionAmount);
+
     event SetWithdrawTimeLock(
         uint256 oldWithdrawTimeLock,
         uint256 newWithdrawTimeLock
@@ -106,6 +108,14 @@ library Operation {
         address oldInsurance = state.insurance;
         state.insurance = newInsurance;
         emit SetInsurance(oldInsurance, newInsurance);
+    }
+
+    function setMaxPositionAmount(Types.State storage state, uint256 newMaxPositionAmount)
+        external
+    {
+        uint256 oldMaxPositionAmount = state.maxPositionAmount;
+        state.maxPositionAmount = newMaxPositionAmount;
+        emit SetMaxPositionAmount(oldMaxPositionAmount, newMaxPositionAmount);
     }
 
     function setWithdrawTimeLock(

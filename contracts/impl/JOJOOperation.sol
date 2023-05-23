@@ -44,6 +44,10 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
         Operation.setInsurance(state, newInsurance);
     }
 
+    function setMaxPositionAmount(uint256 newMaxPositionAmount) external onlyOwner {
+        Operation.setMaxPositionAmount(state, newMaxPositionAmount);
+    }
+
     function setWithdrawTimeLock(uint256 newWithdrawTimeLock)
         external
         onlyOwner

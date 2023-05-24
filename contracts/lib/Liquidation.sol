@@ -405,10 +405,10 @@ library Liquidation {
         ) {
             int256 primaryCredit = state.primaryCredit[liquidatedTrader];
             uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];
-            state.primaryCredit[state.insurance] += primaryCredit;
-            state.secondaryCredit[state.insurance] += secondaryCredit;
             state.primaryCredit[liquidatedTrader] = 0;
             state.secondaryCredit[liquidatedTrader] = 0;
+            state.primaryCredit[state.insurance] += primaryCredit;
+            state.secondaryCredit[state.insurance] += secondaryCredit;
             emit HandleBadDebt(
                 liquidatedTrader,
                 primaryCredit,

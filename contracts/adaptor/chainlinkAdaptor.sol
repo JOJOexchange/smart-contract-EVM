@@ -6,6 +6,7 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "../utils/Errors.sol";
 
 interface IChainlink {
     function latestRoundData()
@@ -41,10 +42,12 @@ contract ChainlinkExpandAdaptor {
     }
 
     function getMarkPrice() external view returns (uint256 price) {
-        int256 rawPrice;
-        uint256 updatedAt;
-        (, rawPrice, , updatedAt, ) = IChainlink(chainlink).latestRoundData();
-        (, int256 USDCPrice,, uint256 USDCUpdatedAt,) = IChainlink(USDCSource).latestRoundData();
+        (uint80 roundID, int256 rawPrice, , uint256 updatedAt, uint80 answeredInRound) = IChainlink(chainlink).latestRoundData();
+        (uint80 USDCRoundID, int256 USDCPrice, , uint256 USDCUpdatedAt, uint80 USDCAnsweredInRound) = IChainlink(USDCSource).latestRoundData();
+        require(rawPrice> 0, Errors.CHAINLINK_PRICE_LESS_THAN_0);
+        require(answeredInRound >= roundID, Errors.STALE_PRICE);
+        require(USDCPrice> 0, Errors.USDC_CHAINLINK_PRICE_LESS_THAN_0);
+        require(USDCAnsweredInRound >= USDCRoundID, Errors.USDC_STALE_PRICE);
         require(
             block.timestamp - updatedAt <= heartbeatInterval,
             "ORACLE_HEARTBEAT_FAILED"

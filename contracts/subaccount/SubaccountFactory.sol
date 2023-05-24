@@ -37,7 +37,8 @@ contract SubaccountFactory {
     /// is a standard protocol for deploying minimal proxy contracts,
     /// also known as "clones".
     function newSubaccount() external returns (address subaccount) {
-        subaccount = Clones.clone(template);
+        bytes32 salt = keccak256(abi.encodePacked(msg.sender, subaccountRegistry[msg.sender].length));
+        subaccount = Clones.cloneDeterministic(template, salt);
         Subaccount(subaccount).init(msg.sender);
         subaccountRegistry[msg.sender].push(subaccount);
         emit NewSubaccount(

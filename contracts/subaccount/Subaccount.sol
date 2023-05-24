@@ -42,8 +42,9 @@ contract Subaccount {
         owner = _owner;
     }
 
-    function execute(address to, bytes calldata data, uint256 value) external onlyOwner returns (bytes memory){
+    function execute(address to, bytes calldata data, uint256 value) external payable onlyOwner returns (bytes memory){
         require(to != address(0));
+        require(msg.value == value, "TRANSFER_PAYMENT_NOT_MATCH");
         (bool success, bytes memory returnData) = to.call{value: value}(data);
         if (!success) {
             assembly {

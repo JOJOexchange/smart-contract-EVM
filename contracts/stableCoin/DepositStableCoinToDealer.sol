@@ -5,6 +5,7 @@ pragma solidity 0.8.9;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../intf/IDealer.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {IWETH} from "../intf/IWETH.sol";
 
 contract DepositStableCoinToDealer is Ownable{
 
@@ -13,13 +14,16 @@ contract DepositStableCoinToDealer is Ownable{
     address public immutable JOJODealer;
     address public immutable USDC;
     mapping(address => bool) public whiteListContract;
+    address public WETH;
 
     constructor(
         address _JOJODealer,
-        address _USDC
+        address _USDC,
+        address _WETH
     ) {
         JOJODealer = _JOJODealer;
         USDC = _USDC;
+        WETH = _WETH;
     }
 
     function setWhiteListContract(address targetContract, bool isValid) onlyOwner public {
@@ -32,8 +36,14 @@ contract DepositStableCoinToDealer is Ownable{
         address to,
         bytes calldata param,
         uint256 minReceive
-    ) external {
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+    ) external payable{
+        if (asset == WETH && msg.value >= amount) {
+            IWETH(WETH).deposit{value: amount}();
+            IWETH(WETH).transfer(address(this), amount);
+        }
+        else {
+            IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        }
         (address approveTarget, address swapTarget, bytes memory data) = abi
         .decode(param, (address, address, bytes));
         require(whiteListContract[approveTarget], "approve target is not in the whitelist");

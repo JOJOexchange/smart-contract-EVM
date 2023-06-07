@@ -10,9 +10,6 @@ pragma solidity 0.8.9;
 contract SubaccountFactory {
     // ========== storage ==========
 
-    // Subaccount template that can be cloned
-    address immutable template;
-
     // Subaccount can only be added.
     mapping(address => address[]) subaccountRegistry;
 
@@ -24,28 +21,18 @@ contract SubaccountFactory {
         address subaccountAddress
     );
 
-    // ========== constructor ==========
-
-    constructor() {
-        template = address(new Subaccount());
-        Subaccount(template).init(address(this));
-    }
-
     // ========== functions ==========
 
-    /// @notice https://eips.ethereum.org/EIPS/eip-1167[EIP 1167]
-    /// is a standard protocol for deploying minimal proxy contracts,
-    /// also known as "clones".
-    function newSubaccount() external returns (address subaccount) {
-        bytes32 salt = keccak256(abi.encodePacked(msg.sender, subaccountRegistry[msg.sender].length));
-        subaccount = Clones.cloneDeterministic(template, salt);
-        Subaccount(subaccount).init(msg.sender);
-        subaccountRegistry[msg.sender].push(subaccount);
+    function newSubaccount() external returns(address) {
+        Subaccount subaccount = new Subaccount();
+        subaccount.init(msg.sender);
+        subaccountRegistry[msg.sender].push(address(subaccount));
         emit NewSubaccount(
             msg.sender,
             subaccountRegistry[msg.sender].length - 1,
-            subaccount
+            address(subaccount)
         );
+        return address(subaccount);
     }
 
     function getSubaccounts(address master)

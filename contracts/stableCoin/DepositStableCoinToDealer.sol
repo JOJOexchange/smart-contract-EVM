@@ -37,9 +37,8 @@ contract DepositStableCoinToDealer is Ownable{
         bytes calldata param,
         uint256 minReceive
     ) external payable{
-        if (asset == WETH && msg.value >= amount) {
+        if (asset == WETH && msg.value == amount) {
             IWETH(WETH).deposit{value: amount}();
-            IWETH(WETH).transfer(address(this), amount);
         }
         else {
             IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);

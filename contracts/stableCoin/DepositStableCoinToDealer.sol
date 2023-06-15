@@ -48,8 +48,7 @@ contract DepositStableCoinToDealer is Ownable{
         require(whiteListContract[approveTarget], "approve target is not in the whitelist");
         require(whiteListContract[swapTarget], "swap target is not in the whitelist");
         // if usdt
-        IERC20(asset).approve(approveTarget, 0);
-        IERC20(asset).approve(approveTarget, amount);
+        IERC20(asset).safeApprove(approveTarget, amount);
         (bool success, ) = swapTarget.call(data);
         if (success == false) {
             assembly {

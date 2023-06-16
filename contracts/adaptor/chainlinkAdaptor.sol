@@ -26,17 +26,20 @@ contract ChainlinkExpandAdaptor {
     address public immutable chainlink;
     uint256 public immutable decimalsCorrection;
     uint256 public immutable heartbeatInterval;
+    uint256 public immutable USDCHeartbeat;
     address public immutable USDCSource;
 
     constructor(
         address _chainlink,
         uint256 _decimalsCorrection,
         uint256 _heartbeatInterval,
+        uint256 _USDCHeartbeat,
         address _USDCSource
     ) {
         chainlink = _chainlink;
         decimalsCorrection = 10**_decimalsCorrection;
         heartbeatInterval = _heartbeatInterval;
+        USDCHeartbeat = _USDCHeartbeat;
         USDCSource = _USDCSource;
     }
 
@@ -49,7 +52,7 @@ contract ChainlinkExpandAdaptor {
             block.timestamp - updatedAt <= heartbeatInterval,
             "ORACLE_HEARTBEAT_FAILED"
         );
-        require(block.timestamp - USDCUpdatedAt <= heartbeatInterval, "USDC_ORACLE_HEARTBEAT_FAILED");
+        require(block.timestamp - USDCUpdatedAt <= USDCHeartbeat, "USDC_ORACLE_HEARTBEAT_FAILED");
         uint256 tokenPrice = (SafeCast.toUint256(rawPrice) * 1e8) / SafeCast.toUint256(USDCPrice);
         return tokenPrice * 1e18 / decimalsCorrection;
     }

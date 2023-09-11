@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../intf/IDealer.sol";
 import "../utils/SignedDecimalMath.sol";
-import "./DegenSubaccountFactory.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract DegenSubaccount {

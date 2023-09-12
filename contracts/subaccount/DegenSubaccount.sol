@@ -20,7 +20,6 @@ contract DegenSubaccount {
     bool public initialized;
     address private JOJOOperator;
     address public dealer;
-    uint256 public maxMultiple;
 
 
     // ========== modifier ==========
@@ -52,10 +51,6 @@ contract DegenSubaccount {
         IDealer(dealer).setOperator(owner, true);
     }
 
-    function updateMaxMultiple(uint256 newMaxMultiple) external onlyGlobalOperator {
-        emit UpdateMaxMultiple(maxMultiple, newMaxMultiple);
-        maxMultiple = newMaxMultiple;
-    }
 
 
     /// @param isValid authorize operator if value is true
@@ -68,28 +63,34 @@ contract DegenSubaccount {
         IDealer(dealer).setOperator(operator, isValid);
     }
 
-    function requestWithdrawUSDC(uint256 primaryAmount) external onlyOwner {
-        (,uint256 exposure,) = IDealer(dealer).getTraderRisk(address(this));
-
+    // primary
+    function requestWithdrawPrimaryAsset(uint256 primaryAmount) external onlyOwner {
+        (,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
         (int256 primaryCredit,,,,) = IDealer(dealer).getCreditOf(address(this));
-        //   (0, total balance - position amount * 1/20)
-        uint256 maxWithdraw = SafeCast.toUint256(primaryCredit) - exposure / maxMultiple;
-        require(primaryAmount <= maxWithdraw, "withdraw amount is too big");
+
+        require(primaryCredit > 0, "primaryCredit is less than 0");
+        require(primaryAmount + maintenanceMargin <= SafeCast.toUint256(primaryCredit), "withdraw amount is too big");
         IDealer(dealer).requestWithdraw(primaryAmount, 0);
     }
 
-    function executeWithdrawUSDC(address to, bool toInternal) external onlyOwner {
+    function executeWithdrawPrimaryAsset(address to, bool toInternal) external onlyOwner {
+        (,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
+        (int256 primaryCredit,,uint256 pendingPrimaryWithdraw,,) = IDealer(dealer).getCreditOf(address(this));
+
+        require(primaryCredit > 0, "primaryCredit is less than 0");
+        require(pendingPrimaryWithdraw + maintenanceMargin <= SafeCast.toUint256(primaryCredit), "withdraw amount is too big");
         IDealer(dealer).executeWithdraw(to, toInternal);
     }
 
 
-    function requestJUSD(uint256 secondaryAmount) external onlyGlobalOperator {
+    // secondary
+    function requestWithdrawSecondaryAsset(uint256 secondaryAmount) external onlyGlobalOperator {
         // only Global operator can request JUSD
         IDealer(dealer).requestWithdraw(0, secondaryAmount);
 
     }
 
-    function executeJUSD() external onlyGlobalOperator {
+    function executeWithdrawSecondaryAsset() external onlyGlobalOperator {
         // only Global operator can withdraw JUSD
         IDealer(dealer).executeWithdraw(JOJOOperator, false);
     }

@@ -97,13 +97,13 @@ contract DegenSubaccount {
     function requestWithdrawPrimaryAsset(uint256 withdrawAmount) external onlyOwner {
         (uint256 maxWithdrawValue,) = getMaxWithdrawAmount(address(this));
         require(withdrawAmount <= maxWithdrawValue, "withdraw amount is too big");
-        IDealer(dealer).requestWithdraw(withdrawAmount, 0);
+        IDealer(dealer).requestWithdraw(address(this), withdrawAmount, 0);
     }
 
     function executeWithdrawPrimaryAsset(address to, bool toInternal) external onlyOwner {
         (uint256 maxWithdrawValue, uint256 pendingPrimaryWithdraw) = getMaxWithdrawAmount(address(this));
         require(pendingPrimaryWithdraw <= maxWithdrawValue, "withdraw amount is too big");
-        IDealer(dealer).executeWithdraw(to, toInternal);
+        IDealer(dealer).executeWithdraw(address(this), to, toInternal, "");
     }
 
 

@@ -46,14 +46,14 @@ contract BotSubaccount {
 
 
     function requestWithdrawAsset(uint256 primaryAmount, uint256 secondaryAmount) external onlyGlobalOperatorAndOwner {
-        IDealer(dealer).requestWithdraw(primaryAmount, secondaryAmount);
+        IDealer(dealer).requestWithdraw(address(this), primaryAmount, secondaryAmount);
     }
 
     function executeWithdrawAsset(address to, bool toInternal) external onlyGlobalOperatorAndOwner {
         if(msg.sender == JOJOOperator){
             require(to == owner, "globalOperator only can transfer to owner");
         }
-        IDealer(dealer).executeWithdraw(to, toInternal);
+        IDealer(dealer).executeWithdraw(address(this), to, toInternal, "");
     }
 
 }

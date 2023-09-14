@@ -63,22 +63,27 @@ contract DegenSubaccount {
         IDealer(dealer).setOperator(operator, isValid);
     }
 
-    // primary
-    function requestWithdrawPrimaryAsset(uint256 primaryAmount) external onlyOwner {
-        (,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
-        (int256 primaryCredit,,,,) = IDealer(dealer).getCreditOf(address(this));
+    function getMaxWithdrawAmount() public view returns(uint256, uint256) {
+        (int256 netValue,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
+        (, uint256 secondaryCredit, uint256 pendingPrimaryWithdraw,,)= IDealer(dealer).getCreditOf(address(this));
 
-        require(primaryCredit > 0, "primaryCredit is less than 0");
-        require(primaryAmount + maintenanceMargin <= SafeCast.toUint256(primaryCredit), "withdraw amount is too big");
-        IDealer(dealer).requestWithdraw(primaryAmount, 0);
+        require(netValue > 0, "netValue is less than 0");
+        require(SafeCast.toUint256(netValue) >= secondaryCredit + maintenanceMargin, "netValue is less than maintenance margin");
+        uint256 maxWithxdrawAmount =  SafeCast.toUint256(netValue) - secondaryCredit - maintenanceMargin;
+        return (maxWithxdrawAmount, pendingPrimaryWithdraw);
+
+    }
+
+    // primary
+    function requestWithdrawPrimaryAsset(uint256 withdrawAmount) external onlyOwner {
+        (uint256 maxWithdrawValue,) = getMaxWithdrawAmount();
+        require(withdrawAmount <= maxWithdrawValue, "withdraw amount is too big");
+        IDealer(dealer).requestWithdraw(withdrawAmount, 0);
     }
 
     function executeWithdrawPrimaryAsset(address to, bool toInternal) external onlyOwner {
-        (,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
-        (int256 primaryCredit,,uint256 pendingPrimaryWithdraw,,) = IDealer(dealer).getCreditOf(address(this));
-
-        require(primaryCredit > 0, "primaryCredit is less than 0");
-        require(pendingPrimaryWithdraw + maintenanceMargin <= SafeCast.toUint256(primaryCredit), "withdraw amount is too big");
+        (uint256 maxWithdrawValue, uint256 pendingPrimaryWithdraw) = getMaxWithdrawAmount();
+        require(pendingPrimaryWithdraw <= maxWithdrawValue, "withdraw amount is too big");
         IDealer(dealer).executeWithdraw(to, toInternal);
     }
 

@@ -25,7 +25,7 @@ contract DegenSubaccountFactory {
 
     // ========== event ==========
 
-    event NewSubaccount(
+    event NewDegenSubaccount(
         address indexed master,
         uint256 subaccountIndex,
         address subaccountAddress
@@ -49,7 +49,7 @@ contract DegenSubaccountFactory {
         subaccount = Clones.clone(template);
         DegenSubaccount(subaccount).init(msg.sender, dealer, globalOperator);
         degenSubaccountRegistry[msg.sender].push(subaccount);
-        emit NewSubaccount(
+        emit NewDegenSubaccount(
             msg.sender,
             degenSubaccountRegistry[msg.sender].length - 1,
             subaccount

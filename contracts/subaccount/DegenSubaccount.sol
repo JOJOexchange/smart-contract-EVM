@@ -35,10 +35,6 @@ contract DegenSubaccount {
     }
 
 
-    // ========== event ==========
-    event ExecuteTransaction(address indexed owner, address subaccount, address to, bytes data, uint256 value);
-    event UpdateMaxMultiple(uint256 oldMaxMultiple, uint256 newMaxMultiple);
-
     // ========== functions ==========
 
     function init(address _owner, address _dealer, address _operator) external {

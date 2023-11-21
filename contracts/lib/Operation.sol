@@ -26,10 +26,19 @@ library Operation {
 
     event SetOrderSender(address orderSender, bool isValid);
 
+    event SetFastWithdrawalWhitelist(address target, bool isValid);
+
     event SetOperator(
         address indexed client,
         address indexed operator,
         bool isValid
+    );
+
+    event FundOperatorAllowedChange(
+        address indexed client,
+        address indexed operator,
+        uint256 primaryAllowed,
+        uint256 secondaryAllowed
     );
 
     event SetSecondaryAsset(address secondaryAsset);
@@ -136,6 +145,15 @@ library Operation {
         emit SetOrderSender(orderSender, isValid);
     }
 
+    function setFastWithdrawalWhitelist(
+        Types.State storage state,
+        address target,
+        bool isValid
+    ) external {
+        state.fastWithdrawalWhitelist[target] = isValid;
+        emit SetFastWithdrawalWhitelist(target, isValid);
+    }
+
     function setOperator(
         Types.State storage state,
         address client,
@@ -144,6 +162,18 @@ library Operation {
     ) external {
         state.operatorRegistry[client][operator] = isValid;
         emit SetOperator(client, operator, isValid);
+    }
+
+    function approveFundOperator(
+        Types.State storage state,
+        address client,
+        address operator,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    ) external {
+        state.primaryCreditAllowed[client][operator] = primaryAmount;
+        state.secondaryCreditAllowed[client][operator] = secondaryAmount;
+        emit FundOperatorAllowedChange(client, operator, primaryAmount, secondaryAmount);
     }
 
     function setSecondaryAsset(

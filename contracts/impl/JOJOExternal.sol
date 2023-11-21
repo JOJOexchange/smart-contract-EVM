@@ -34,24 +34,43 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
-        external
-        nonReentrant
-    {
-        Funding.requestWithdraw(state, primaryAmount, secondaryAmount);
+    function requestWithdraw(
+        address from,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    ) external nonReentrant {
+        Funding.requestWithdraw(state, from, primaryAmount, secondaryAmount);
     }
 
     /// @inheritdoc IDealer
-    function executeWithdraw(address to, bool isInternal)
-        external
-        nonReentrant
-    {
-        Funding.executeWithdraw(state, to, isInternal);
+    function executeWithdraw(
+        address from,
+        address to,
+        bool isInternal,
+        bytes memory param
+    ) external nonReentrant {
+        Funding.executeWithdraw(state, from, to, isInternal, param);
+    }
+
+    /// @inheritdoc IDealer
+    function fastWithdraw(
+        address from,
+        address to,
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
+        bool isInternal,
+        bytes memory param
+    ) external nonReentrant {
+        Funding.fastWithdraw(state, from, to, primaryAmount, secondaryAmount, isInternal, param);
     }
 
     /// @inheritdoc IDealer
     function setOperator(address operator, bool isValid) external {
         Operation.setOperator(state, msg.sender, operator, isValid);
+    }
+
+    function approveFundOperator(address operator, uint256 primaryAmount, uint256 secondaryAmount) external {
+        Operation.approveFundOperator(state, msg.sender, operator, primaryAmount, secondaryAmount);
     }
 
     /// @inheritdoc IDealer
@@ -94,15 +113,18 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
     }
 
     /// @inheritdoc IDealer
-    function realizePnl(address trader, int256 pnl)
-        external
-        onlyRegisteredPerp
-    {
+    function realizePnl(
+        address trader,
+        int256 pnl
+    ) external onlyRegisteredPerp {
         Position._realizePnl(state, trader, pnl);
     }
 
     /// @inheritdoc IDealer
-    function approveTrade(address orderSender, bytes calldata tradeData)
+    function approveTrade(
+        address orderSender,
+        bytes calldata tradeData
+    )
         external
         onlyRegisteredPerp
         returns (

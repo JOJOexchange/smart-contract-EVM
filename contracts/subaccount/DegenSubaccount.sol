@@ -70,7 +70,7 @@ contract DegenSubaccount {
 
         require(primaryCredit > 0, "primaryCredit is less than 0");
         require(primaryAmount + maintenanceMargin <= SafeCast.toUint256(primaryCredit), "withdraw amount is too big");
-        IDealer(dealer).requestWithdraw(primaryAmount, 0);
+        IDealer(dealer).requestWithdraw(address(this), primaryAmount, 0);
     }
 
     function executeWithdrawPrimaryAsset(address to, bool toInternal) external onlyOwner {
@@ -79,19 +79,19 @@ contract DegenSubaccount {
 
         require(primaryCredit > 0, "primaryCredit is less than 0");
         require(pendingPrimaryWithdraw + maintenanceMargin <= SafeCast.toUint256(primaryCredit), "withdraw amount is too big");
-        IDealer(dealer).executeWithdraw(to, toInternal);
+        IDealer(dealer).executeWithdraw(address(this), to, toInternal, "");
     }
 
 
     // secondary
     function requestWithdrawSecondaryAsset(uint256 secondaryAmount) external onlyGlobalOperator {
         // only Global operator can request JUSD
-        IDealer(dealer).requestWithdraw(0, secondaryAmount);
+        IDealer(dealer).requestWithdraw(address(this), 0, secondaryAmount);
 
     }
 
     function executeWithdrawSecondaryAsset() external onlyGlobalOperator {
         // only Global operator can withdraw JUSD
-        IDealer(dealer).executeWithdraw(JOJOOperator, false);
+        IDealer(dealer).executeWithdraw(address(this), JOJOOperator, false, "");
     }
 }

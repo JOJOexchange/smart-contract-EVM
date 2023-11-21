@@ -15,6 +15,9 @@ library Types {
         // credit, gained by deposit assets
         mapping(address => int256) primaryCredit;
         mapping(address => uint256) secondaryCredit;
+        // allow fund operators to withdraw
+        mapping(address => mapping(address => uint256)) primaryCreditAllowed;
+        mapping(address => mapping(address => uint256)) secondaryCreditAllowed;
         // withdrawal request time lock
         uint256 withdrawTimeLock;
         // pending primary asset withdrawal amount
@@ -37,6 +40,8 @@ library Types {
         mapping(bytes32 => uint256) orderFilledPaperAmount;
         // valid order sender registry
         mapping(address => bool) validOrderSender;
+        // addresses that can make fast withdrawal
+        mapping(address => bool) fastWithdrawalWhitelist;
         // operator registry
         // client => operator => isValid
         mapping(address => mapping(address => bool)) operatorRegistry;

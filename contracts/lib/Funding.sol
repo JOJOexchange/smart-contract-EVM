@@ -12,6 +12,7 @@ import "../intf/IMarkPriceSource.sol";
 import "../utils/SignedDecimalMath.sol";
 import "../utils/Errors.sol";
 import "./Liquidation.sol";
+import "./Operation.sol";
 import "./Types.sol";
 
 library Funding {
@@ -81,11 +82,35 @@ library Funding {
 
     // ========== withdraw ==========
 
+    function isWithdrawValid(
+        Types.State storage state,
+        address spender,
+        address from,
+        uint256 primaryAmount,
+        uint256 secondaryAmount
+    ) internal view returns (bool) {
+        return
+            spender == from ||
+            (state.primaryCreditAllowed[from][spender] >= primaryAmount &&
+                state.secondaryCreditAllowed[from][spender] >= secondaryAmount);
+    }
+
     function requestWithdraw(
         Types.State storage state,
+        address from,
         uint256 primaryAmount,
         uint256 secondaryAmount
     ) external {
+        require(
+            isWithdrawValid(
+                state,
+                msg.sender,
+                from,
+                primaryAmount,
+                secondaryAmount
+            ),
+            Errors.WITHDRAW_INVALID
+        );
         state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
         state.pendingSecondaryWithdraw[msg.sender] = secondaryAmount;
         state.withdrawExecutionTimestamp[msg.sender] =
@@ -101,39 +126,100 @@ library Funding {
 
     function executeWithdraw(
         Types.State storage state,
+        address from,
         address to,
-        bool isInternal
+        bool isInternal,
+        bytes memory param
     ) external {
         require(
-            state.withdrawExecutionTimestamp[msg.sender] <= block.timestamp,
+            state.withdrawExecutionTimestamp[from] <= block.timestamp,
             Errors.WITHDRAW_PENDING
         );
-        uint256 primaryAmount = state.pendingPrimaryWithdraw[msg.sender];
-        uint256 secondaryAmount = state.pendingSecondaryWithdraw[msg.sender];
-        state.pendingPrimaryWithdraw[msg.sender] = 0;
-        state.pendingSecondaryWithdraw[msg.sender] = 0;
+        uint256 primaryAmount = state.pendingPrimaryWithdraw[from];
+        uint256 secondaryAmount = state.pendingSecondaryWithdraw[from];
+        require(
+            isWithdrawValid(
+                state,
+                msg.sender,
+                from,
+                primaryAmount,
+                secondaryAmount
+            ),
+            Errors.WITHDRAW_INVALID
+        );
+        state.pendingPrimaryWithdraw[from] = 0;
+        state.pendingSecondaryWithdraw[from] = 0;
         // No need to change withdrawExecutionTimestamp, because we set pending
         // withdraw amount to 0.
         _withdraw(
             state,
             msg.sender,
+            from,
             to,
             primaryAmount,
             secondaryAmount,
-            isInternal
+            isInternal,
+            param
+        );
+    }
+
+    function fastWithdraw(
+        Types.State storage state,
+        address from,
+        address to,
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
+        bool isInternal,
+        bytes memory param
+    ) external {
+        require(
+            state.fastWithdrawalWhitelist[msg.sender],
+            Errors.FAST_WITHDRAW_NOT_ALLOWED
+        );
+        require(
+            isWithdrawValid(
+                state,
+                msg.sender,
+                from,
+                primaryAmount,
+                secondaryAmount
+            ),
+            Errors.WITHDRAW_INVALID
+        );
+        _withdraw(
+            state,
+            msg.sender,
+            from,
+            to,
+            primaryAmount,
+            secondaryAmount,
+            isInternal,
+            param
         );
     }
 
     function _withdraw(
         Types.State storage state,
-        address payer,
+        address spender,
+        address from,
         address to,
         uint256 primaryAmount,
         uint256 secondaryAmount,
-        bool isInternal
+        bool isInternal,
+        bytes memory param
     ) private {
+        if (spender != from) {
+            state.primaryCreditAllowed[from][spender] -= primaryAmount;
+            state.secondaryCreditAllowed[from][spender] -= secondaryAmount;
+            emit Operation.FundOperatorAllowedChange(
+                from,
+                spender,
+                state.primaryCreditAllowed[from][spender],
+                state.secondaryCreditAllowed[from][spender]
+            );
+        }
         if (primaryAmount > 0) {
-            state.primaryCredit[payer] -= SafeCast.toInt256(primaryAmount);
+            state.primaryCredit[from] -= SafeCast.toInt256(primaryAmount);
             if (isInternal) {
                 state.primaryCredit[to] += SafeCast.toInt256(primaryAmount);
             } else {
@@ -141,7 +227,7 @@ library Funding {
             }
         }
         if (secondaryAmount > 0) {
-            state.secondaryCredit[payer] -= secondaryAmount;
+            state.secondaryCredit[from] -= secondaryAmount;
             if (isInternal) {
                 state.secondaryCredit[to] += secondaryAmount;
             } else {
@@ -152,19 +238,34 @@ library Funding {
         if (primaryAmount > 0) {
             // if trader withdraw primary asset, we should check if solid safe
             require(
-                Liquidation._isSolidSafe(state, payer),
+                Liquidation._isSolidSafe(state, from),
                 Errors.ACCOUNT_NOT_SAFE
             );
         } else {
             // if trader didn't withdraw primary asset, normal safe check is enough
-            require(Liquidation._isSafe(state, payer), Errors.ACCOUNT_NOT_SAFE);
+            require(Liquidation._isSafe(state, from), Errors.ACCOUNT_NOT_SAFE);
         }
 
         if (isInternal) {
             emit TransferIn(to, primaryAmount, secondaryAmount);
-            emit TransferOut(payer, primaryAmount, secondaryAmount);
+            emit TransferOut(from, primaryAmount, secondaryAmount);
         } else {
-            emit Withdraw(to, payer, primaryAmount, secondaryAmount);
+            emit Withdraw(to, from, primaryAmount, secondaryAmount);
+        }
+
+        if (param.length != 0) {
+            (bool success, bytes memory returnData) = to.call(param);
+            if (!success) {
+                if (returnData.length > 0) {
+                    string memory errorMessage = abi.decode(
+                        returnData,
+                        (string)
+                    );
+                    revert(errorMessage);
+                } else {
+                    revert("External call failed without error message");
+                }
+            }
         }
     }
 }

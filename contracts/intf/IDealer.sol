@@ -21,16 +21,44 @@ interface IDealer {
     /// @notice Submit withdrawal request, which can be executed after
     /// the timelock. The main purpose of this function is to avoid the
     /// failure of counterparty caused by withdrawal.
+    /// @param from The deducted account.
     /// @param primaryAmount is the amount of primary asset you want to withdraw.
     /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
-    function requestWithdraw(uint256 primaryAmount, uint256 secondaryAmount)
-        external;
+    function requestWithdraw(
+        address from, 
+        uint256 primaryAmount, 
+        uint256 secondaryAmount
+    ) external;
 
     /// @notice Execute the withdrawal request.
+    /// @param from The deducted account.
     /// @param to is the address receiving assets.
     /// @param isInternal Only internal credit transfers will be made,
     /// and ERC20 transfers will not happen.
-    function executeWithdraw(address to, bool isInternal) external;
+    /// @param param call "to" with param if not null. 
+    function executeWithdraw(
+        address from, 
+        address to, 
+        bool isInternal,
+        bytes memory param
+    ) external;
+
+    /// @notice Withdraw without waiting.
+    /// @param from The deducted account.
+    /// @param to is the address receiving assets.
+    /// @param primaryAmount is the amount of primary asset you want to withdraw.
+    /// @param secondaryAmount is the amount of secondary asset you want to 
+    /// @param isInternal Only internal credit transfers will be made,
+    /// and ERC20 transfers will not happen.
+    /// @param param call "to" with param if not null. 
+    function fastWithdraw(
+        address from,
+        address to,
+        uint256 primaryAmount,
+        uint256 secondaryAmount,
+        bool isInternal,
+        bytes memory param
+    ) external;
 
     /// @notice Help perpetual contract parse tradeData and return
     /// the balance changes of each trader.

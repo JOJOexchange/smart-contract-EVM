@@ -33,7 +33,8 @@ library Trading {
         address indexed perp,
         int256 orderFilledPaperAmount,
         int256 filledCreditAmount,
-        uint256 positionSerialNum
+        uint256 positionSerialNum,
+        int256 fee
     );
 
     // ========== matching[important] ==========
@@ -118,7 +119,8 @@ library Trading {
                     msg.sender,
                     paperChange,
                     creditChange - fee,
-                    serialNum
+                    serialNum,
+                    fee
                 );
                 // store matching result, including fees
                 result.paperChangeList[currentTraderIndex] += paperChange;
@@ -146,7 +148,8 @@ library Trading {
                 msg.sender,
                 result.paperChangeList[0],
                 result.creditChangeList[0],
-                state.positionSerialNum[orderList[0].signer][msg.sender]
+                state.positionSerialNum[orderList[0].signer][msg.sender],
+                takerFee
             );
         }
     }

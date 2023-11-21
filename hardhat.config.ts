@@ -26,14 +26,14 @@ module.exports = {
       chainId: 97,
       url: process.env.BSCTEST_URL,
     },
-    arbitrumtest: {
-      chainId: 421613,
-      url: process.env.ARBITRUMTEST_URL,
-      account: [process.env.JOJO_LIQUIDATE_PK],
-      gas: 2100000,
-      gasPrice: 8000000000,
-      allowUnlimitedContractSize: true
-    },
+    // arbitrumtest: {
+    //   chainId: 421613,
+    //   url: process.env.ARBITRUMTEST_URL,
+    //   account: [process.env.JOJO_LIQUIDATE_PK],
+    //   gas: 2100000,
+    //   gasPrice: 8000000000,
+    //   allowUnlimitedContractSize: true
+    // },
     arbitrum: {
       chainId: 42161,
       url: process.env.ARBITRUM_URL,

@@ -55,10 +55,10 @@ library Types {
             whose balance will be changed.
             Normally it should be an EOA account and the 
             order is valid only if the signer signed it.
-            If the signer is a contract, it must implement
-            isValidPerpetualOperator(address) returns(bool).
-            The order is valid only if one of the valid operators
-            is an EOA account and signed the order.
+            If the signer is a smart contract, it has two ways
+            to sign the order. The first way is to authorize 
+            another EOA address to sign for it through setOperator.
+            The other way is to implement IERC1271 for self-verification.
         */
         address signer;
         // positive(negative) if you want to open long(short) position

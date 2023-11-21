@@ -6,6 +6,8 @@
 pragma solidity 0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "./JOJOStorage.sol";
 import "../utils/Errors.sol";
 import "../utils/SignedDecimalMath.sol";
@@ -134,13 +136,25 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
                 Trading._structHash(order)
             );
             orderHashList[i] = orderHash;
+            // validate signature
             address recoverSigner = ECDSA.recover(orderHash, signatureList[i]);
+            if (
+                recoverSigner != order.signer &&
+                !state.operatorRegistry[order.signer][recoverSigner]
+            ) {
+                if (Address.isContract(order.signer)) {
+                    require(
+                        IERC1271(order.signer).isValidSignature(
+                            orderHash,
+                            signatureList[i]
+                        ) == 0x1626ba7e,
+                        Errors.INVALID_ORDER_SIGNATURE
+                    );
+                } else {
+                    revert(Errors.INVALID_ORDER_SIGNATURE);
+                }
+            }
             // requirements
-            require(
-                recoverSigner == order.signer ||
-                    state.operatorRegistry[order.signer][recoverSigner],
-                Errors.INVALID_ORDER_SIGNATURE
-            );
             require(
                 Trading._info2Expiration(order.info) >= block.timestamp,
                 Errors.ORDER_EXPIRED

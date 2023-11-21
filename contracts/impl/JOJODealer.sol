@@ -20,6 +20,6 @@ contract JOJODealer is JOJOExternal, JOJOOperation, JOJOView {
     }
 
     function version() external pure returns (string memory) {
-        return "JOJODealer V1.0";
+        return "JOJODealer V1.1";
     }
 }

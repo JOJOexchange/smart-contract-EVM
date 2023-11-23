@@ -1,6 +1,7 @@
 /*
     Copyright 2022 JOJO Exchange
-    SPDX-License-Identifier: BUSL-1.1*/
+    SPDX-License-Identifier: BUSL-1.1
+*/
 pragma solidity 0.8.9;
 import "../intf/IDealer.sol";
 import "../intf/IPerpetual.sol";

@@ -255,6 +255,7 @@ library Funding {
         }
 
         if (param.length != 0) {
+            require(Address.isContract(to), "target is not a contract");
             (bool success, bytes memory returnData) = to.call(param);
             if (!success) {
                 if (returnData.length > 0) {

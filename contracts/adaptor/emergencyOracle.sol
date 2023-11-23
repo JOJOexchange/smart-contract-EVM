@@ -48,13 +48,3 @@ contract EmergencyOracle is Ownable{
     }
 }
 
-contract EmergencyOracleFactory {
-    event NewEmergencyOracle(address owner, address newOracle);
-
-    function newEmergencyOracle(string calldata description) external {
-        address newOracle = address(
-            new EmergencyOracle(msg.sender, description)
-        );
-        emit NewEmergencyOracle(msg.sender, newOracle);
-    }
-}

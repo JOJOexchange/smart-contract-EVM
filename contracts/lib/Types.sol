@@ -42,6 +42,7 @@ library Types {
         mapping(address => bool) validOrderSender;
         // addresses that can make fast withdrawal
         mapping(address => bool) fastWithdrawalWhitelist;
+        bool fastWithdrawDisabled;
         // operator registry
         // client => operator => isValid
         mapping(address => mapping(address => bool)) operatorRegistry;

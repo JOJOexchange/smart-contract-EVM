@@ -69,6 +69,10 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
         Operation.setFastWithdrawalWhitelist(state, target, isValid);
     }
 
+    function disableFastWithdraw(bool disabled) external onlyOwner{
+        Operation.disableFastWithdraw(state, disabled);
+    }
+
     /// @notice Secondary asset can only be set once.
     /// Secondary asset must have the same decimal with primary asset.
     function setSecondaryAsset(address _secondaryAsset) external onlyOwner {

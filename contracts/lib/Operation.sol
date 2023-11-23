@@ -28,6 +28,8 @@ library Operation {
 
     event SetFastWithdrawalWhitelist(address target, bool isValid);
 
+    event FastWithdrawDisabled(bool disabled);
+
     event SetOperator(
         address indexed client,
         address indexed operator,
@@ -152,6 +154,14 @@ library Operation {
     ) external {
         state.fastWithdrawalWhitelist[target] = isValid;
         emit SetFastWithdrawalWhitelist(target, isValid);
+    }
+
+    function disableFastWithdraw(
+        Types.State storage state,
+        bool disabled
+    ) external {
+        state.fastWithdrawDisabled = disabled;
+        emit FastWithdrawDisabled(disabled);
     }
 
     function setOperator(

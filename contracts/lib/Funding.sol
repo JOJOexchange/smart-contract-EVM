@@ -173,7 +173,8 @@ library Funding {
         bytes memory param
     ) external {
         require(
-            state.fastWithdrawalWhitelist[msg.sender],
+            !state.fastWithdrawDisabled ||
+                state.fastWithdrawalWhitelist[msg.sender],
             Errors.FAST_WITHDRAW_NOT_ALLOWED
         );
         require(

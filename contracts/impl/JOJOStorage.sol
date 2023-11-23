@@ -24,6 +24,7 @@ abstract contract JOJOStorage is Ownable, ReentrancyGuard {
         );
     }
 
+
     modifier onlyFundingRateKeeper() {
         require(
             msg.sender == state.fundingRateKeeper,

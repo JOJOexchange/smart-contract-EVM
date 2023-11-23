@@ -65,7 +65,7 @@ contract DegenSubaccount {
 
     // primary
     function requestWithdrawPrimaryAsset(uint256 primaryAmount) external onlyOwner {
-        (,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
+        (,,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
         (int256 primaryCredit,,,,) = IDealer(dealer).getCreditOf(address(this));
 
         require(primaryCredit > 0, "primaryCredit is less than 0");
@@ -74,7 +74,7 @@ contract DegenSubaccount {
     }
 
     function executeWithdrawPrimaryAsset(address to, bool toInternal) external onlyOwner {
-        (,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
+        (,,, uint256 maintenanceMargin) = IDealer(dealer).getTraderRisk(address(this));
         (int256 primaryCredit,,uint256 pendingPrimaryWithdraw,,) = IDealer(dealer).getCreditOf(address(this));
 
         require(primaryCredit > 0, "primaryCredit is less than 0");

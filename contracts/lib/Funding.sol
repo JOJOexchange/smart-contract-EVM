@@ -239,12 +239,12 @@ library Funding {
         if (primaryAmount > 0) {
             // if trader withdraw primary asset, we should check if solid safe
             require(
-                Liquidation._isSolidSafe(state, from),
+                Liquidation._isSolidIMSafe(state, from),
                 Errors.ACCOUNT_NOT_SAFE
             );
         } else {
             // if trader didn't withdraw primary asset, normal safe check is enough
-            require(Liquidation._isSafe(state, from), Errors.ACCOUNT_NOT_SAFE);
+            require(Liquidation._isIMSafe(state, from), Errors.ACCOUNT_NOT_SAFE);
         }
 
         if (isInternal) {

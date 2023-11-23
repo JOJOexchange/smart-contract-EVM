@@ -83,6 +83,7 @@ contract HelperContract {
             (
             int256 netValue,
             uint256 exposure,
+            ,
             uint256 maintenanceMargin
             ) = IDealer(JOJODealer).getTraderRisk(accounts[i]);
             accountStates[i].netValue = netValue;

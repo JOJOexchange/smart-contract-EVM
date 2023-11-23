@@ -85,7 +85,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
 
     /// @inheritdoc IDealer
     function isSafe(address trader) external view returns (bool safe) {
-        return Liquidation._isSafe(state, trader);
+        return Liquidation._isMMSafe(state, trader);
     }
 
     /// @inheritdoc IDealer
@@ -94,7 +94,7 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         view
         returns (bool safe)
     {
-        return Liquidation._isAllSafe(state, traderList);
+        return Liquidation._isAllMMSafe(state, traderList);
     }
 
     /// @inheritdoc IDealer
@@ -109,16 +109,16 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         returns (
             int256 netValue,
             uint256 exposure,
+            uint256 initialMargin,
             uint256 maintenanceMargin
         )
     {
-        int256 positionNetValue;
-        (positionNetValue, exposure, maintenanceMargin) = Liquidation
-            .getTotalExposure(state, trader);
-        netValue =
-            positionNetValue +
-            state.primaryCredit[trader] +
-            SafeCast.toInt256(state.secondaryCredit[trader]);
+        (
+            netValue, 
+            exposure, 
+            initialMargin,
+            maintenanceMargin
+        ) = Liquidation.getTotalExposure(state, trader);
     }
 
     /// @inheritdoc IDealer

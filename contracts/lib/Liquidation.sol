@@ -50,15 +50,20 @@ library Liquidation {
 
     // ========== trader safety check ==========
 
-    function getTotalExposure(Types.State storage state, address trader)
+    function getTotalExposure(
+        Types.State storage state,
+        address trader
+    )
         public
         view
         returns (
-            int256 netPositionValue,
+            int256 netValue,
             uint256 exposure,
+            uint256 initialMargin,
             uint256 maintenanceMargin
         )
     {
+        int256 netPositionValue;
         // sum net value and exposure among all markets
         for (uint256 i = 0; i < state.openPositions[trader].length; ) {
             (int256 paperAmount, int256 creditAmount) = IPerpetual(
@@ -77,115 +82,58 @@ library Liquidation {
             maintenanceMargin +=
                 (exposureIncrement * params.liquidationThreshold) /
                 Types.ONE;
-
+            initialMargin +=
+                (exposureIncrement * params.initialMarginRatio) /
+                Types.ONE;
             unchecked {
                 ++i;
             }
         }
+        netValue = netPositionValue +
+            state.primaryCredit[trader] +
+            SafeCast.toInt256(state.secondaryCredit[trader]);
     }
 
-    function _isSafe(Types.State storage state, address trader)
-        internal
-        view
-        returns (bool)
-    {
-        (
-            int256 netPositionValue,
-            ,
-            uint256 maintenanceMargin
-        ) = getTotalExposure(state, trader);
-
-        // net value >= maintenanceMargin
-        return
-            netPositionValue +
-                state.primaryCredit[trader] +
-                SafeCast.toInt256(state.secondaryCredit[trader]) >=
-            SafeCast.toInt256(maintenanceMargin);
+    function _isMMSafe(
+        Types.State storage state,
+        address trader
+    ) internal view returns (bool) {
+        (int256 netValue,,,uint256 maintenanceMargin) 
+            = getTotalExposure(state, trader);
+        return netValue >= SafeCast.toInt256(maintenanceMargin);
     }
 
-    /// @notice More strict than _isSafe.
+    function _isIMSafe(
+        Types.State storage state,
+        address trader
+    ) internal view returns (bool) {
+        (int256 netValue,,uint256 initialMargin,) 
+            = getTotalExposure(state, trader);
+        return netValue >= SafeCast.toInt256(initialMargin);
+    }
+
+    /// @notice More strict than _isIMSafe.
     /// Additional requirement: netPositionValue + primaryCredit >= 0
     /// used when traders transfer out primary credit.
-    function _isSolidSafe(Types.State storage state, address trader)
-        internal
-        view
-        returns (bool)
-    {
-        (
-            int256 netPositionValue,
-            ,
-            uint256 maintenanceMargin
-        ) = getTotalExposure(state, trader);
-        return
-            netPositionValue + state.primaryCredit[trader] >= 0 &&
-            netPositionValue +
-                state.primaryCredit[trader] +
-                SafeCast.toInt256(state.secondaryCredit[trader]) >=
-            SafeCast.toInt256(maintenanceMargin);
+    function _isSolidIMSafe(
+        Types.State storage state,
+        address trader
+    ) internal view returns (bool) {
+        (int256 netValue,,uint256 initialMargin,) 
+            = getTotalExposure(state, trader);
+        return 
+            netValue - SafeCast.toInt256(state.secondaryCredit[trader]) >= 0 &&
+            netValue >= SafeCast.toInt256(initialMargin);
     }
 
-    /// @dev A gas saving way to check multi traders' safety status
-    /// by caching mark prices
-    function _isAllSafe(
+    function _isAllMMSafe(
         Types.State storage state,
         address[] calldata traderList
     ) internal view returns (bool) {
-        // cache mark price
-        uint256 totalPerpNum = state.registeredPerp.length;
-        address[] memory perpList = new address[](totalPerpNum);
-        int256[] memory markPriceCache = new int256[](totalPerpNum);
-
-        // check each trader's maintenance margin and net value
         for (uint256 i = 0; i < traderList.length; ) {
             address trader = traderList[i];
-            uint256 maintenanceMargin;
-            int256 netValue = state.primaryCredit[trader] +
-                SafeCast.toInt256(state.secondaryCredit[trader]);
-
-            // go through all open positions
-            for (uint256 j = 0; j < state.openPositions[trader].length; ) {
-                address perp = state.openPositions[trader][j];
-                Types.RiskParams storage params = state.perpRiskParams[perp];
-                int256 markPrice;
-                // use cached price OR cache it
-                for (uint256 k = 0; k < totalPerpNum; ) {
-                    if (perpList[k] == perp) {
-                        markPrice = markPriceCache[k];
-                        break;
-                    }
-                    // if not, query mark price and cache it
-                    if (perpList[k] == address(0)) {
-                        markPrice = SafeCast.toInt256(
-                            IMarkPriceSource(params.markPriceSource)
-                                .getMarkPrice()
-                        );
-                        perpList[k] = perp;
-                        markPriceCache[k] = markPrice;
-                        break;
-                    }
-                    unchecked {
-                        ++k;
-                    }
-                }
-                (int256 paperAmount, int256 credit) = IPerpetual(perp)
-                    .balanceOf(trader);
-                maintenanceMargin +=
-                    (paperAmount.decimalMul(markPrice).abs() *
-                        params.liquidationThreshold) /
-                    Types.ONE;
-                netValue += paperAmount.decimalMul(markPrice) + credit;
-                unchecked {
-                    ++j;
-                }
-            }
-
-            // return false if any one of traders is lack of collateral
-            if (netValue < SafeCast.toInt256(maintenanceMargin)) {
+            if (!_isMMSafe(state, trader)) {
                 return false;
-            }
-
-            unchecked {
-                ++i;
             }
         }
         return true;
@@ -291,7 +239,7 @@ library Liquidation {
         )
     {
         // can not liquidate a safe trader
-        require(!_isSafe(state, liquidatedTrader), Errors.ACCOUNT_IS_SAFE);
+        require(!_isMMSafe(state, liquidatedTrader), Errors.ACCOUNT_IS_SAFE);
 
         // calculate and limit the paper change to the position size
         (int256 brokenPaperAmount, ) = IPerpetual(perp).balanceOf(
@@ -363,7 +311,10 @@ library Liquidation {
         state.primaryCredit[state.insurance] += SafeCast.toInt256(insuranceFee);
 
         // liquidated trader balance change
-        liqedCreditChange = liqtorCreditChange * -1 - SafeCast.toInt256(insuranceFee);
+        liqedCreditChange =
+            liqtorCreditChange *
+            -1 -
+            SafeCast.toInt256(insuranceFee);
         liqedPaperChange = liqtorPaperChange * -1;
 
         // events
@@ -387,21 +338,21 @@ library Liquidation {
         emit ChargeInsurance(perp, liquidatedTrader, insuranceFee);
     }
 
-    function getMarkPrice(Types.State storage state, address perp)
-        external
-        view
-        returns (uint256 price)
-    {
+    function getMarkPrice(
+        Types.State storage state,
+        address perp
+    ) external view returns (uint256 price) {
         price = IMarkPriceSource(state.perpRiskParams[perp].markPriceSource)
             .getMarkPrice();
     }
 
-    function handleBadDebt(Types.State storage state, address liquidatedTrader)
-        external
-    {
+    function handleBadDebt(
+        Types.State storage state,
+        address liquidatedTrader
+    ) external {
         if (
             state.openPositions[liquidatedTrader].length == 0 &&
-            !Liquidation._isSafe(state, liquidatedTrader)
+            !Liquidation._isMMSafe(state, liquidatedTrader)
         ) {
             int256 primaryCredit = state.primaryCredit[liquidatedTrader];
             uint256 secondaryCredit = state.secondaryCredit[liquidatedTrader];

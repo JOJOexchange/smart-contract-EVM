@@ -174,12 +174,15 @@ interface IDealer {
     /// @notice Get the risk profile data of a trader.
     /// @return netValue net value of trader including credit amount
     /// @return exposure open position value of the trader across all markets
+    /// @return initialMargin Funds required to open a position.
+    /// @return maintenanceMargin Funds needed to keep a position open.
     function getTraderRisk(address trader)
         external
         view
         returns (
             int256 netValue,
             uint256 exposure,
+            uint256 initialMargin,
             uint256 maintenanceMargin
         );
 

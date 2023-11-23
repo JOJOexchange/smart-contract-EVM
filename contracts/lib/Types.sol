@@ -93,9 +93,15 @@ library Types {
     /// @notice risk params of a perpetual market
     struct RiskParams {
         /*
+            When users withdraw funds, their margin must be equal or
+            greater than the exposure * initialMarginRatio.
+        */
+        uint256 initialMarginRatio;
+        /*
             Liquidation will happen when
             netValue < exposure * liquidationThreshold
             The lower liquidationThreshold, the higher leverage.
+            This value is also known as "maintenance margin ratio".
             1E18 based decimal.
         */
         uint256 liquidationThreshold;

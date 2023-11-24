@@ -98,7 +98,7 @@ library Liquidation {
         Types.State storage state,
         address trader
     ) internal view returns (bool) {
-        (int256 netValue,,,uint256 maintenanceMargin) 
+        (int256 netValue,,,uint256 maintenanceMargin)
             = getTotalExposure(state, trader);
         return netValue >= SafeCast.toInt256(maintenanceMargin);
     }
@@ -107,7 +107,7 @@ library Liquidation {
         Types.State storage state,
         address trader
     ) internal view returns (bool) {
-        (int256 netValue,,uint256 initialMargin,) 
+        (int256 netValue,,uint256 initialMargin,)
             = getTotalExposure(state, trader);
         return netValue >= SafeCast.toInt256(initialMargin);
     }
@@ -119,9 +119,9 @@ library Liquidation {
         Types.State storage state,
         address trader
     ) internal view returns (bool) {
-        (int256 netValue,,uint256 initialMargin,) 
+        (int256 netValue,,uint256 initialMargin,)
             = getTotalExposure(state, trader);
-        return 
+        return
             netValue - SafeCast.toInt256(state.secondaryCredit[trader]) >= 0 &&
             netValue >= SafeCast.toInt256(initialMargin);
     }
@@ -134,6 +134,9 @@ library Liquidation {
             address trader = traderList[i];
             if (!_isMMSafe(state, trader)) {
                 return false;
+            }
+            unchecked {
+                ++i;
             }
         }
         return true;
@@ -158,21 +161,21 @@ library Liquidation {
 
             So we have:
                 netValue' + paperAmount * price + creditAmount >= maintenanceMargin' + abs(paperAmount) * price * liquidationThreshold
-            
+
             if paperAmount > 0
-                paperAmount * price * (1-liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount 
+                paperAmount * price * (1-liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount
                 price >= (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1-liquidationThreshold)
                 liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1-liquidationThreshold)
 
             if paperAmount < 0
-                paperAmount * price * (1+liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount 
+                paperAmount * price * (1+liquidationThreshold) >= maintenanceMargin' - netValue' - creditAmount
                 price <= (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1+liquidationThreshold)
                 liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/(1+liquidationThreshold)
-            
+
             Let's call 1±liquidationThreshold "multiplier"
             Then:
                 liqPrice = (maintenanceMargin' - netValue' - creditAmount)/paperAmount/multiplier
-            
+
             If liqPrice<0, it should be considered as the position can never be
             liquidated (absolutely safe) or being liquidated at the present if return 0.
         */

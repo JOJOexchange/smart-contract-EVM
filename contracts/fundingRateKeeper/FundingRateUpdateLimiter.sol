@@ -20,18 +20,13 @@ contract FundingRateUpdateLimiter is Ownable {
 
     // dealer
     address immutable dealer;
-    // max speed multiplier, should be 1/2/3/4/5..., no decimal
-    // funding rate max daily change will be limited to 
-    // speedMultiplier*liquidationThreshold
-    // e.d 3 * 3% = 9%
-    uint8 immutable speedMultiplier;
+
     // The timestamp of the last funding rate update
     // used to limit the change rate of fundingRate
     mapping(address => uint256) public fundingRateUpdateTimestamp;
 
-    constructor(address _dealer, uint8 _speedMultiplier) {
+    constructor(address _dealer) {
         dealer = _dealer;
-        speedMultiplier = _speedMultiplier;
     }
 
     function updateFundingRate(

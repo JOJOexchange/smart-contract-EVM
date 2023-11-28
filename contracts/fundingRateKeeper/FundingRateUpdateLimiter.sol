@@ -40,10 +40,8 @@ contract FundingRateUpdateLimiter is Ownable {
     ) external onlyOwner {
         for (uint256 i = 0; i < perpList.length;) {
             address perp = perpList[i];
-            int256 oldRate = IPerpetual(perp).getFundingRate();
-            uint256 maxChange = getMaxChange(perp);
             require(
-                (rateList[i] - oldRate).abs() <= maxChange,
+                (rateList[i]).abs() <= 1e16,
                 "FUNDING_RATE_CHANGE_TOO_MUCH"
             );
             fundingRateUpdateTimestamp[perp] = block.timestamp;
@@ -53,20 +51,5 @@ contract FundingRateUpdateLimiter is Ownable {
         }
 
         IDealer(dealer).updateFundingRate(perpList, rateList);
-    }
-
-    // limit funding rate change speed
-    // can not exceed speedMultiplier*liquidationThreshold
-    function getMaxChange(address perp) public view returns (uint256) {
-        Types.RiskParams memory params = IDealer(dealer).getRiskParams(perp);
-        uint256 markPrice = IMarkPriceSource(params.markPriceSource)
-            .getMarkPrice();
-        uint256 timeInterval = block.timestamp -
-            fundingRateUpdateTimestamp[perp];
-        uint256 maxChangeRate = (speedMultiplier *
-            timeInterval *
-            params.liquidationThreshold) / (1 days);
-        uint256 maxChange = (maxChangeRate * markPrice) / Types.ONE;
-        return maxChange;
     }
 }

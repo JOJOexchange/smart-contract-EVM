@@ -72,6 +72,16 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.validOrderSender[orderSender];
     }
 
+
+    /// @inheritdoc IDealer
+    function isFastWithdrawalValid(address fastWithdrawOperator)
+        external
+        view
+        returns (bool)
+    {
+        return state.fastWithdrawalWhitelist[fastWithdrawOperator];
+    }
+
     /// @inheritdoc IDealer
     function isOperatorValid(address client, address operator)
         external

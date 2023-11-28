@@ -219,6 +219,11 @@ interface IDealer {
         view
         returns (bool);
 
+    function isFastWithdrawalValid(address fastWithdrawOperator)
+        external
+        view
+        returns (bool);
+
     /// @notice check if operator is valid
     function isOperatorValid(address client, address operator)
         external

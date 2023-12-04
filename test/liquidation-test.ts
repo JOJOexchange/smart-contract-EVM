@@ -450,10 +450,10 @@ describe("Liquidation", () => {
       it("liquidator not safe", async () => {
         await context.dealer
           .connect(liquidator)
-          .requestWithdraw(utils.parseEther("0"), utils.parseEther("5000"));
+          .requestWithdraw(liquidator.address, utils.parseEther("0"), utils.parseEther("5000"));
         await context.dealer
           .connect(liquidator)
-          .executeWithdraw(liquidator.address, false);
+          .executeWithdraw(liquidator.address, liquidator.address, false, Buffer.from([]));
         await expect(
           perp0
             .connect(liquidator)

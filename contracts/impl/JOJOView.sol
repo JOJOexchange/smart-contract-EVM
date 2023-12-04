@@ -124,8 +124,8 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         )
     {
         (
-            netValue, 
-            exposure, 
+            netValue,
+            exposure,
             initialMargin,
             maintenanceMargin
         ) = Liquidation.getTotalExposure(state, trader);
@@ -180,19 +180,19 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return abi.encodeWithSignature("setOperator(address,bool)", operator, isValid);
     }
 
-    function getRequestWithdrawCallData(uint256 primaryAmount, uint256 secondaryAmount)
+    function getRequestWithdrawCallData(address from, uint256 primaryAmount, uint256 secondaryAmount)
         external
         pure
         returns (bytes memory)
     {
-        return abi.encodeWithSignature("requestWithdraw(uint256,uint256)", primaryAmount, secondaryAmount);
+        return abi.encodeWithSignature("requestWithdraw(address,uint256,uint256)", from, primaryAmount, secondaryAmount);
     }
 
-    function getExecuteWithdrawCallData(address to, bool isInternal)
+    function getExecuteWithdrawCallData(address from, address to, bool isInternal, bytes memory param)
         external
         pure
         returns (bytes memory)
     {
-        return abi.encodeWithSignature("executeWithdraw(address,bool)", to, isInternal);
+        return abi.encodeWithSignature("executeWithdraw(address,address,bool,bytes)", from, to, isInternal, param);
     }
 }

@@ -216,7 +216,7 @@ describe("view-functions", async () => {
       context.perpList[0],
       orderEnv
     );
-    
+
     positions = await context.dealer.getPositions(trader1.address);
     await expect(positions.length).to.be.equal(0);
     positions = await context.dealer.getPositions(trader2.address);
@@ -225,7 +225,7 @@ describe("view-functions", async () => {
 
   it("get version", async () => {
     let version = await context.dealer.version();
-    await expect(version).to.be.equal("JOJODealer V1.0");
+    await expect(version).to.be.equal("JOJODealer V1.1");
   });
 
   it("get mark price", async () => {

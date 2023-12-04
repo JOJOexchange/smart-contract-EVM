@@ -5,12 +5,12 @@ import { Contract, Wallet, Signer, utils } from "ethers";
     Default Context Params
     5 characters: owner insurance trader1~3
     3 perp markets:
-    - BTC 20x 
-      3% liquidation 1% price offset 1% insurance 
-    - ETH 10x 
-      5% liquidation 1% price offset 1% insurance 
-    - AR  5x  
-      10% liquidation 3% price offset 2% insurance 
+    - BTC 20x
+      3% liquidation 1% price offset 1% insurance
+    - ETH 10x
+      5% liquidation 1% price offset 1% insurance
+    - AR  5x
+      10% liquidation 3% price offset 2% insurance
     Init price
     - BTC 30000
     - ETH 2000
@@ -100,6 +100,7 @@ export async function basicContext(): Promise<Context> {
 
   // set BTC market
   await dealer.setPerpRiskParams(perpList[0].address, [
+    utils.parseEther("0.05"), // 5% initial
     utils.parseEther("0.03"), // 3% liquidation
     utils.parseEther("0.01"), // 1% price offset
     // utils.parseEther("100"), // 100BTC max
@@ -113,6 +114,7 @@ export async function basicContext(): Promise<Context> {
 
   // set ETH market
   await dealer.setPerpRiskParams(perpList[1].address, [
+    utils.parseEther("0.10"), // 10% initial
     utils.parseEther("0.05"), // 5% liquidation
     utils.parseEther("0.01"), // 1% price offset
     // utils.parseEther("1000"), // 1000ETH max
@@ -126,6 +128,7 @@ export async function basicContext(): Promise<Context> {
 
   // set AR market
   await dealer.setPerpRiskParams(perpList[2].address, [
+    utils.parseEther("0.20"), // 20% initial
     utils.parseEther("0.10"), // 10% liquidation
     utils.parseEther("0.03"), // 3% price offset
     // utils.parseEther("1000"), // 1000AR max

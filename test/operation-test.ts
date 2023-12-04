@@ -23,6 +23,7 @@ describe("operations", async () => {
     await expect(registeredPerps.length).to.be.equal(3);
 
     await context.dealer.setPerpRiskParams(context.perpList[1].address, [
+      utils.parseEther("0.10"), // 10% initial
       utils.parseEther("0.05"), // 5% liquidation
       utils.parseEther("0.01"), // 1% price offset
       // utils.parseEther("1000"), // 1000ETH max
@@ -72,6 +73,7 @@ describe("operations", async () => {
   it("invalid risk param",async () => {
     await expect(
       context.dealer.setPerpRiskParams(context.perpList[0].address, [
+        utils.parseEther("0.05"), // 5% initial
         utils.parseEther("0.03"), // 3% liquidation
         utils.parseEther("0.02"), // 1% price offset
         utils.parseEther("0.02"), // 1% insurance fee

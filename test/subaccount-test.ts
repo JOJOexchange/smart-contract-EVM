@@ -99,8 +99,8 @@ describe("Subaccount", () => {
         trader1Sub.address
       );
     await checkCredit(context, trader1Sub.address, "10", "20");
-    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData(utils.parseEther("10"), utils.parseEther("20"));
-    let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader1.address, false);
+    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData(trader1Sub.address, utils.parseEther("10"), utils.parseEther("20"));
+    let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader1Sub.address, trader1.address, false, Buffer.from([]));
 
     await trader1Sub
       .connect(trader1).execute(context.dealer.address, requestWithdrawData, 0);
@@ -161,8 +161,8 @@ describe("Subaccount", () => {
       trader1Sub.connect(trader2).execute(context.dealer.address, setOperatorData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");
 
-    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData("15", "10");
-    let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader2.address, false);
+    let requestWithdrawData = await context.dealer.getRequestWithdrawCallData(trader1Sub.address, "15", "10");
+    let executeWithdrawData = await context.dealer.getExecuteWithdrawCallData(trader1Sub.address, trader2.address, false, Buffer.from([]));
     await expect(
       trader1Sub.connect(trader2).execute(context.dealer.address, requestWithdrawData, 0)
     ).to.be.revertedWith("Ownable: caller is not the owner");

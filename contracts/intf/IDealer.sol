@@ -25,8 +25,8 @@ interface IDealer {
     /// @param primaryAmount is the amount of primary asset you want to withdraw.
     /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
     function requestWithdraw(
-        address from, 
-        uint256 primaryAmount, 
+        address from,
+        uint256 primaryAmount,
         uint256 secondaryAmount
     ) external;
 
@@ -35,10 +35,10 @@ interface IDealer {
     /// @param to is the address receiving assets.
     /// @param isInternal Only internal credit transfers will be made,
     /// and ERC20 transfers will not happen.
-    /// @param param call "to" with param if not null. 
+    /// @param param call "to" with param if not null.
     function executeWithdraw(
-        address from, 
-        address to, 
+        address from,
+        address to,
         bool isInternal,
         bytes memory param
     ) external;
@@ -47,10 +47,10 @@ interface IDealer {
     /// @param from The deducted account.
     /// @param to is the address receiving assets.
     /// @param primaryAmount is the amount of primary asset you want to withdraw.
-    /// @param secondaryAmount is the amount of secondary asset you want to 
+    /// @param secondaryAmount is the amount of secondary asset you want to
     /// @param isInternal Only internal credit transfers will be made,
     /// and ERC20 transfers will not happen.
-    /// @param param call "to" with param if not null. 
+    /// @param param call "to" with param if not null.
     function fastWithdraw(
         address from,
         address to,

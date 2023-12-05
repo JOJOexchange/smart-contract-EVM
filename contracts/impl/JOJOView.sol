@@ -82,6 +82,16 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return state.fastWithdrawalWhitelist[fastWithdrawOperator];
     }
 
+
+    /// @inheritdoc IDealer
+    function isCreditAllowed(address from, address spender)
+        external
+        view
+        returns (uint256 primaryCreditAllowed, uint256 secondaryCreditAllowed)
+    {
+        return (state.primaryCreditAllowed[from][spender], state.secondaryCreditAllowed[from][spender]);
+    }
+
     /// @inheritdoc IDealer
     function isOperatorValid(address client, address operator)
         external

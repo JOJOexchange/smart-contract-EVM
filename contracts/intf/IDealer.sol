@@ -229,4 +229,9 @@ interface IDealer {
         external
         view
         returns (bool);
+
+    function isCreditAllowed(address from, address spender)
+        external
+        view
+        returns (uint256 primaryCreditAllowed, uint256 secondaryCreditAllowed);
 }

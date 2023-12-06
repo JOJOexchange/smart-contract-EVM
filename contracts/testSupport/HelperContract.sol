@@ -87,22 +87,22 @@ contract HelperContract {
     function getWalletBalance(address token, address wallet) public view returns(uint256) {
         return IERC20(token).balanceOf(wallet);
     }
-    function getHedgingState(address wallet, address perpetual) public view returns(HedgingState memory hedgingState) {
+    function getHedgingState(address perpetual) public view returns(HedgingState memory hedgingState) {
         (
         int256 primaryCredit,
         uint256 secondaryCredit,,,
-        ) = IDealer(JOJODealer).getCreditOf(wallet);
+        ) = IDealer(JOJODealer).getCreditOf(address(fundingRateArbitrage));
         hedgingState.USDCPerpBalance = primaryCredit;
         hedgingState.JUSDPerpBalance = secondaryCredit;
-        uint256 USDCWalletBalance = IERC20(USDC).balanceOf(wallet);
+        uint256 USDCWalletBalance = IERC20(USDC).balanceOf(address(fundingRateArbitrage));
         hedgingState.USDCWalletBalance = USDCWalletBalance;
-        uint256 wstETHWalletBalance = IERC20(fundingRateArbitrage.getCollateral()).balanceOf(wallet);
+        uint256 wstETHWalletBalance = IERC20(fundingRateArbitrage.getCollateral()).balanceOf(address(fundingRateArbitrage));
         hedgingState.wstETHWalletBalance = wstETHWalletBalance;
-        uint256 wstETHBankAmount = jusdBank.getDepositBalance(fundingRateArbitrage.getCollateral(), wallet);
+        uint256 wstETHBankAmount = jusdBank.getDepositBalance(fundingRateArbitrage.getCollateral(), address(fundingRateArbitrage));
         hedgingState.wstETHBankAmount = wstETHBankAmount;
-        uint256 JUSDBorrowAmount = jusdBank.getBorrowBalance(wallet);
+        uint256 JUSDBorrowAmount = jusdBank.getBorrowBalance(address(fundingRateArbitrage));
         hedgingState.JUSDBorrowAmount = JUSDBorrowAmount;
-        (int256 PositionPerpAmount, int256 PositionCreditAmount) = IPerpetual(perpetual).balanceOf(wallet);
+        (int256 PositionPerpAmount, int256 PositionCreditAmount) = IPerpetual(perpetual).balanceOf(address(fundingRateArbitrage));
         hedgingState.PositionPerpAmount = PositionPerpAmount;
         hedgingState.PositionCreditAmount = PositionCreditAmount;
         uint256 index = fundingRateArbitrage.getIndex();

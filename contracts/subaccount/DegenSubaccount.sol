@@ -106,6 +106,12 @@ contract DegenSubaccount {
         IDealer(dealer).executeWithdraw(address(this), to, toInternal, "");
     }
 
+    function fastWithdrawPrimaryAsset(uint256 withdrawAmount, address to, bool toInternal) external onlyOwner {
+        (uint256 maxWithdrawValue,) = getMaxWithdrawAmount(address(this));
+        require(withdrawAmount <= maxWithdrawValue, "withdraw amount is too big");
+        IDealer(dealer).fastWithdraw(address(this), to, withdrawAmount, 0, toInternal, "");
+    }
+
 
     // secondary
     function requestWithdrawSecondaryAsset(uint256 secondaryAmount) external onlyGlobalOperator {
@@ -118,4 +124,10 @@ contract DegenSubaccount {
         // only Global operator can withdraw JUSD
         IDealer(dealer).executeWithdraw(address(this), JOJOOperator, false, "");
     }
+
+
+    function fastWithdrawSecondaryAsset(address to, uint256 secondaryAmount) external onlyGlobalOperator {
+        IDealer(dealer).fastWithdraw(address(this), to, 0, secondaryAmount, false, "");
+    }
+
 }

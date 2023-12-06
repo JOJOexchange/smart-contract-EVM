@@ -19,7 +19,6 @@ contract BotSubaccountFactory {
 
     address immutable globalOperator;
 
-    address public datastore;
 
     // Subaccount can only be added.
     mapping(address => address[]) botSubaccountRegistry;

@@ -60,7 +60,7 @@ contract BotSubaccount {
         if(msg.sender == JOJOOperator){
             require(to == owner, "globalOperator only can transfer to owner");
         }
-        
+
         IDealer(dealer).fastWithdraw(address(this), to, primaryAmount, secondaryAmount, isInternal, "");
     }
 

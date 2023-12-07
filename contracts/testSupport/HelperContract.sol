@@ -10,6 +10,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 interface IFundingRateArbitrage {
     function getIndex() external view returns (uint256);
     function getCollateral() external view returns(address);
+    function getTotalEarnUSDCBalance() external view returns(uint256);
+}
+interface IChainlink {
+    function latestAnswer() external view returns (int256 answer);
 }
 
 interface IJUSDBank {
@@ -20,6 +24,8 @@ interface IJUSDBank {
     function getBorrowBalance(address from) external view returns (uint256);
 
     function getUserCollateralList(address from) external view returns (address[] memory);
+
+    function getCollateralPrice(address collateral) external view returns (uint256);
 }
 
 contract HelperContract {
@@ -28,12 +34,14 @@ contract HelperContract {
     IJUSDBank public jusdBank;
     IFundingRateArbitrage public fundingRateArbitrage;
     address public USDC;
+    address public wstToETHPrice;
 
-    constructor(address _JOJODealer, address _JUSDBank, address _FundingRateArbitrage, address _USDC) {
+    constructor(address _JOJODealer, address _JUSDBank, address _FundingRateArbitrage, address _USDC, address _wstToETHPrice) {
         JOJODealer = IDealer(_JOJODealer);
         jusdBank = IJUSDBank(_JUSDBank);
         fundingRateArbitrage = IFundingRateArbitrage(_FundingRateArbitrage);
         USDC = _USDC;
+        wstToETHPrice = _wstToETHPrice;
     }
     struct CollateralState {
         address collateral;
@@ -82,6 +90,10 @@ contract HelperContract {
         int256 PositionPerpAmount;
         int256 PositionCreditAmount;
         uint256 earnUSDCRate;
+        int256 wstETHToETH;
+        uint256 wstETHToUSDC;
+        uint256 wstETHDecimal;
+        uint256 earnUSDCTotalSupply;
     }
 
     function getWalletBalance(address token, address wallet) public view returns(uint256) {
@@ -107,6 +119,11 @@ contract HelperContract {
         hedgingState.PositionCreditAmount = PositionCreditAmount;
         uint256 index = fundingRateArbitrage.getIndex();
         hedgingState.earnUSDCRate = index;
+        uint256 wstETHToUSDC = IJUSDBank(jusdBank).getCollateralPrice(fundingRateArbitrage.getCollateral());
+        hedgingState.wstETHToUSDC = wstETHToUSDC;
+        hedgingState.wstETHDecimal = 18;
+        hedgingState.wstETHToETH = IChainlink(wstToETHPrice).latestAnswer();
+        hedgingState.earnUSDCTotalSupply = fundingRateArbitrage.getTotalEarnUSDCBalance();
     }
 
     function getAccountsStates(

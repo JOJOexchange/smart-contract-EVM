@@ -2,18 +2,16 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1*/
 pragma solidity 0.8.9;
-import "../intf/IDealer.sol";
+import "../impl/JOJODealer.sol";
 import "../intf/IPerpetual.sol";
 import "../lib/Types.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 interface IFundingRateArbitrage {
     function getIndex() external view returns (uint256);
     function getCollateral() external view returns(address);
     function getTotalEarnUSDCBalance() external view returns(uint256);
-}
-interface IChainlink {
-    function latestAnswer() external view returns (int256 answer);
 }
 
 interface IJUSDBank {
@@ -30,18 +28,15 @@ interface IJUSDBank {
 
 contract HelperContract {
 
-    IDealer public JOJODealer;
+    JOJODealer public JojoDealer;
     IJUSDBank public jusdBank;
     IFundingRateArbitrage public fundingRateArbitrage;
-    address public USDC;
     address public wstToETHPrice;
 
-    constructor(address _JOJODealer, address _JUSDBank, address _FundingRateArbitrage, address _USDC, address _wstToETHPrice) {
-        JOJODealer = IDealer(_JOJODealer);
+    constructor(address _JOJODealer, address _JUSDBank, address _FundingRateArbitrage) {
+        JojoDealer = JOJODealer(_JOJODealer);
         jusdBank = IJUSDBank(_JUSDBank);
         fundingRateArbitrage = IFundingRateArbitrage(_FundingRateArbitrage);
-        USDC = _USDC;
-        wstToETHPrice = _wstToETHPrice;
     }
     struct CollateralState {
         address collateral;
@@ -90,7 +85,7 @@ contract HelperContract {
         int256 PositionPerpAmount;
         int256 PositionCreditAmount;
         uint256 earnUSDCRate;
-        int256 wstETHToETH;
+        uint256 wstETHToETH;
         uint256 wstETHToUSDC;
         uint256 wstETHDecimal;
         uint256 earnUSDCTotalSupply;
@@ -103,9 +98,10 @@ contract HelperContract {
         (
         int256 primaryCredit,
         uint256 secondaryCredit,,,
-        ) = IDealer(JOJODealer).getCreditOf(address(fundingRateArbitrage));
+        ) = IDealer(JojoDealer).getCreditOf(address(fundingRateArbitrage));
         hedgingState.USDCPerpBalance = primaryCredit;
         hedgingState.JUSDPerpBalance = secondaryCredit;
+        (address USDC,,,,,,) = JojoDealer.state();
         uint256 USDCWalletBalance = IERC20(USDC).balanceOf(address(fundingRateArbitrage));
         hedgingState.USDCWalletBalance = USDCWalletBalance;
         uint256 wstETHWalletBalance = IERC20(fundingRateArbitrage.getCollateral()).balanceOf(address(fundingRateArbitrage));
@@ -120,9 +116,10 @@ contract HelperContract {
         uint256 index = fundingRateArbitrage.getIndex();
         hedgingState.earnUSDCRate = index;
         uint256 wstETHToUSDC = IJUSDBank(jusdBank).getCollateralPrice(fundingRateArbitrage.getCollateral());
+        uint256 ETHToUSDC = IDealer(JojoDealer).getMarkPrice(perpetual);
         hedgingState.wstETHToUSDC = wstETHToUSDC;
-        hedgingState.wstETHDecimal = 18;
-        hedgingState.wstETHToETH = IChainlink(wstToETHPrice).latestAnswer();
+        hedgingState.wstETHDecimal = ERC20(fundingRateArbitrage.getCollateral()).decimals();
+        hedgingState.wstETHToETH = (wstETHToUSDC / ETHToUSDC) * 1e12;
         hedgingState.earnUSDCTotalSupply = fundingRateArbitrage.getTotalEarnUSDCBalance();
     }
 
@@ -139,7 +136,7 @@ contract HelperContract {
                 uint256 pendingPrimaryWithdraw,
                 uint256 pendingSecondaryWithdraw,
                 uint256 executionTimestamp
-                ) = IDealer(JOJODealer).getCreditOf(accounts[i]);
+                ) = IDealer(JojoDealer).getCreditOf(accounts[i]);
                 accountStates[i].primaryCredit = primaryCredit;
                 accountStates[i].secondaryCredit = secondaryCredit;
                 accountStates[i]
@@ -153,13 +150,13 @@ contract HelperContract {
             uint256 exposure,
             uint256 initialMargin,
             uint256 maintenanceMargin
-            ) = IDealer(JOJODealer).getTraderRisk(accounts[i]);
+            ) = IDealer(JojoDealer).getTraderRisk(accounts[i]);
             accountStates[i].netValue = netValue;
             accountStates[i].exposure = exposure;
             accountStates[i].initialMargin = initialMargin;
             accountStates[i].maintenanceMargin = maintenanceMargin;
-            accountStates[i].isSafe = IDealer(JOJODealer).isSafe(accounts[i]);
-            address[] memory perp = IDealer(JOJODealer).getPositions(
+            accountStates[i].isSafe = IDealer(JojoDealer).isSafe(accounts[i]);
+            address[] memory perp = IDealer(JojoDealer).getPositions(
                 accounts[i]
             );
             accountStates[i].accountPerpState = new AccountPerpState[](perp.length);
@@ -171,7 +168,7 @@ contract HelperContract {
                 accountStates[i].accountPerpState[j].paper = paper;
                 accountStates[i].accountPerpState[j].credit = credit;
                 accountStates[i].accountPerpState[j].liquidatePrice = IDealer(
-                    JOJODealer
+                    JojoDealer
                 ).getLiquidationPrice(accounts[i], perp[j]);
             }
         }
@@ -182,13 +179,13 @@ contract HelperContract {
         perpStates = new PerpState[](perps.length);
         for (uint256 i = 0; i < perps.length; i++) {
             perpStates[i].perp = perps[i];
-            perpStates[i].fundingRate = IDealer(JOJODealer).getFundingRate(
+            perpStates[i].fundingRate = IDealer(JojoDealer).getFundingRate(
                 perps[i]
             );
-            perpStates[i].markPrice = IDealer(JOJODealer).getMarkPrice(
+            perpStates[i].markPrice = IDealer(JojoDealer).getMarkPrice(
                 perps[i]
             );
-            perpStates[i].riskParams = IDealer(JOJODealer).getRiskParams(
+            perpStates[i].riskParams = IDealer(JojoDealer).getRiskParams(
                 perps[i]
             );
         }

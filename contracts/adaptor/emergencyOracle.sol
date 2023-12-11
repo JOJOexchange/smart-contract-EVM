@@ -33,6 +33,12 @@ contract EmergencyOracle is Ownable{
         return price;
     }
 
+    function getAssetPrice() external view returns (uint256) {
+        require(turnOn, "the emergency oracle is close");
+        return price;
+    }
+
+
     function turnOnOracle() external onlyOwner {
         turnOn = true;
     }

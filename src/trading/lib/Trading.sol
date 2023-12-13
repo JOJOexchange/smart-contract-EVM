@@ -58,7 +58,7 @@ library Trading {
             uint256 uniqueTraderNum = 2;
             uint256 totalMakerFilledPaper = matchPaperAmount[1];
             // start from the second maker, which is the third trader
-            for (uint256 i = 2; i < orderList.length;) {
+            for (uint256 i = 2; i < orderList.length; ) {
                 totalMakerFilledPaper += matchPaperAmount[i];
                 if (orderList[i].signer > orderList[i - 1].signer) {
                     uniqueTraderNum = uniqueTraderNum + 1;
@@ -124,7 +124,9 @@ library Trading {
                 );
                 // store matching result, including fees
                 result.paperChangeList[currentTraderIndex] += paperChange;
-                result.creditChangeList[currentTraderIndex] += creditChange - fee;
+                result.creditChangeList[currentTraderIndex] +=
+                    creditChange -
+                    fee;
                 result.paperChangeList[0] -= paperChange;
                 result.creditChangeList[0] -= creditChange;
                 result.orderSenderFee += fee;
@@ -138,7 +140,8 @@ library Trading {
         // trading fee calculation
         {
             // calculate takerFee based on taker's credit matching amount
-            int256 takerFee = SafeCast.toInt256(result.creditChangeList[0].abs())
+            int256 takerFee = SafeCast
+                .toInt256(result.creditChangeList[0].abs())
                 .decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
@@ -190,11 +193,9 @@ library Trading {
 
     // ========== EIP712 struct hash ==========
 
-    function _structHash(Types.Order memory order)
-        internal
-        pure
-        returns (bytes32 structHash)
-    {
+    function _structHash(
+        Types.Order memory order
+    ) internal pure returns (bytes32 structHash) {
         /*
             To save gas, we use assembly to implement the function:
 
@@ -239,11 +240,9 @@ library Trading {
         return int256(makerFee);
     }
 
-    function _info2TakerFeeRate(bytes32 info)
-        internal
-        pure
-        returns (int256 takerFeeRate)
-    {
+    function _info2TakerFeeRate(
+        bytes32 info
+    ) internal pure returns (int256 takerFeeRate) {
         bytes8 value = bytes8(info >> 128);
         int64 takerFee;
         assembly {

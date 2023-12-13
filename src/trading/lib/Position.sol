@@ -14,7 +14,10 @@ library Position {
     /// @notice add position when trade or liquidation happen
     /// msg.sender is the perpetual contract
     function _openPosition(Types.State storage state, address trader) internal {
-        require(state.openPositions[trader].length < state.maxPositionAmount, Errors.POSITION_AMOUNT_REACH_UPPER_LIMIT);
+        require(
+            state.openPositions[trader].length < state.maxPositionAmount,
+            Errors.POSITION_AMOUNT_REACH_UPPER_LIMIT
+        );
         state.openPositions[trader].push(msg.sender);
     }
 
@@ -29,7 +32,7 @@ library Position {
         state.positionSerialNum[trader][msg.sender] += 1;
 
         address[] storage positionList = state.openPositions[trader];
-        for (uint256 i = 0; i < positionList.length;) {
+        for (uint256 i = 0; i < positionList.length; ) {
             if (positionList[i] == msg.sender) {
                 positionList[i] = positionList[positionList.length - 1];
                 positionList.pop();

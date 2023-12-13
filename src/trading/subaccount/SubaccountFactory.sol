@@ -2,6 +2,7 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1
 */
+
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Subaccount.sol";
 
@@ -47,19 +48,16 @@ contract SubaccountFactory {
         );
     }
 
-    function getSubaccounts(address master)
-        external
-        view
-        returns (address[] memory)
-    {
+    function getSubaccounts(
+        address master
+    ) external view returns (address[] memory) {
         return subaccountRegistry[master];
     }
 
-    function getSubaccount(address master, uint256 index)
-        external
-        view
-        returns (address)
-    {
+    function getSubaccount(
+        address master,
+        uint256 index
+    ) external view returns (address) {
         return subaccountRegistry[master][index];
     }
 }

@@ -5,8 +5,8 @@
 
 pragma solidity 0.8.9;
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /// @notice Subaccount can help its owner manage risk and positions.
 /// You can open orders with isolated positions via Subaccount.
@@ -32,7 +32,13 @@ contract Subaccount {
     }
 
     // ========== event ==========
-    event ExecuteTransaction(address indexed owner, address subaccount, address to, bytes data, uint256 value);
+    event ExecuteTransaction(
+        address indexed owner,
+        address subaccount,
+        address to,
+        bytes data,
+        uint256 value
+    );
 
     // ========== functions ==========
 
@@ -42,7 +48,11 @@ contract Subaccount {
         owner = _owner;
     }
 
-    function execute(address to, bytes calldata data, uint256 value) external payable onlyOwner returns (bytes memory){
+    function execute(
+        address to,
+        bytes calldata data,
+        uint256 value
+    ) external payable onlyOwner returns (bytes memory) {
         require(to != address(0));
         require(msg.value == value, "TRANSFER_PAYMENT_NOT_MATCH");
         (bool success, bytes memory returnData) = to.call{value: value}(data);

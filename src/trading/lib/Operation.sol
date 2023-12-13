@@ -4,11 +4,10 @@
 */
 
 pragma solidity 0.8.9;
-
-import "./Types.sol";
-import "../utils/Errors.sol";
 import "../intf/IPerpetual.sol";
 import "../../basicIntf/IDecimalERC20.sol";
+import "../utils/Errors.sol";
+import "./Types.sol";
 
 library Operation {
     // ========== events ==========
@@ -17,7 +16,10 @@ library Operation {
 
     event SetInsurance(address oldInsurance, address newInsurance);
 
-    event SetMaxPositionAmount(uint256 oldMaxPositionAmount, uint256 newMaxPositionAmount);
+    event SetMaxPositionAmount(
+        uint256 oldMaxPositionAmount,
+        uint256 newMaxPositionAmount
+    );
 
     event SetWithdrawTimeLock(
         uint256 oldWithdrawTimeLock,
@@ -62,7 +64,7 @@ library Operation {
     ) external {
         if (state.perpRiskParams[perp].isRegistered && !param.isRegistered) {
             // remove perp
-            for (uint256 i; i < state.registeredPerp.length;) {
+            for (uint256 i; i < state.registeredPerp.length; ) {
                 if (state.registeredPerp[i] == perp) {
                     state.registeredPerp[i] = state.registeredPerp[
                         state.registeredPerp.length - 1
@@ -95,7 +97,7 @@ library Operation {
             perpList.length == rateList.length,
             Errors.ARRAY_LENGTH_NOT_SAME
         );
-        for (uint256 i = 0; i < perpList.length;) {
+        for (uint256 i = 0; i < perpList.length; ) {
             int256 oldRate = IPerpetual(perpList[i]).getFundingRate();
             IPerpetual(perpList[i]).updateFundingRate(rateList[i]);
             emit UpdateFundingRate(perpList[i], oldRate, rateList[i]);
@@ -105,25 +107,28 @@ library Operation {
         }
     }
 
-    function setFundingRateKeeper(Types.State storage state, address newKeeper)
-        external
-    {
+    function setFundingRateKeeper(
+        Types.State storage state,
+        address newKeeper
+    ) external {
         address oldKeeper = state.fundingRateKeeper;
         state.fundingRateKeeper = newKeeper;
         emit SetFundingRateKeeper(oldKeeper, newKeeper);
     }
 
-    function setInsurance(Types.State storage state, address newInsurance)
-        external
-    {
+    function setInsurance(
+        Types.State storage state,
+        address newInsurance
+    ) external {
         address oldInsurance = state.insurance;
         state.insurance = newInsurance;
         emit SetInsurance(oldInsurance, newInsurance);
     }
 
-    function setMaxPositionAmount(Types.State storage state, uint256 newMaxPositionAmount)
-        external
-    {
+    function setMaxPositionAmount(
+        Types.State storage state,
+        uint256 newMaxPositionAmount
+    ) external {
         uint256 oldMaxPositionAmount = state.maxPositionAmount;
         state.maxPositionAmount = newMaxPositionAmount;
         emit SetMaxPositionAmount(oldMaxPositionAmount, newMaxPositionAmount);
@@ -183,7 +188,12 @@ library Operation {
     ) external {
         state.primaryCreditAllowed[client][operator] = primaryAmount;
         state.secondaryCreditAllowed[client][operator] = secondaryAmount;
-        emit FundOperatorAllowedChange(client, operator, primaryAmount, secondaryAmount);
+        emit FundOperatorAllowedChange(
+            client,
+            operator,
+            primaryAmount,
+            secondaryAmount
+        );
     }
 
     function setSecondaryAsset(

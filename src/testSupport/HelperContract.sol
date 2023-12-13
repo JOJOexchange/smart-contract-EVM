@@ -155,7 +155,7 @@ contract HelperContract {
         hedgingState.wstETHToUSDC = wstETHToUSDC;
         hedgingState.wstETHDecimal = ERC20(fundingRateArbitrage.getCollateral())
             .decimals();
-        hedgingState.wstETHToETH = (wstETHToUSDC / ETHToUSDC) * 1e12;
+        hedgingState.wstETHToETH = wstETHToUSDC * 1e18 / ETHToUSDC;
         hedgingState.earnUSDCTotalSupply = fundingRateArbitrage
             .getTotalEarnUSDCBalance();
     }

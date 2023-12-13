@@ -15,3 +15,9 @@ broadcast/
 # VIM
 *.swo
 *.swp
+/out/
+/test/
+/src/basicIntf/IChainlink.sol
+/src/basicIntf/IMarkPriceSource.sol
+/src/basicIntf/IWETH.sol
+/src/basicIntf/IDecimalERC20.sol

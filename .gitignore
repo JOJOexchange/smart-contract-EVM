@@ -15,4 +15,4 @@ broadcast/
 # VIM
 *.swo
 *.swp
-/out/
+out/

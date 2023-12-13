@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.8.0;
 
-import "../../src/trading/lib/Types.sol";
+import "../../src/libraries/Types.sol";
 
 library EIP712Test {
-
-    function _structHash(Types.Order memory order)
-        internal
-        pure
-        returns (bytes32 structHash)
-    {
+    function _structHash(
+        Types.Order memory order
+    ) internal pure returns (bytes32 structHash) {
         bytes32 orderTypeHash = Types.ORDER_TYPEHASH;
         assembly {
             let start := sub(order, 32)
@@ -22,7 +19,6 @@ library EIP712Test {
             mstore(start, tmp)
         }
     }
-
 
     function _buildDomainSeparator(
         string memory name,
@@ -46,13 +42,13 @@ library EIP712Test {
             );
     }
 
-
-    function _hashTypedDataV4(bytes32 domainSeparator, bytes32 structHash)
-        internal
-        pure
-        returns (bytes32)
-    {
-
-        return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    function _hashTypedDataV4(
+        bytes32 domainSeparator,
+        bytes32 structHash
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked("\x19\x01", domainSeparator, structHash)
+            );
     }
 }

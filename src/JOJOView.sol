@@ -8,9 +8,9 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./interfaces/IDealer.sol";
+import "./libraries/Errors.sol";
 import "./libraries/Liquidation.sol";
 import "./libraries/Trading.sol";
-import "./libraries/Errors.sol";
 import "./JOJOStorage.sol";
 
 abstract contract JOJOView is JOJOStorage, IDealer {

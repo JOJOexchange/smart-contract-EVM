@@ -2,25 +2,25 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1
 */
+
 pragma solidity ^0.8.9;
 
-import "../../../src/Interface/IJUSDBank.sol";
-import "../../../src/Interface/IJUSDExchange.sol";
-import "../../../src/Interface/IFlashLoanReceive.sol";
-import {DecimalMath} from "../../lib/DecimalMath.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IPriceChainLink} from "../../Interface/IPriceChainLink.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/IJUSDBank.sol";
+import "./interfaces/IJUSDExchange.sol";
+import "./interfaces/IFlashLoanReceive.sol";
+import "./libraries/SignedDecimalMath.sol";
 
 contract FlashLoanLiquidate is IFlashLoanReceive, Ownable {
     using SafeERC20 for IERC20;
-    using DecimalMath for uint256;
+    using SignedDecimalMath for uint256;
 
-    address public jusdBank;
-    address public jusdExchange;
     address public immutable USDC;
     address public immutable JUSD;
+    address public jusdBank;
+    address public jusdExchange;
     address public insurance;
     mapping(address => bool) public whiteListContract;
 
@@ -59,7 +59,6 @@ contract FlashLoanLiquidate is IFlashLoanReceive, Ownable {
         address to,
         bytes calldata param
     ) external {
-        //swapContract swap
         (LiquidateData memory liquidateData, bytes memory originParam) = abi
             .decode(param, (LiquidateData, bytes));
         (
@@ -103,17 +102,13 @@ contract FlashLoanLiquidate is IFlashLoanReceive, Ownable {
         );
         IERC20(JUSD).approve(jusdBank, liquidateData.actualLiquidated);
         IJUSDBank(jusdBank).repay(liquidateData.actualLiquidated, to);
-
-        // 2. insurance
         IERC20(USDC).safeTransfer(insurance, liquidateData.insuranceFee);
-        // 3. liquidate usdc
         if (liquidateData.liquidatedRemainUSDC != 0) {
             IERC20(USDC).safeTransfer(
                 address(jusdBank),
                 liquidateData.liquidatedRemainUSDC
             );
         }
-        // 4. transfer to liquidator
         IERC20(USDC).safeTransfer(
             liquidator,
             USDCAmount -

@@ -2,24 +2,25 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1
 */
+
 pragma solidity ^0.8.9;
 
-import "../../../src/Interface/IJUSDBank.sol";
-import "../../../src/Interface/IJUSDExchange.sol";
-import "../../../src/Interface/IFlashLoanReceive.sol";
-import {DecimalMath} from "../../lib/DecimalMath.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/IJUSDBank.sol";
+import "./interfaces/IJUSDExchange.sol";
+import "./interfaces/IFlashLoanReceive.sol";
+import "./libraries/SignedDecimalMath.sol";
 
 contract FlashLoanRepay is IFlashLoanReceive, Ownable {
     using SafeERC20 for IERC20;
-    using DecimalMath for uint256;
+    using SignedDecimalMath for uint256;
 
-    address public jusdBank;
-    address public jusdExchange;
     address public immutable USDC;
     address public immutable JUSD;
+    address public jusdBank;
+    address public jusdExchange;
     mapping(address => bool) public whiteListContract;
 
     constructor(
@@ -76,7 +77,6 @@ contract FlashLoanRepay is IFlashLoanReceive, Ownable {
         uint256 USDCAmount = IERC20(USDC).balanceOf(address(this));
         require(USDCAmount >= minReceive, "receive amount is too small");
         uint256 JUSDAmount = USDCAmount;
-
         uint256 borrowBalance = IJUSDBank(jusdBank).getBorrowBalance(to);
         if (USDCAmount <= borrowBalance) {
             IERC20(USDC).approve(jusdExchange, USDCAmount);
@@ -87,7 +87,6 @@ contract FlashLoanRepay is IFlashLoanReceive, Ownable {
             IERC20(USDC).safeTransfer(to, USDCAmount - borrowBalance);
             JUSDAmount = borrowBalance;
         }
-
         IERC20(JUSD).approve(jusdBank, JUSDAmount);
         IJUSDBank(jusdBank).repay(JUSDAmount, to);
     }

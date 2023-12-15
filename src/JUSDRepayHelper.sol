@@ -4,12 +4,15 @@
 */
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IJUSDExchange.sol";
 import "./JUSDBank.sol";
-import "../Interface/IJUSDExchange.sol";
 
 pragma solidity ^0.8.9;
 
 contract JUSDRepayHelper is Ownable {
+    using SafeERC20 for IERC20;
+    using SignedDecimalMath for uint256;
+    
     address public immutable JusdBank;
     address public immutable JUSD;
     address public immutable USDC;
@@ -17,13 +20,8 @@ contract JUSDRepayHelper is Ownable {
 
     mapping(address => bool) public adminWhiteList;
 
-    using SafeERC20 for IERC20;
-    using DecimalMath for uint256;
-
-    event HelpToTransfer(address from, address to, uint256 amount);
     event UpdateAdmin(address admin, bool isValid);
-
-    // =========================Consturct===================
+    event HelpToTransfer(address from, address to, uint256 amount);
 
     constructor(
         address _jusdBank,
@@ -47,6 +45,11 @@ contract JUSDRepayHelper is Ownable {
         _;
     }
 
+    function setWhiteList(address admin, bool isValid) public onlyOwner {
+        adminWhiteList[admin] = isValid;
+        emit UpdateAdmin(admin, isValid);
+    }
+
     /// @notice This is to facilitate the withdrawal of USDC/JUSD from the trading account,
     /// and repay the withdrawal USDC/JUSD directly to the lending platform without any other steps.
     /// check the test `testJOJOSubaccountRepayFromPerp`
@@ -62,10 +65,5 @@ contract JUSDRepayHelper is Ownable {
         require(balance >= 0, "do not have JUSD");
         IJUSDBank(JusdBank).repay(balance, to);
         emit HelpToTransfer(from, to, balance);
-    }
-
-    function setWhiteList(address admin, bool isValid) public onlyOwner {
-        adminWhiteList[admin] = isValid;
-        emit UpdateAdmin(admin, isValid);
     }
 }

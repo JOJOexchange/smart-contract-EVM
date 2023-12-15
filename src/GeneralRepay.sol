@@ -3,22 +3,21 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import "../../../src/Interface/IJUSDBank.sol";
-import "../../../src/Interface/IJUSDExchange.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./interfaces/IJUSDBank.sol";
+import "./interfaces/IJUSDExchange.sol";
 
 pragma solidity ^0.8.9;
 
 contract GeneralRepay is Ownable {
+    using SafeERC20 for IERC20;
+
     address public immutable USDC;
+    address public immutable JUSD;
     address public jusdBank;
     address public jusdExchange;
-    address public immutable JUSD;
     mapping(address => bool) public whiteListContract;
-
-    using SafeERC20 for IERC20;
 
     constructor(
         address _jusdBank,
@@ -75,11 +74,9 @@ contract GeneralRepay is Ownable {
             }
             minReceive = minAmount;
         }
-
         uint256 USDCAmount = IERC20(USDC).balanceOf(address(this));
         require(USDCAmount >= minReceive, "receive amount is too small");
         uint256 JUSDAmount = USDCAmount;
-
         uint256 borrowBalance = IJUSDBank(jusdBank).getBorrowBalance(to);
         if (USDCAmount <= borrowBalance) {
             IERC20(USDC).approve(jusdExchange, USDCAmount);
@@ -90,7 +87,6 @@ contract GeneralRepay is Ownable {
             IERC20(USDC).safeTransfer(msg.sender, USDCAmount - borrowBalance);
             JUSDAmount = borrowBalance;
         }
-
         IERC20(JUSD).approve(jusdBank, JUSDAmount);
         IJUSDBank(jusdBank).repay(JUSDAmount, to);
     }

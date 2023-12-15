@@ -1,10 +1,25 @@
 /*
     Copyright 2022 JOJO Exchange
+    SPDX-License-Identifier: BUSL-1.1
 */
+
 pragma solidity ^0.8.9;
 
 contract MultiSigWallet {
     uint public constant MAX_OWNER_COUNT = 50;
+    uint public required;
+    uint public transactionCount;
+    address[] public owners;
+    mapping(uint => Transaction) public transactions;
+    mapping(uint => mapping(address => bool)) public confirmations;
+    mapping(address => bool) public isOwner;
+
+    struct Transaction {
+        address destination;
+        uint value;
+        bytes data;
+        bool executed;
+    }
 
     event Confirmation(address indexed sender, uint indexed transactionId);
     event Revocation(address indexed sender, uint indexed transactionId);
@@ -15,20 +30,6 @@ contract MultiSigWallet {
     event OwnerAddition(address indexed owner);
     event OwnerRemoval(address indexed owner);
     event RequirementChange(uint required);
-
-    mapping(uint => Transaction) public transactions;
-    mapping(uint => mapping(address => bool)) public confirmations;
-    mapping(address => bool) public isOwner;
-    address[] public owners;
-    uint public required;
-    uint public transactionCount;
-
-    struct Transaction {
-        address destination;
-        uint value;
-        bytes data;
-        bool executed;
-    }
 
     modifier onlyWallet() {
         if (msg.sender != address(this)) revert("ONLY_WALLET_ERROR");

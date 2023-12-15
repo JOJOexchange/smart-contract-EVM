@@ -8,8 +8,8 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./libraries/EIP712.sol";
-import "./libraries/Types.sol";
 import "./libraries/Errors.sol";
+import "./libraries/Types.sol";
 
 /// @notice All storage variables of JOJODealer
 abstract contract JOJOStorage is Ownable, ReentrancyGuard {

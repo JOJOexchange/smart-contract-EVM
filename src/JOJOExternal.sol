@@ -9,13 +9,13 @@ import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "./interfaces/IDealer.sol";
+import "./libraries/Errors.sol";
 import "./libraries/Funding.sol";
 import "./libraries/Liquidation.sol";
 import "./libraries/Operation.sol";
 import "./libraries/Position.sol";
-import "./libraries/Trading.sol";
-import "./libraries/Errors.sol";
 import "./libraries/SignedDecimalMath.sol";
+import "./libraries/Trading.sol";
 import "./JOJOStorage.sol";
 
 abstract contract JOJOExternal is JOJOStorage, IDealer {

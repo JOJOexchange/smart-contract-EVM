@@ -5,47 +5,57 @@
 
 pragma solidity ^0.8.9;
 
+import "./libraries/Errors.sol";
+import "./libraries/SignedDecimalMath.sol";
 import "./JUSDBankStorage.sol";
-import "../utils/JUSDError.sol";
-import "../lib/JOJOConstant.sol";
-import {DecimalMath} from "../lib/DecimalMath.sol";
 
 /// @notice Owner-only functions
 abstract contract JUSDOperation is JUSDBankStorage {
-    using DecimalMath for uint256;
+    using SignedDecimalMath for uint256;
 
-    // ========== event ==========
+    //Event
+
+    event RemoveReserve(address indexed collateral);
+
+    event UpdateBorrowFeeRate(uint256 newBorrowFeeRate);
+
+    event ReRegisterReserve(address indexed collateral);
+
+    event UpdateOracle(address collateral, address newOracle);
+
     event UpdateInsurance(address oldInsurance, address newInsurance);
+
     event UpdateJOJODealer(address oldJOJODealer, address newJOJODealer);
+
+    event UpdateMaxReservesAmount(
+        uint256 maxReservesAmount,
+        uint256 newMaxReservesAmount
+    );
+
+    event UpdateMaxBorrowAmount(
+        uint256 maxPerAccountBorrowAmount,
+        uint256 maxTotalBorrowAmount
+    );
+
     event SetOperator(
         address indexed client,
         address indexed operator,
         bool isOperator
     );
-    event UpdateOracle(address collateral, address newOracle);
-    event UpdateBorrowFeeRate(uint256 newBorrowFeeRate);
-    event UpdateMaxReservesAmount(
-        uint256 maxReservesAmount,
-        uint256 newMaxReservesAmount
-    );
-    event RemoveReserve(address indexed collateral);
-    event ReRegisterReserve(address indexed collateral);
+
     event UpdateReserveRiskParam(
         address indexed collateral,
         uint256 liquidationMortgageRate,
         uint256 liquidationPriceOff,
         uint256 insuranceFeeRate
     );
+
     event UpdateReserveParam(
         address indexed collateral,
         uint256 initialMortgageRate,
         uint256 maxTotalDepositAmount,
         uint256 maxDepositAmountPerAccount,
         uint256 maxBorrowValue
-    );
-    event UpdateMaxBorrowAmount(
-        uint256 maxPerAccountBorrowAmount,
-        uint256 maxTotalBorrowAmount
     );
 
     /// @notice initial the param of each reserve
@@ -61,12 +71,12 @@ abstract contract JUSDOperation is JUSDBankStorage {
         address _oracle
     ) external onlyOwner {
         require(
-            JOJOConstant.ONE - _liquidationMortgageRate >
+            Types.ONE - _liquidationMortgageRate >
                 _liquidationPriceOff +
-                    (JOJOConstant.ONE - _liquidationPriceOff).decimalMul(
+                    (Types.ONE - _liquidationPriceOff).decimalMul(
                         _insuranceFeeRate
                     ),
-            JUSDErrors.RESERVE_PARAM_ERROR
+            Errors.RESERVE_PARAM_ERROR
         );
         reserveInfo[_collateral].initialMortgageRate = _initialMortgageRate;
         reserveInfo[_collateral].maxTotalDepositAmount = _maxTotalDepositAmount;
@@ -82,15 +92,6 @@ abstract contract JUSDOperation is JUSDBankStorage {
         reserveInfo[_collateral].isBorrowAllowed = true;
         reserveInfo[_collateral].oracle = _oracle;
         _addReserve(_collateral);
-    }
-
-    function _addReserve(address collateral) private {
-        require(
-            reservesNum < maxReservesNum,
-            JUSDErrors.NO_MORE_RESERVE_ALLOWED
-        );
-        reservesList.push(collateral);
-        reservesNum += 1;
     }
 
     /// @notice update the max borrow amount of total and per account
@@ -118,18 +119,22 @@ abstract contract JUSDOperation is JUSDBankStorage {
         JOJODealer = newJOJODealer;
     }
 
+    /// @notice open liquidatorWhitelist
     function liquidatorWhitelistOpen() external onlyOwner {
         isLiquidatorWhitelistOpen = true;
     }
 
+    /// @notice close liquidatorWhitelist
     function liquidatorWhitelistClose() external onlyOwner {
         isLiquidatorWhitelistOpen = false;
     }
 
+    /// @notice add liquidatorWhitelist
     function addLiquidator(address liquidator) external onlyOwner {
         isLiquidatorWhiteList[liquidator] = true;
     }
 
+    /// @notice rempve liquidatorWhitelist
     function removeLiquidator(address liquidator) external onlyOwner {
         isLiquidatorWhiteList[liquidator] = false;
     }
@@ -139,11 +144,12 @@ abstract contract JUSDOperation is JUSDBankStorage {
         address collateral,
         address newOracle
     ) external onlyOwner {
-        DataTypes.ReserveInfo storage reserve = reserveInfo[collateral];
+        Types.ReserveInfo storage reserve = reserveInfo[collateral];
         reserve.oracle = newOracle;
         emit UpdateOracle(collateral, newOracle);
     }
 
+    /// @notice update maxReservesNum
     function updateMaxReservesAmount(
         uint256 newMaxReservesAmount
     ) external onlyOwner {
@@ -152,7 +158,6 @@ abstract contract JUSDOperation is JUSDBankStorage {
     }
 
     /// @notice update the borrow fee rate
-    // t0Rate and lastUpdateTimestamp will be updated according to the borrow fee rate
     function updateBorrowFeeRate(uint256 _borrowFeeRate) external onlyOwner {
         accrueRate();
         borrowFeeRate = _borrowFeeRate;
@@ -167,18 +172,17 @@ abstract contract JUSDOperation is JUSDBankStorage {
         uint256 _insuranceFeeRate
     ) external onlyOwner {
         require(
-            JOJOConstant.ONE - _liquidationMortgageRate >
+            Types.ONE - _liquidationMortgageRate >
                 _liquidationPriceOff +
-                    ((JOJOConstant.ONE - _liquidationPriceOff) *
-                        _insuranceFeeRate) /
-                    JOJOConstant.ONE,
-            JUSDErrors.RESERVE_PARAM_ERROR
+                    ((Types.ONE - _liquidationPriceOff) * _insuranceFeeRate) /
+                    Types.ONE,
+            Errors.RESERVE_PARAM_ERROR
         );
 
         require(
             reserveInfo[collateral].initialMortgageRate <
                 _liquidationMortgageRate,
-            JUSDErrors.RESERVE_PARAM_WRONG
+            Errors.RESERVE_PARAM_WRONG
         );
         reserveInfo[collateral]
             .liquidationMortgageRate = _liquidationMortgageRate;
@@ -203,7 +207,7 @@ abstract contract JUSDOperation is JUSDBankStorage {
         require(
             _initialMortgageRate <
                 reserveInfo[collateral].liquidationMortgageRate,
-            JUSDErrors.RESERVE_PARAM_WRONG
+            Errors.RESERVE_PARAM_WRONG
         );
         reserveInfo[collateral].initialMortgageRate = _initialMortgageRate;
         reserveInfo[collateral].maxTotalDepositAmount = _maxTotalDepositAmount;
@@ -221,9 +225,8 @@ abstract contract JUSDOperation is JUSDBankStorage {
     }
 
     /// @notice remove the reserve, need to modify the market status
-    /// which means this reserve is delist
     function delistReserve(address collateral) external onlyOwner {
-        DataTypes.ReserveInfo storage reserve = reserveInfo[collateral];
+        Types.ReserveInfo storage reserve = reserveInfo[collateral];
         reserve.isBorrowAllowed = false;
         reserve.isDepositAllowed = false;
         reserve.isFinalLiquidation = true;
@@ -232,7 +235,7 @@ abstract contract JUSDOperation is JUSDBankStorage {
 
     /// @notice relist the delist reserve
     function relistReserve(address collateral) external onlyOwner {
-        DataTypes.ReserveInfo storage reserve = reserveInfo[collateral];
+        Types.ReserveInfo storage reserve = reserveInfo[collateral];
         reserve.isBorrowAllowed = true;
         reserve.isDepositAllowed = true;
         reserve.isFinalLiquidation = false;
@@ -243,5 +246,11 @@ abstract contract JUSDOperation is JUSDBankStorage {
     function setOperator(address operator, bool isOperator) external {
         operatorRegistry[msg.sender][operator] = isOperator;
         emit SetOperator(msg.sender, operator, isOperator);
+    }
+
+    function _addReserve(address collateral) private {
+        require(reservesNum < maxReservesNum, Errors.NO_MORE_RESERVE_ALLOWED);
+        reservesList.push(collateral);
+        reservesNum += 1;
     }
 }

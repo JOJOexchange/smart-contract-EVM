@@ -6,7 +6,7 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IMarkPriceSource.sol";
+import "./interfaces/internal/IPriceSource.sol";
 import "./interfaces/IDealer.sol";
 import "./interfaces/IPerpetual.sol";
 import "./libraries/Types.sol";
@@ -58,8 +58,7 @@ contract FundingRateUpdateLimiter is Ownable {
     // can not exceed speedMultiplier*liquidationThreshold
     function getMaxChange(address perp) public view returns (uint256) {
         Types.RiskParams memory params = IDealer(dealer).getRiskParams(perp);
-        uint256 markPrice = IMarkPriceSource(params.markPriceSource)
-            .getMarkPrice();
+        uint256 markPrice = IPriceSource(params.markPriceSource).getMarkPrice();
         uint256 timeInterval = block.timestamp -
             fundingRateUpdateTimestamp[perp];
         uint256 maxChangeRate = (speedMultiplier *

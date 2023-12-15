@@ -5,7 +5,7 @@
 
 pragma solidity ^0.8.9;
 
-import "../libraries/DataTypes.sol";
+import "../libraries/Types.sol";
 
 /// @notice JUSDBank is a mortgage lending system that supports ERC20 as collateral and issues JUSD
 /// JUSD is a self-issued stable coin used to support multi-collateralization protocols
@@ -46,6 +46,10 @@ interface IJUSDBank {
 
     /// @notice liquidate function: The price of user mortgage assets fluctuates.
     /// If the value of the mortgage collaterals cannot handle the value of JUSD borrowed, the collaterals may be liquidated
+    /// Liquidation is divided into three steps:
+    /// 1. determine whether liquidatedTrader is safe
+    /// 2. calculate the collateral amount actually liquidated
+    /// 3. transfer the insurance fee
     /// @param liquidatedTrader: is the trader to be liquidated
     /// @param liquidationCollateral: is the liquidated collateral type
     /// @param liquidationAmount: is the collateral amount liqidator want to take
@@ -57,7 +61,7 @@ interface IJUSDBank {
         uint256 liquidationAmount,
         bytes memory param,
         uint256 expectPrice
-    ) external returns (DataTypes.LiquidateData memory liquidateData);
+    ) external returns (Types.LiquidateData memory liquidateData);
 
     /// @notice insurance account take bad debts on unsecured accounts
     /// @param liquidatedTraders traders who have bad debts
@@ -97,24 +101,30 @@ interface IJUSDBank {
         address user
     ) external view returns (uint256 maxAmount);
 
+    /// @notice return is account safe
     function isAccountSafe(address user) external view returns (bool);
 
+    /// @notice get collateral price
     function getCollateralPrice(
         address collateral
     ) external view returns (uint256);
 
+    /// @notice get if has collateral
     function getIfHasCollateral(
         address from,
         address collateral
     ) external view returns (bool);
 
+    /// @notice get deposit balance
     function getDepositBalance(
         address collateral,
         address from
     ) external view returns (uint256);
 
+    /// @notice get borrow balance
     function getBorrowBalance(address from) external view returns (uint256);
 
+    /// @notice get user collateral list
     function getUserCollateralList(
         address from
     ) external view returns (address[] memory);

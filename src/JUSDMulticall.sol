@@ -2,14 +2,15 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1
 */
+
 pragma solidity ^0.8.9;
 
-import {DecimalMath} from "../lib/DecimalMath.sol";
+import "./libraries/SignedDecimalMath.sol";
 import "./JUSDBank.sol";
 
 /// @notice User's multi-step operation on the JUSDBank like: deposit and borrow
 contract JUSDMulticall {
-    using DecimalMath for uint256;
+    using SignedDecimalMath for uint256;
 
     function multiCall(
         bytes[] memory callData
@@ -32,7 +33,8 @@ contract JUSDMulticall {
         }
     }
 
-    // --------------helper-------------------
+    // Helper
+
     function getMulticallData(
         bytes[] memory callData
     ) external pure returns (bytes memory) {

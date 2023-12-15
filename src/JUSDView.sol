@@ -2,15 +2,16 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1
 */
+
 pragma solidity ^0.8.9;
 
+import "./interfaces/IJUSDBank.sol";
+import "./interfaces/internal/IPriceSource.sol";
 import "./JUSDBankStorage.sol";
-import {DecimalMath} from "../lib/DecimalMath.sol";
-import "../Interface/IJUSDBank.sol";
-import {IPriceChainLink} from "../Interface/IPriceChainLink.sol";
+import "./libraries/SignedDecimalMath.sol";
 
 abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
-    using DecimalMath for uint256;
+    using SignedDecimalMath for uint256;
 
     function getReservesList() external view returns (address[] memory) {
         return reservesList;
@@ -19,7 +20,7 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     function getDepositMaxMintAmount(
         address user
     ) external view returns (uint256) {
-        DataTypes.UserInfo storage userInfo = userInfo[user];
+        Types.UserInfo storage userInfo = userInfo[user];
         return _maxMintAmount(userInfo);
     }
 
@@ -27,7 +28,7 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
         address collateral,
         uint256 amount
     ) external view returns (uint256 maxAmount) {
-        DataTypes.ReserveInfo memory reserve = reserveInfo[collateral];
+        Types.ReserveInfo memory reserve = reserveInfo[collateral];
         return _getMintAmount(reserve, amount, reserve.initialMortgageRate);
     }
 
@@ -35,7 +36,7 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
         address collateral,
         address user
     ) external view returns (uint256 maxAmount) {
-        DataTypes.UserInfo storage userInfo = userInfo[user];
+        Types.UserInfo storage userInfo = userInfo[user];
         uint256 JUSDBorrow = userInfo.t0BorrowBalance.decimalMul(getTRate());
         if (JUSDBorrow == 0) {
             return userInfo.depositBalance[collateral];
@@ -44,10 +45,10 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
         if (maxMintAmount <= JUSDBorrow) {
             maxAmount = 0;
         } else {
-            DataTypes.ReserveInfo memory reserve = reserveInfo[collateral];
+            Types.ReserveInfo memory reserve = reserveInfo[collateral];
             uint256 remainAmount = (maxMintAmount - JUSDBorrow).decimalDiv(
                 reserve.initialMortgageRate.decimalMul(
-                    IPriceChainLink(reserve.oracle).getAssetPrice()
+                    IPriceSource(reserve.oracle).getAssetPrice()
                 )
             );
             remainAmount >= userInfo.depositBalance[collateral]
@@ -57,14 +58,14 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     }
 
     function isAccountSafe(address user) external view returns (bool) {
-        DataTypes.UserInfo storage userInfo = userInfo[user];
+        Types.UserInfo storage userInfo = userInfo[user];
         return !_isStartLiquidation(userInfo, getTRate());
     }
 
     function getCollateralPrice(
         address collateral
     ) external view returns (uint256) {
-        return IPriceChainLink(reserveInfo[collateral].oracle).getAssetPrice();
+        return IPriceSource(reserveInfo[collateral].oracle).getAssetPrice();
     }
 
     function getIfHasCollateral(
@@ -92,11 +93,11 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     }
 
     function _getMintAmount(
-        DataTypes.ReserveInfo memory reserve,
+        Types.ReserveInfo memory reserve,
         uint256 amount,
         uint256 rate
     ) internal view returns (uint256) {
-        uint256 depositAmount = IPriceChainLink(reserve.oracle)
+        uint256 depositAmount = IPriceSource(reserve.oracle)
             .getAssetPrice()
             .decimalMul(amount)
             .decimalMul(rate);
@@ -107,20 +108,20 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     }
 
     function _isAccountSafe(
-        DataTypes.UserInfo storage user,
+        Types.UserInfo storage user,
         uint256 tRate
     ) internal view returns (bool) {
         return user.t0BorrowBalance.decimalMul(tRate) <= _maxMintAmount(user);
     }
 
     function _maxMintAmount(
-        DataTypes.UserInfo storage user
+        Types.UserInfo storage user
     ) internal view returns (uint256) {
         address[] memory collaterals = user.collateralList;
         uint256 maxMintAmount;
         for (uint256 i; i < collaterals.length; i = i + 1) {
             address collateral = collaterals[i];
-            DataTypes.ReserveInfo memory reserve = reserveInfo[collateral];
+            Types.ReserveInfo memory reserve = reserveInfo[collateral];
             if (!reserve.isBorrowAllowed) {
                 continue;
             }
@@ -135,17 +136,17 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     }
 
     function _maxWithdrawAmount(
-        DataTypes.UserInfo storage user
+        Types.UserInfo storage user
     ) internal view returns (uint256) {
         address[] memory collaterals = user.collateralList;
         uint256 maxMintAmount;
         for (uint256 i; i < collaterals.length; i = i + 1) {
             address collateral = collaterals[i];
-            DataTypes.ReserveInfo memory reserve = reserveInfo[collateral];
+            Types.ReserveInfo memory reserve = reserveInfo[collateral];
             if (!reserve.isBorrowAllowed) {
                 continue;
             }
-            maxMintAmount += IPriceChainLink(reserve.oracle)
+            maxMintAmount += IPriceSource(reserve.oracle)
                 .getAssetPrice()
                 .decimalMul(user.depositBalance[collateral])
                 .decimalMul(reserve.initialMortgageRate);
@@ -157,7 +158,7 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     // If the collateral delisted. When calculating the boundary conditions for collateral to be liquidated, treat the value of collateral as 0
     // liquidationMaxMintAmount = sum(depositAmount * price * liquidationMortgageRate)
     function _isStartLiquidation(
-        DataTypes.UserInfo storage liquidatedTraderInfo,
+        Types.UserInfo storage liquidatedTraderInfo,
         uint256 tRate
     ) internal view returns (bool) {
         uint256 JUSDBorrow = (liquidatedTraderInfo.t0BorrowBalance).decimalMul(
@@ -167,7 +168,7 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
         address[] memory collaterals = liquidatedTraderInfo.collateralList;
         for (uint256 i; i < collaterals.length; i = i + 1) {
             address collateral = collaterals[i];
-            DataTypes.ReserveInfo memory reserve = reserveInfo[collateral];
+            Types.ReserveInfo memory reserve = reserveInfo[collateral];
             if (reserve.isFinalLiquidation) {
                 continue;
             }

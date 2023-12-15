@@ -2,26 +2,22 @@
     Copyright 2022 JOJO Exchange
     SPDX-License-Identifier: BUSL-1.1
 */
+
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import {DataTypes} from "../lib/DataTypes.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../utils/FlashLoanReentrancyGuard.sol";
-import "../lib/JOJOConstant.sol";
-import {DecimalMath} from "../lib/DecimalMath.sol";
+import "./libraries/FlashLoanReentrancyGuard.sol";
+import "./libraries/SignedDecimalMath.sol";
+import "./libraries/Types.sol";
 
 abstract contract JUSDBankStorage is
     Ownable,
     ReentrancyGuard,
     FlashLoanReentrancyGuard
 {
-    // reserve token address ==> reserve info
-    mapping(address => DataTypes.ReserveInfo) public reserveInfo;
-    // reserve token address ==> user info
-    mapping(address => DataTypes.UserInfo) public userInfo;
-    //client -> operator -> bool
-    mapping(address => mapping(address => bool)) public operatorRegistry;
+    using SignedDecimalMath for uint256;
+
     // reserves amount
     uint256 public reservesNum;
     // max reserves amount
@@ -38,19 +34,25 @@ abstract contract JUSDBankStorage is
     uint256 public tRate;
     // update timestamp
     uint256 public lastUpdateTimestamp;
-    // reserves's list
-    address[] public reservesList;
+
+    bool public isLiquidatorWhitelistOpen;
     // insurance account
     address public insurance;
     // JUSD address
     address public JUSD;
     // primary address
     address public primaryAsset;
-    address public JOJODealer;
-    bool public isLiquidatorWhitelistOpen;
-    mapping(address => bool) isLiquidatorWhiteList;
 
-    using DecimalMath for uint256;
+    address public JOJODealer;
+    // reserves's list
+    address[] public reservesList;
+    mapping(address => bool) isLiquidatorWhiteList;
+    // reserve token address ==> reserve info
+    mapping(address => Types.ReserveInfo) public reserveInfo;
+    // reserve token address ==> user info
+    mapping(address => Types.UserInfo) public userInfo;
+    // client -> operator -> bool
+    mapping(address => mapping(address => bool)) public operatorRegistry;
 
     function accrueRate() public {
         uint256 currentTimestamp = block.timestamp;
@@ -59,9 +61,7 @@ abstract contract JUSDBankStorage is
         }
         uint256 timeDifference = block.timestamp - uint256(lastUpdateTimestamp);
         tRate = tRate.decimalMul(
-            (timeDifference * borrowFeeRate) /
-                JOJOConstant.SECONDS_PER_YEAR +
-                1e18
+            (timeDifference * borrowFeeRate) / Types.SECONDS_PER_YEAR + 1e18
         );
         lastUpdateTimestamp = currentTimestamp;
     }
@@ -69,8 +69,6 @@ abstract contract JUSDBankStorage is
     function getTRate() public view returns (uint256) {
         uint256 timeDifference = block.timestamp - uint256(lastUpdateTimestamp);
         return
-            tRate +
-            (borrowFeeRate * timeDifference) /
-            JOJOConstant.SECONDS_PER_YEAR;
+            tRate + (borrowFeeRate * timeDifference) / Types.SECONDS_PER_YEAR;
     }
 }

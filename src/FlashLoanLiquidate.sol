@@ -10,10 +10,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IJUSDBank.sol";
 import "./interfaces/IJUSDExchange.sol";
-import "./interfaces/IFlashLoanReceive.sol";
 import "./libraries/SignedDecimalMath.sol";
 
-contract FlashLoanLiquidate is IFlashLoanReceive, Ownable {
+contract FlashLoanLiquidate is Ownable {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 

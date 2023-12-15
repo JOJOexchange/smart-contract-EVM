@@ -61,7 +61,7 @@ contract UniswapPriceAdaptor is Ownable {
         impact = _impact;
     }
 
-    function getMarkPrice() external view returns (uint256) {
+    function getPrice() internal view returns (uint256) {
         uint256 uniswapPriceFeed = IStaticOracle(UNISWAP_V3_ORACLE)
             .quoteSpecificPoolsWithTimePeriod(
                 uint128(10 ** decimal),
@@ -79,6 +79,14 @@ contract UniswapPriceAdaptor is Ownable {
             "deviation is too big"
         );
         return uniswapPriceFeed;
+    }
+
+    function getMarkPrice() external view returns (uint256 price) {
+        price = getPrice();
+    }
+
+    function getAssetPrice() external view returns (uint256 price) {
+        price = getPrice();
     }
 
     function updatePools(address[] memory newPools) external onlyOwner {

@@ -16,6 +16,4 @@ interface IChainlink {
             uint256 updatedAt,
             uint80 answeredInRound
         );
-
-    function latestAnswer() external view returns (int256 answer);
 }

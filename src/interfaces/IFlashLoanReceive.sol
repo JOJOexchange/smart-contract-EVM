@@ -5,7 +5,7 @@
 
 pragma solidity ^0.8.9;
 
-interface IFlashLoanReceive {
+interface IFlashloanReceive {
     function JOJOFlashLoan(
         address asset,
         uint256 amount,

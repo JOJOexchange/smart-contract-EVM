@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../interfaces/IJUSDBank.sol";
 import "../interfaces/IPerpetual.sol";
 import "../libraries/Types.sol";
 import "../JOJODealer.sol";
@@ -17,25 +18,6 @@ interface IFundingRateArbitrage {
     function getCollateral() external view returns (address);
 
     function getTotalEarnUSDCBalance() external view returns (uint256);
-}
-
-interface IJUSDBank {
-    function isAccountSafe(address user) external view returns (bool);
-
-    function getDepositBalance(
-        address collateral,
-        address from
-    ) external view returns (uint256);
-
-    function getBorrowBalance(address from) external view returns (uint256);
-
-    function getUserCollateralList(
-        address from
-    ) external view returns (address[] memory);
-
-    function getCollateralPrice(
-        address collateral
-    ) external view returns (uint256);
 }
 
 contract HelperContract {

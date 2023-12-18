@@ -16,3 +16,5 @@ broadcast/
 *.swo
 *.swp
 out/
+report/
+bin/

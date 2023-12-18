@@ -18,10 +18,10 @@ contract MockSwap {
     address wstETH;
     mapping(address => address) tokenPrice;
 
-    constructor(address _USDC, address _wstETH, address _price) {
+    constructor(address _USDC, address _wstETH, address _priceOracle) {
         USDC = _USDC;
         wstETH = _wstETH;
-        tokenPrice[_wstETH] = _price;
+        tokenPrice[_wstETH] = _priceOracle;
     }
 
     function addTokenPrice(address token, address price) public {

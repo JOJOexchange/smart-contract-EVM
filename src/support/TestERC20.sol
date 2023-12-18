@@ -27,4 +27,13 @@ contract TestERC20 is ERC20 {
     function mint(address to, uint256 amount) external {
         _mint(to, amount);
     }
+
+    function mintBatch(
+        address[] calldata to,
+        uint256[] calldata amount
+    ) external {
+        for (uint256 i = 0; i < to.length; i++) {
+            _mint(to[i], amount[i]);
+        }
+    }
 }

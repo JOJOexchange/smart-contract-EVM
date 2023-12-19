@@ -10,20 +10,12 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IJUSDBank.sol";
 import "../interfaces/IPerpetual.sol";
 import "../libraries/Types.sol";
-import "../JOJODealer.sol";
-
-interface IFundingRateArbitrage {
-    function getIndex() external view returns (uint256);
-
-    function getCollateral() external view returns (address);
-
-    function getTotalEarnUSDCBalance() external view returns (uint256);
-}
+import "../FundingRateArbitrage.sol";
 
 contract HelperContract {
     JOJODealer public jojoDealer;
     IJUSDBank public jusdBank;
-    IFundingRateArbitrage public fundingRateArbitrage;
+    FundingRateArbitrage public fundingRateArbitrage;
 
     constructor(
         address _JOJODealer,
@@ -32,7 +24,7 @@ contract HelperContract {
     ) {
         jojoDealer = JOJODealer(_JOJODealer);
         jusdBank = IJUSDBank(_JUSDBank);
-        fundingRateArbitrage = IFundingRateArbitrage(_FundingRateArbitrage);
+        fundingRateArbitrage = FundingRateArbitrage(_FundingRateArbitrage);
     }
 
     struct CollateralState {
@@ -92,11 +84,26 @@ contract HelperContract {
         uint256 earnUSDCTotalSupply;
     }
 
+    struct AccountHedgingState {
+        uint256 earnUSDCBalance;
+        uint256 jusdOutside;
+    }
+
     function getWalletBalance(
         address token,
         address wallet
     ) public view returns (uint256) {
         return IERC20(token).balanceOf(wallet);
+    }
+
+    function getAccountHedgingState(
+        address account
+    ) public view returns (AccountHedgingState memory accountHedgingState) {
+        accountHedgingState.earnUSDCBalance = fundingRateArbitrage
+            .earnUSDCBalance(account);
+        accountHedgingState.jusdOutside = fundingRateArbitrage.jusdOutside(
+            account
+        );
     }
 
     function getHedgingState(
@@ -112,12 +119,11 @@ contract HelperContract {
             address(fundingRateArbitrage)
         );
         hedgingState.USDCWalletBalance = USDCWalletBalance;
-        uint256 wstETHWalletBalance = IERC20(
-            fundingRateArbitrage.getCollateral()
-        ).balanceOf(address(fundingRateArbitrage));
+        uint256 wstETHWalletBalance = IERC20(fundingRateArbitrage.collateral())
+            .balanceOf(address(fundingRateArbitrage));
         hedgingState.wstETHWalletBalance = wstETHWalletBalance;
         uint256 wstETHBankAmount = jusdBank.getDepositBalance(
-            fundingRateArbitrage.getCollateral(),
+            fundingRateArbitrage.collateral(),
             address(fundingRateArbitrage)
         );
         hedgingState.wstETHBankAmount = wstETHBankAmount;
@@ -133,15 +139,15 @@ contract HelperContract {
         uint256 index = fundingRateArbitrage.getIndex();
         hedgingState.earnUSDCRate = index;
         uint256 wstETHToUSDC = IJUSDBank(jusdBank).getCollateralPrice(
-            fundingRateArbitrage.getCollateral()
+            fundingRateArbitrage.collateral()
         );
         uint256 ETHToUSDC = IDealer(jojoDealer).getMarkPrice(perpetual);
         hedgingState.wstETHToUSDC = wstETHToUSDC;
-        hedgingState.wstETHDecimal = ERC20(fundingRateArbitrage.getCollateral())
+        hedgingState.wstETHDecimal = ERC20(fundingRateArbitrage.collateral())
             .decimals();
         hedgingState.wstETHToETH = (wstETHToUSDC * 1e18) / ETHToUSDC;
         hedgingState.earnUSDCTotalSupply = fundingRateArbitrage
-            .getTotalEarnUSDCBalance();
+            .totalEarnUSDCBalance();
     }
 
     function getAccountsStates(

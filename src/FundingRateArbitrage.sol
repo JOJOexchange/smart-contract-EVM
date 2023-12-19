@@ -124,14 +124,6 @@ contract FundingRateArbitrage is Ownable {
         }
     }
 
-    function getCollateral() public view returns (address) {
-        return collateral;
-    }
-
-    function getTotalEarnUSDCBalance() public view returns (uint256) {
-        return totalEarnUSDCBalance;
-    }
-
     function buildSpotSwapData(
         address approveTarget,
         address swapTarget,
@@ -317,6 +309,7 @@ contract FundingRateArbitrage is Ownable {
         uint256 lockedEarnUSDCAmount = jusdOutside[msg.sender].decimalDiv(
             index
         );
+        require(earnUSDCBalance[msg.sender] >= lockedEarnUSDCAmount, "lockedEarnUSDCAmount is bigger than earnUSDCBalance");
         withdrawEarnUSDCAmount =
             earnUSDCBalance[msg.sender] -
             lockedEarnUSDCAmount;

@@ -119,7 +119,6 @@ contract FundingRateArbitrage is Ownable {
         if (totalEarnUSDCBalance == 0) {
             return 1e18;
         } else {
-            // getNetValue = 4020
             return SignedDecimalMath.decimalDiv(getNetValue(), totalEarnUSDCBalance);
         }
     }
@@ -277,14 +276,14 @@ contract FundingRateArbitrage is Ownable {
     // LP Functions
     function deposit(uint256 amount) external {
         require(amount != 0, "deposit amount is zero");
-        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
+        uint256 earnUSDCAmount = amount.decimalDiv(getIndex());
+        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
         if (feeAmount > 0) {
             amount -= feeAmount;
             IERC20(usdc).transfer(owner(), feeAmount);
         }
-        JOJODealer(jojoDealer).deposit(amount, 0, msg.sender);
-        uint256 earnUSDCAmount = amount.decimalDiv(getIndex());
+        JOJODealer(jojoDealer).deposit(0, amount, msg.sender);
         earnUSDCBalance[msg.sender] += earnUSDCAmount;
         jusdOutside[msg.sender] += amount;
         totalEarnUSDCBalance += earnUSDCAmount;

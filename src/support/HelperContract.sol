@@ -96,14 +96,16 @@ contract HelperContract {
         return IERC20(token).balanceOf(wallet);
     }
 
-    function getAccountHedgingState(
-        address account
+    function getAccountHedgingStates(
+        address[] calldata accounts
     ) public view returns (AccountHedgingState memory accountHedgingState) {
-        accountHedgingState.earnUSDCBalance = fundingRateArbitrage
-            .earnUSDCBalance(account);
-        accountHedgingState.jusdOutside = fundingRateArbitrage.jusdOutside(
-            account
-        );
+        for (uint256 i = 0; i < accounts.length; i++) {
+            accountHedgingState.earnUSDCBalance = fundingRateArbitrage
+                .earnUSDCBalance(accounts[i]);
+            accountHedgingState.jusdOutside = fundingRateArbitrage.jusdOutside(
+                accounts[i]
+            );
+        }
     }
 
     function getHedgingState(

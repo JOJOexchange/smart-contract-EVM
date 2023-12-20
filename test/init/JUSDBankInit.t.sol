@@ -173,6 +173,7 @@ contract JUSDBankInitTest is Test {
             address(jusd)
         );
         flashLoanRepay.setWhiteListContract(address(swapContract), true);
+        generalRepay.setWhiteListContract(address(swapContract), true);
     }
 
     function initRepayHelper() public {

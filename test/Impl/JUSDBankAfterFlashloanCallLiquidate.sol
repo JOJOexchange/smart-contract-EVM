@@ -70,7 +70,7 @@ contract JUSDExploitTest is JUSDBankInitTest {
         uint256 flashloanRepayJusdBalance = jusd.balanceOf(
             address(flashloanRepay)
         );
-        uint256 flashloanRepayMockToken1Balance = eth.balanceOf(
+        uint256 flashloanRepayethBalance = eth.balanceOf(
             address(flashloanRepay)
         );
         console.log("Alice jusd balance : %d", jusd.balanceOf(alice)); //0
@@ -81,7 +81,7 @@ contract JUSDExploitTest is JUSDBankInitTest {
         ); //8e8
         console.log(
             "flashloanRepay eth balance : %d",
-            flashloanRepayMockToken1Balance
+            flashloanRepayethBalance
         ); //0
     }
 }

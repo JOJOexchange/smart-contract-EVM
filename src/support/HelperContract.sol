@@ -98,11 +98,12 @@ contract HelperContract {
 
     function getAccountHedgingStates(
         address[] calldata accounts
-    ) public view returns (AccountHedgingState memory accountHedgingState) {
+    ) public view returns (AccountHedgingState[] memory accountHedgingStates) {
+        accountHedgingStates = new AccountHedgingState[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
-            accountHedgingState.earnUSDCBalance = fundingRateArbitrage
+            accountHedgingStates[i].earnUSDCBalance = fundingRateArbitrage
                 .earnUSDCBalance(accounts[i]);
-            accountHedgingState.jusdOutside = fundingRateArbitrage.jusdOutside(
+            accountHedgingStates[i].jusdOutside = fundingRateArbitrage.jusdOutside(
                 accounts[i]
             );
         }

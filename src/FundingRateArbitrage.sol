@@ -13,13 +13,13 @@ import "./libraries/SignedDecimalMath.sol";
 
 pragma solidity ^0.8.9;
 
-struct WithdrawalRequest {
-    uint256 earnUSDCAmount;
-    address user;
-    bool isExecuted;
-}
-
 contract FundingRateArbitrage is Ownable {
+    struct WithdrawalRequest {
+        uint256 earnUSDCAmount;
+        address user;
+        bool isExecuted;
+    }
+
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
@@ -119,7 +119,11 @@ contract FundingRateArbitrage is Ownable {
         if (totalEarnUSDCBalance == 0) {
             return 1e18;
         } else {
-            return SignedDecimalMath.decimalDiv(getNetValue(), totalEarnUSDCBalance);
+            return
+                SignedDecimalMath.decimalDiv(
+                    getNetValue(),
+                    totalEarnUSDCBalance
+                );
         }
     }
 
@@ -308,7 +312,10 @@ contract FundingRateArbitrage is Ownable {
         uint256 lockedEarnUSDCAmount = jusdOutside[msg.sender].decimalDiv(
             index
         );
-        require(earnUSDCBalance[msg.sender] >= lockedEarnUSDCAmount, "lockedEarnUSDCAmount is bigger than earnUSDCBalance");
+        require(
+            earnUSDCBalance[msg.sender] >= lockedEarnUSDCAmount,
+            "lockedEarnUSDCAmount is bigger than earnUSDCBalance"
+        );
         withdrawEarnUSDCAmount =
             earnUSDCBalance[msg.sender] -
             lockedEarnUSDCAmount;

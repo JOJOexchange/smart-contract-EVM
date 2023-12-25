@@ -103,9 +103,32 @@ contract HelperContract {
         for (uint256 i = 0; i < accounts.length; i++) {
             accountHedgingStates[i].earnUSDCBalance = fundingRateArbitrage
                 .earnUSDCBalance(accounts[i]);
-            accountHedgingStates[i].jusdOutside = fundingRateArbitrage.jusdOutside(
-                accounts[i]
-            );
+            accountHedgingStates[i].jusdOutside = fundingRateArbitrage
+                .jusdOutside(accounts[i]);
+        }
+    }
+
+    function getWithdrawRequestList(
+        uint256[] calldata lists
+    )
+        public
+        view
+        returns (
+            FundingRateArbitrage.WithdrawalRequest[] memory withdrawalRequests
+        )
+    {
+        withdrawalRequests = new FundingRateArbitrage.WithdrawalRequest[](
+            lists.length
+        );
+        for (uint256 i = 0; i < lists.length; i++) {
+            (
+                uint256 earnUSDCAmount,
+                address user,
+                bool isExecuted
+            ) = fundingRateArbitrage.withdrawalRequests(i);
+            withdrawalRequests[i].earnUSDCAmount = earnUSDCAmount;
+            withdrawalRequests[i].user = user;
+            withdrawalRequests[i].isExecuted = isExecuted;
         }
     }
 

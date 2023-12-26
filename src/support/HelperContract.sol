@@ -125,7 +125,7 @@ contract HelperContract {
                 uint256 earnUSDCAmount,
                 address user,
                 bool isExecuted
-            ) = fundingRateArbitrage.withdrawalRequests(i);
+            ) = fundingRateArbitrage.withdrawalRequests(lists[i]);
             withdrawalRequests[i].earnUSDCAmount = earnUSDCAmount;
             withdrawalRequests[i].user = user;
             withdrawalRequests[i].isExecuted = isExecuted;

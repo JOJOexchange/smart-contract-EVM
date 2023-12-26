@@ -62,7 +62,6 @@ contract JUSDRepayHelper is Ownable {
             IJUSDExchange(JUSDExchange).buyJUSD(USDCBalance, address(this));
         }
         uint256 balance = IERC20(JUSD).balanceOf(address(this));
-        require(balance >= 0, "do not have JUSD");
         IJUSDBank(JusdBank).repay(balance, to);
         emit HelpToTransfer(from, to, balance);
     }

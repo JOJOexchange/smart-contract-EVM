@@ -177,7 +177,7 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             );
             orderHashList[i] = orderHash;
             // validate signature
-            address recoverSigner = ECDSA.recover(orderHash, signatureList[i]);
+            (address recoverSigner, ) = ECDSA.tryRecover(orderHash, signatureList[i]);
             if (
                 recoverSigner != order.signer &&
                 !state.operatorRegistry[order.signer][recoverSigner]

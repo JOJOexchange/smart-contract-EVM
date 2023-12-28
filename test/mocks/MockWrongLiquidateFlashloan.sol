@@ -15,6 +15,9 @@ import "../../src/interfaces/internal/IPriceSource.sol";
 import "../../src/libraries/SignedDecimalMath.sol";
 
 contract LiquidateCollateralRepayNotEnough is Ownable {
+    // add this to be excluded from coverage report
+    function test() public {}
+
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
@@ -97,6 +100,9 @@ contract LiquidateCollateralRepayNotEnough is Ownable {
 }
 
 contract LiquidateCollateralInsuranceNotEnough is Ownable {
+    // add this to be excluded from coverage report
+    function test() public {}
+
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
@@ -187,6 +193,9 @@ contract LiquidateCollateralInsuranceNotEnough is Ownable {
 }
 
 contract LiquidateCollateralLiquidatedNotEnough is Ownable {
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 

@@ -22,10 +22,16 @@ contract JUSDViewTest is JUSDBankInitTest {
             pools,
             600,
             address(ethOracle),
-            50000000000000000
+            100000000000000000
         );
+        UNIOracle.getAssetPrice();
+        UNIOracle.getMarkPrice();
+        UNIOracle.updatePools(pools);
+        UNIOracle.updatePeriod(5);
+        UNIOracle.updateImpact(1);
         cheats.expectRevert("deviation is too big");
         UNIOracle.getAssetPrice();
+
         jusdBank.initReserve(
             // token
             address(BTC),
@@ -78,5 +84,7 @@ contract JUSDViewTest is JUSDBankInitTest {
         jusdBank.withdraw(address(BTC), 1e8, alice, false);
         maxWithdrawETH = jusdBank.getMaxWithdrawAmount(address(eth), alice);
         assertEq(maxWithdrawETH, 0);
+        jusdBank.getTRate();
+        jusdBank.accrueRate();
     }
 }

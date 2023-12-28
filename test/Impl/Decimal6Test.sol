@@ -8,8 +8,7 @@ pragma solidity ^0.8.9;
 import "../init/TradingInit.sol";
 
 contract Decimal6Test is TradingInit {
-
-    function deposit() public{
+    function deposit() public {
         vm.startPrank(traders[0]);
         jojoDealer.deposit(0, 10000e6, traders[0]);
         vm.stopPrank();
@@ -20,7 +19,7 @@ contract Decimal6Test is TradingInit {
 
     function testBalanceCheck() public {
         deposit();
-        trade(1e18, -30000e6, -1e18, 30000e6);
+        trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
         (, uint256 secondaryCredit0, , , ) = jojoDealer.getCreditOf(traders[0]);
         (, uint256 secondaryCredit1, , , ) = jojoDealer.getCreditOf(traders[1]);
         assertEq(secondaryCredit0, 10000e6);
@@ -39,7 +38,11 @@ contract Decimal6Test is TradingInit {
 
     function testLiqPrice() public {
         deposit();
-        trade(1e18, -30000e6, -1e18, 30000e6);
+        jojoDealer.getLiquidationPrice(
+            traders[0],
+            address(perpList[0])
+        );
+        trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
         uint256 liquidationPrice0 = jojoDealer.getLiquidationPrice(
             traders[0],
             address(perpList[0])
@@ -47,6 +50,10 @@ contract Decimal6Test is TradingInit {
         uint256 liquidationPrice1 = jojoDealer.getLiquidationPrice(
             traders[1],
             address(perpList[0])
+        );
+        jojoDealer.getLiquidationPrice(
+            traders[0],
+            address(perpList[1])
         );
         assertEq(liquidationPrice0, 20634020618);
         assertEq(liquidationPrice1, 38832038834);
@@ -58,7 +65,7 @@ contract Decimal6Test is TradingInit {
 
     function testSecondaryAssetExist() public {
         deposit();
-        trade(1e18, -30000e6, -1e18, 30000e6);
+        trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
         TestERC20 usdw = new TestERC20("USDW", "USDW", 12);
         cheats.expectRevert("JOJO_SECONDARY_ASSET_ALREADY_EXIST");
         jojoDealer.setSecondaryAsset(address(usdw));

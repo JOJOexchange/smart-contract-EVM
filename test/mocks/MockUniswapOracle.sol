@@ -1,15 +1,21 @@
-pragma solidity ^0.8.0;
+/*
+    Copyright 2022 JOJO Exchange
+    SPDX-License-Identifier: BUSL-1.1
+*/
+
+pragma solidity ^0.8.9;
 
 contract MockUniswapOracle {
-
-
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     function quoteSpecificPoolsWithTimePeriod(
-        uint128 baseAmount,
-        address baseToken,
-        address quoteToken,
-        address[] calldata pools,
-        uint32 period
-    ) external view returns (uint256 quoteAmount){
-        return 949999;
+        uint128,
+        address,
+        address,
+        address[] calldata,
+        uint32
+    ) external pure returns (uint256 quoteAmount) {
+        return 1010e6;
     }
 }

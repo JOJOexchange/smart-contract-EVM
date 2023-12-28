@@ -4,6 +4,9 @@ pragma solidity >=0.8.0;
 import "../../src/libraries/Types.sol";
 
 library EIP712Test {
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     function _structHash(
         Types.Order memory order
     ) internal pure returns (bytes32 structHash) {

@@ -31,7 +31,16 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         uint256 maxToken2 = jusdBank.getMaxWithdrawAmount(address(btc), alice);
         assertEq(maxToken2, 10e8);
         // 10 btc
-        jusdBank.withdraw(address(eth), 10e18, alice, false);
+        jusdBank.withdraw(address(eth), 5e18, alice, false);
+        vm.stopPrank();
+        jusdBank.delistReserve(address(eth));
+        vm.startPrank(alice);
+        cheats.expectRevert("RESERVE_NOT_ALLOW_DEPOSIT");
+        jusdBank.withdraw(address(eth), 5e18, alice, true);
+        vm.stopPrank();
+        jusdBank.relistReserve(address(eth));
+        vm.startPrank(alice);
+        jusdBank.withdraw(address(eth), 5e18, alice, true);
         emit log_uint(jusdBank.getDepositMaxMintAmount(alice));
         uint256 maxToken1 = jusdBank.getMaxWithdrawAmount(address(eth), alice);
         maxToken2 = jusdBank.getMaxWithdrawAmount(address(btc), alice);

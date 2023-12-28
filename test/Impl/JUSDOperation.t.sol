@@ -6,6 +6,8 @@
 pragma solidity ^0.8.9;
 
 import "../init/JUSDBankInit.t.sol";
+import "../../src/token/JUSD.sol";
+
 
 contract JUSDOperationTest is JUSDBankInitTest {
     function testJUSDMint() public {
@@ -96,13 +98,15 @@ contract JUSDOperationTest is JUSDBankInitTest {
     function testUpdateRiskParamWrong() public {
         cheats.expectRevert("RESERVE_PARAM_ERROR");
         jusdBank.updateRiskParam(address(eth), 9e17, 2e17, 2e17);
-        //        assertEq(jusdBank.getInsuranceFeeRate(address(eth)), 2e17);
+        cheats.expectRevert("RESERVE_PARAM_WRONG");
+        jusdBank.updateRiskParam(address(eth), 5e17, 2e17, 2e17);
     }
 
     function testUpdateReserveParam() public {
+        cheats.expectRevert("RESERVE_PARAM_WRONG");
         jusdBank.updateReserveParam(
             address(eth),
-            8e17,
+            9e17,
             100e18,
             100e18,
             200000e18
@@ -143,5 +147,12 @@ contract JUSDOperationTest is JUSDBankInitTest {
     function testCollateraltMaxMintAmount() public {
         uint256 value = jusdBank.getCollateralMaxMintAmount(address(eth), 2e18);
         assertEq(value, 1600000000);
+    }
+
+    function testBurnJUSD() public {
+        JUSD jusd = new JUSD(6);
+        jusd.mint(1e6);
+        jusd.burn(1e6);
+        assertEq(jusd.totalSupply(), 0);
     }
 }

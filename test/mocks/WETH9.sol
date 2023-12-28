@@ -3,6 +3,9 @@
 pragma solidity 0.8.9;
 
 contract WETH9 {
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     string public name = "Wrapped Ether";
     string public symbol = "WETH";
     uint8 public decimals = 18;

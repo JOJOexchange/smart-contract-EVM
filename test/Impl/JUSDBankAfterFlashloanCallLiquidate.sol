@@ -16,6 +16,9 @@ struct LiquidateData {
 }
 
 contract JUSDExploitTest is JUSDBankInitTest {
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     // Alice deposit 10e18 JUSD
     // Bob deposit 10e18 JUSD
     // Alice borrow 10e18 JUSD
@@ -87,6 +90,9 @@ contract JUSDExploitTest is JUSDBankInitTest {
 }
 
 contract Attack {
+    // add this to be excluded from coverage report
+    function test() public {}
+
     address public eth;
     address public jusdBank;
     address public jusdExchange;
@@ -129,6 +135,9 @@ contract Attack {
 }
 
 contract Repay {
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     address public eth;
     address public jusdBank;
     address public jusdExchange;

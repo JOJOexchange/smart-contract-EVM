@@ -10,6 +10,83 @@ import "../../src/FlashLoanLiquidate.sol";
 import {LiquidateCollateralRepayNotEnough, LiquidateCollateralInsuranceNotEnough, LiquidateCollateralLiquidatedNotEnough} from "../mocks/MockWrongLiquidateFlashloan.sol";
 
 contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
+    function testLiquidateRevert() public {
+        eth.transfer(alice, 10e18);
+        vm.startPrank(alice);
+        eth.approve(address(jusdBank), 10e18);
+
+        // eth 10 0.8 1000 8000
+        jusdBank.deposit(alice, address(eth), 10e18, alice);
+        vm.warp(1000);
+        jusdBank.borrow(7426e6, alice, false);
+        vm.stopPrank();
+
+        vm.warp(2000);
+        ethOracle.setMarkPrice(900e6);
+
+        jusd.mint(50000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
+        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
+            address(jusdBank),
+            address(jusdExchange),
+            address(usdc),
+            address(jusd),
+            insurance
+        );
+        bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
+        bytes memory param = abi.encode(
+            swapContract,
+            address(this),
+            address(bob),
+            9000e6,
+            data
+        );
+        // liquidate
+        vm.startPrank(bob);
+        bytes memory afterParam = abi.encode(
+            address(flashLoanLiquidate),
+            param
+        );
+
+        cheats.expectRevert("approve target is not in the whitelist");
+        jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
+        vm.stopPrank();
+        flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
+        vm.startPrank(bob);
+        cheats.expectRevert("swap target is not in the whitelist");
+        jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
+
+        bytes memory param2 = abi.encode(
+            swapContract,
+            swapContract,
+            address(bob),
+            19000e6,
+            data
+        );
+        cheats.expectRevert("receive amount is too small");
+        bytes memory afterParam2 = abi.encode(
+            address(flashLoanLiquidate),
+            param2
+        );
+        jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam2, 900e6);
+
+        bytes memory data2 = abi.encodeWithSignature("swap");
+        bytes memory param3 = abi.encode(
+            swapContract,
+            swapContract,
+            address(bob),
+            9000e6,
+            data2
+        );
+        bytes memory afterParam3 = abi.encode(
+            address(flashLoanLiquidate),
+            param3
+        );
+        cheats.expectRevert();
+        jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam3, 900e6);
+        vm.stopPrank();
+    }
+
     function testLiquidateAll() public {
         eth.transfer(alice, 10e18);
         vm.startPrank(alice);

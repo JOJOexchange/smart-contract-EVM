@@ -132,6 +132,7 @@ contract JUSDBankLiquidateCollateralTest is JUSDBankInitTest {
     function testLiquidatorIsNotInWhiteList() public {
         eth.transfer(alice, 10e18);
         bool isOpen = jusdBank.isLiquidatorWhitelistOpen();
+        jusdBank.liquidatorWhitelistClose();
         assertEq(isOpen, false);
         jusdBank.liquidatorWhitelistOpen();
         vm.startPrank(alice);

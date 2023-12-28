@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "../init/JUSDBankInit.t.sol";
 
+// Check jusdbank's deposit
 contract JUSDBankTest is JUSDBankInitTest {
     function testDepositSuccess() public {
         eth.transfer(alice, 10e18);

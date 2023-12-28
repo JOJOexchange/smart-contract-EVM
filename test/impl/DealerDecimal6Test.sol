@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "../init/TradingInit.sol";
 
+// Check dealer's decimal
 contract Decimal6Test is TradingInit {
     function deposit() public {
         vm.startPrank(traders[0]);

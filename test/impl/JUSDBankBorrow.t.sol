@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "../init/JUSDBankInit.t.sol";
 
+// Check jusdbank's borrow
 contract JUSDBankBorrowTest is JUSDBankInitTest {
     // no tRate just one token
     function testBorrowJUSDSuccess() public {

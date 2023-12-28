@@ -8,6 +8,7 @@ pragma solidity ^0.8.9;
 import "../init/JUSDBankInit.t.sol";
 import "../../src/FlashLoanLiquidate.sol";
 
+// Check jusdbank's list/delist
 contract JUSDBankClearReserveTest is JUSDBankInitTest {
     /// @notice user borrow jusd account is not safe
     function testClearReserve() public {

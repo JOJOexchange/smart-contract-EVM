@@ -8,6 +8,7 @@ pragma solidity ^0.8.9;
 import "../../src/DepositStableCoinToDealer.sol";
 import "../init/JUSDBankInit.t.sol";
 
+// Check jusdbank's repay
 contract JUSDBankRepayTest is JUSDBankInitTest {
     function testRepayJUSDSuccess() public {
         eth.transfer(alice, 100e18);

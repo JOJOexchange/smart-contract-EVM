@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "../init/JUSDBankInit.t.sol";
 
+// Check jusdbank's withdraw
 contract JUSDBankWithdrawTest is JUSDBankInitTest {
     function testWithdrawAmountIsZero() public {
         eth.transfer(alice, 10e18);

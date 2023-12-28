@@ -8,7 +8,7 @@ pragma solidity ^0.8.9;
 import "../init/JUSDBankInit.t.sol";
 import "../../src/token/JUSD.sol";
 
-
+// Check jusdbank's operation
 contract JUSDOperationTest is JUSDBankInitTest {
     function testJUSDMint() public {
         jusd.mint(100e6);

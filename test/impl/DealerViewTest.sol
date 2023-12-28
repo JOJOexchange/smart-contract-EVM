@@ -8,6 +8,7 @@ pragma solidity ^0.8.9;
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
 
+// Check dealer's view function
 contract JOJOViewTest is Checkers {
     function testJOJOView() public {
         bool ifOrderValid = jojoDealer.isOrderSenderValid(address(this));

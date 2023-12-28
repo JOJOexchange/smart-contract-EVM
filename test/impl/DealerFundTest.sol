@@ -9,6 +9,7 @@ import "../../src/DepositStableCoinToDealer.sol";
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
 
+// Check dealer's deposit/withdraw
 contract FundTest is Checkers {
     function testDeposit() public {
         vm.startPrank(traders[0]);

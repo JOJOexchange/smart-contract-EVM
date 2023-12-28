@@ -9,6 +9,7 @@ import "../init/JUSDBankInit.t.sol";
 import "../../src/FlashLoanLiquidate.sol";
 import {LiquidateCollateralRepayNotEnough, LiquidateCollateralInsuranceNotEnough, LiquidateCollateralLiquidatedNotEnough} from "../mocks/MockWrongLiquidateFlashloan.sol";
 
+// Check jusdbank's liquidation
 contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
     function testLiquidateRevert() public {
         eth.transfer(alice, 10e18);

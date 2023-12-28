@@ -9,6 +9,7 @@ import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
 import "../../src/FundingRateUpdateLimiter.sol";
 
+// Check dealer's fundingRate
 contract FundingRateTest is Checkers {
     function deposit() public {
         vm.startPrank(traders[0]);

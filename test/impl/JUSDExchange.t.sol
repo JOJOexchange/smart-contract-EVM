@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "../init/JUSDBankInit.t.sol";
 
+// Check jusd exchange
 contract JUSDExchangeTest is JUSDBankInitTest {
     function testExchangeSuccess() public {
         vm.startPrank(alice);

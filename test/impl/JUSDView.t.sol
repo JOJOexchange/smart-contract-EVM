@@ -9,6 +9,7 @@ import "../init/JUSDBankInit.t.sol";
 import "../mocks/MockUniswapOracle.sol";
 import "../../src/oracle/UniswapPriceAdaptor.sol";
 
+// Check jusdbank's view
 contract JUSDViewTest is JUSDBankInitTest {
     function testJUSDView() public {
         TestERC20 BTC = new TestERC20("BTC", "BTC", 8);

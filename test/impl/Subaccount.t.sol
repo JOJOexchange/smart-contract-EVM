@@ -11,6 +11,7 @@ import "../../src/subaccount/DegenSubaccountFactory.sol";
 import "../../src/subaccount/BotSubaccount.sol";
 import "../../src/subaccount/BotSubaccountFactory.sol";
 
+// Check subaccount
 contract SubaccountTest is JUSDBankInitTest {
     function getSetOperatorData(
         address op,

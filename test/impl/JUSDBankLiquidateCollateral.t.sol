@@ -8,6 +8,7 @@ pragma solidity ^0.8.9;
 import "../init/JUSDBankInit.t.sol";
 import "../../src/FlashLoanLiquidate.sol";
 
+// Check jusdbank's liquidation
 contract JUSDBankLiquidateCollateralTest is JUSDBankInitTest {
     /// @notice user just deposit not borrow, account is safe
     function testLiquidateCollateralAccountIsSafe() public {

@@ -7,6 +7,7 @@ pragma solidity ^0.8.9;
 
 import "../init/JUSDBankInit.t.sol";
 
+// Check jusdbank's multiCall
 contract JUSDBankMulticallTest is JUSDBankInitTest {
     function testHelperDeposit() public {
         bytes memory a = jusdBank.getDepositData(

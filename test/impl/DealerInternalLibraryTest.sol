@@ -9,6 +9,7 @@ import "forge-std/Test.sol";
 
 pragma solidity ^0.8.9;
 
+// Check dealer's internal library
 contract InternalLibraryTest {
     function mul(int256 a, int256 b) public pure {
         SignedDecimalMath.decimalMul(a, b);

@@ -12,6 +12,8 @@ import "../interfaces/internal/IPriceSource.sol";
 
 
 contract MockSwap {
+    // add this to be excluded from coverage report
+    function test() public {}
 
     using SafeERC20 for IERC20;
     address USDC;

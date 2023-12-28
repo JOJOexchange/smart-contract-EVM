@@ -10,6 +10,9 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TestERC20 is ERC20 {
+    // add this to be excluded from coverage report
+    function test() public {}
+    
     uint8 _decimals_;
 
     constructor(
@@ -35,5 +38,9 @@ contract TestERC20 is ERC20 {
         for (uint256 i = 0; i < to.length; i++) {
             _mint(to[i], amount[i]);
         }
+    }
+
+    function deposit() public payable {
+        
     }
 }

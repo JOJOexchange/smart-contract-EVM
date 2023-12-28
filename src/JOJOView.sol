@@ -105,6 +105,11 @@ abstract contract JOJOView is JOJOStorage, IDealer {
         return Liquidation._isMMSafe(state, trader);
     }
 
+
+    function isIMSafe(address trader) external view returns (bool safe) {
+        return Liquidation._isIMSafe(state, trader);
+    }
+
     /// @inheritdoc IDealer
     function isAllSafe(
         address[] calldata traderList

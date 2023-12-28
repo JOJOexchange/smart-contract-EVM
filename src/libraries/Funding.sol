@@ -259,16 +259,13 @@ library Funding {
 
         if (param.length != 0) {
             require(Address.isContract(to), "target is not a contract");
-            (bool success, bytes memory returnData) = to.call(param);
-            if (!success) {
-                if (returnData.length > 0) {
-                    string memory errorMessage = abi.decode(
-                        returnData,
-                        (string)
-                    );
-                    revert(errorMessage);
-                } else {
-                    revert("External call failed without error message");
+            (bool success, ) = to.call(param);
+            if (success == false) {
+                assembly {
+                    let ptr := mload(0x40)
+                    let size := returndatasize()
+                    returndatacopy(ptr, 0, size)
+                    revert(ptr, size)
                 }
             }
         }

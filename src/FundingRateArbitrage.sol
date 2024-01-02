@@ -13,6 +13,9 @@ import "./libraries/SignedDecimalMath.sol";
 
 pragma solidity ^0.8.9;
 
+/// @notice This contract involves offsetting trades in both the spot and perpetual contract markets
+/// to capture the funding rate income in perpetual contract trading. Liquidy provider can deposit usdc
+/// to this pool and accumulate interest.
 contract FundingRateArbitrage is Ownable {
     struct WithdrawalRequest {
         uint256 earnUSDCAmount;
@@ -95,6 +98,9 @@ contract FundingRateArbitrage is Ownable {
     }
 
     // View
+
+    /// @notice this function is to return the sum of netValue in whole system.
+    /// including the netValue in collateral system, trading system and buffer usdc
     function getNetValue() public view returns (uint256) {
         uint256 jusdBorrowed = IJUSDBank(jusdBank).getBorrowBalance(
             address(this)
@@ -117,6 +123,7 @@ contract FundingRateArbitrage is Ownable {
             jusdBorrowed;
     }
 
+    /// @notice this function is to return the ratio between netValue and totalEarnUSDCBalance
     function getIndex() public view returns (uint256) {
         if (totalEarnUSDCBalance == 0) {
             return 1e18;
@@ -144,6 +151,8 @@ contract FundingRateArbitrage is Ownable {
     }
 
     //Only Owner
+
+    /// @notice this function is to set Operator who can operate this pool
     function setOperator(address operator, bool isValid) public onlyOwner {
         JOJODealer(jojoDealer).setOperator(operator, isValid);
     }
@@ -160,10 +169,11 @@ contract FundingRateArbitrage is Ownable {
         withdrawFeeRate = newWithdrawFeeRate;
     }
 
-    function setDefalutQuota(uint256 defaultQuota) public onlyOwner {
+    function setDefaultQuota(uint256 defaultQuota) public onlyOwner {
         defaultUsdcQuota = defaultQuota;
     }
-
+ 
+    /// @notice this function is to set the personal deposit quota
     function setPersonalQuota(address to, uint256 personalQuota) public onlyOwner {
         maxUsdcQuota[to] = personalQuota;
     }
@@ -178,6 +188,9 @@ contract FundingRateArbitrage is Ownable {
         IERC20(jusd).safeTransfer(msg.sender, amount);
     }
 
+    /// @notice this function is to swap usdc to eth and deposit to collateral system
+    /// @param minReceivedCollateral is the minimum eth received
+    /// @param spotTradeParam is param to swap usdc to eth, can build by this function: `buildSpotSwapData`
     function swapBuyEth(
         uint256 minReceivedCollateral,
         bytes memory spotTradeParam
@@ -187,6 +200,10 @@ contract FundingRateArbitrage is Ownable {
         _depositToJUSDBank(IERC20(collateral).balanceOf(address(this)));
     }
 
+    /// @notice this function is to withdraw eth to the pool and swap eth to usdc
+    /// @param minReceivedUSDC is the minimum usdc received
+    /// @param collateralAmount is the expected eth amount which withdraw from collateral system
+    /// @param spotTradeParam is param to swap eth to usdc, can build by this function: `buildSpotSwapData`
     function swapSellEth(
         uint256 minReceivedUSDC,
         uint256 collateralAmount,
@@ -197,10 +214,14 @@ contract FundingRateArbitrage is Ownable {
         require(receivedUSDC >= minReceivedUSDC, "SWAP SLIPPAGE");
     }
 
+    /// @notice this function is to borrow jusd from collateral system and deposit to trading system
+    /// @param JUSDAmount is the expected borrowed amount.
     function borrow(uint256 JUSDAmount) public onlyOwner {
         _borrowJUSD(JUSDAmount);
     }
 
+    /// @notice this function is to withdraw jusd from trading system and repay to collateral system
+    /// @param JUSDRebalanceAmount is the expected repay amount.
     function repay(uint256 JUSDRebalanceAmount) public onlyOwner {
         JOJODealer(jojoDealer).fastWithdraw(
             address(this),
@@ -272,10 +293,15 @@ contract FundingRateArbitrage is Ownable {
     }
 
     // JOJODealer Operations
+
+    /// @notice this function is to deposit the buffered usdc from pool to trading system
+    /// @param primaryAmount is the expected deposit primary amount.
     function depositUSDCToPerp(uint256 primaryAmount) public onlyOwner {
         JOJODealer(jojoDealer).deposit(primaryAmount, 0, address(this));
     }
 
+    /// @notice this function is to withdraw the buffered usdc from trading system to pool
+    /// @param primaryAmount is the expected withdraw primary amount.
     function fastWithdrawUSDCFromPerp(uint256 primaryAmount) public onlyOwner {
         JOJODealer(jojoDealer).fastWithdraw(
             address(this),
@@ -288,6 +314,11 @@ contract FundingRateArbitrage is Ownable {
     }
 
     // LP Functions
+
+    /// @notice this function is called by liquidity providers, users can deposit usdc to arbitrage
+    /// @dev During the deposit, users usdc will transfer to the system and system will return
+    /// the equivalent amount of jusd which deposit to the trading system.
+    /// @param amount is the expected deposit usdc amount.
     function deposit(uint256 amount) external {
         require(amount != 0, "deposit amount is zero");
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
@@ -312,6 +343,11 @@ contract FundingRateArbitrage is Ownable {
         emit DepositToHedging(msg.sender, amount, feeAmount, earnUSDCAmount);
     }
 
+    /// @notice this function is to submit a withdrawal which wiil permit by our system in 24 hours
+    /// The main purpose of this function is to capture the interest and avoid the DOS attacks.
+    /// @dev users need to withdraw jusd from trading system firstly or by jusd, then transfer jusd to 
+    /// the pool and get usdc back 
+    /// @param repayJUSDAmount is the repat jusd amount
     function requestWithdraw(
         uint256 repayJUSDAmount
     ) external returns (uint256 withdrawEarnUSDCAmount) {
@@ -354,6 +390,8 @@ contract FundingRateArbitrage is Ownable {
         return withdrawIndex;
     }
 
+    /// @notice this function is to permit withdrawals which are submit by liqudity provider
+    /// @param requestIDList is the request ids
     function permitWithdrawRequests(
         uint256[] memory requestIDList
     ) external onlyOwner {

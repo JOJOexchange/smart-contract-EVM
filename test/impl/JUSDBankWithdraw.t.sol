@@ -41,7 +41,7 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         vm.stopPrank();
         jusdBank.relistReserve(address(eth));
         vm.startPrank(alice);
-        jusdBank.withdraw(address(eth), 5e18, alice, true);
+        jusdBank.withdraw(address(eth), 5e18, alice, false);
         emit log_uint(jusdBank.getDepositMaxMintAmount(alice));
         uint256 maxToken1 = jusdBank.getMaxWithdrawAmount(address(eth), alice);
         maxToken2 = jusdBank.getMaxWithdrawAmount(address(btc), alice);

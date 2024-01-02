@@ -31,12 +31,11 @@ contract FundingRateArbitrageTest is Test {
         Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
     FundingRateArbitrage public fundingRateArbitrage;
     Utils internal utils;
-    TestERC20 public wstETH;
+    TestERC20 public eth;
     JUSDBank public jusdBank;
     TestERC20 public jusd;
     TestERC20 public USDC;
     Perpetual public perpetual;
-    EmergencyOracle public wstETHOracle;
     EmergencyOracle public ETHOracle;
     JOJODealer public jojoDealer;
     MockSwap public swapContract;
@@ -87,7 +86,6 @@ contract FundingRateArbitrageTest is Test {
     }
 
     function initJUSDBank() public {
-        wstETHOracle = new EmergencyOracle("wstETH Oracle");
         //bank
         jusdBank = new JUSDBank(
             // maxReservesAmount_
@@ -106,7 +104,7 @@ contract FundingRateArbitrageTest is Test {
 
         jusdBank.initReserve(
             // token
-            address(wstETH),
+            address(eth),
             // initialMortgageRate
             8e17,
             // maxDepositAmount
@@ -121,7 +119,7 @@ contract FundingRateArbitrageTest is Test {
             5e16,
             // insuranceFeeRate
             1e17,
-            address(wstETHOracle)
+            address(ETHOracle)
         );
 
         jusd.mint(address(jusdBank), 100000e6);
@@ -130,7 +128,7 @@ contract FundingRateArbitrageTest is Test {
     function initFundingRateSetting() public {
         fundingRateArbitrage = new FundingRateArbitrage(
             //  _collateral,
-            address(wstETH),
+            address(eth),
             // _jusdBank
             address(jusdBank),
             // _JOJODealer
@@ -143,9 +141,10 @@ contract FundingRateArbitrageTest is Test {
 
         fundingRateArbitrage.transferOwnership(Owner);
         vm.startPrank(Owner);
-        jusd.mint(address(fundingRateArbitrage), 10000e6);
+        jusd.mint(address(fundingRateArbitrage), 10010e6);
         fundingRateArbitrage.setOperator(sender1, true);
         fundingRateArbitrage.setMaxNetValue(10000e6);
+        fundingRateArbitrage.setDefalutQuota(10000e6);
         vm.stopPrank();
     }
 
@@ -170,15 +169,15 @@ contract FundingRateArbitrageTest is Test {
     function initSupportSWAP() public {
         swapContract = new MockSwap(
             address(USDC),
-            address(wstETH),
-            address(wstETHOracle)
+            address(eth),
+            address(ETHOracle)
         );
         USDC.mint(address(swapContract), 100000e6);
-        wstETH.mint(address(swapContract), 10000e18);
+        eth.mint(address(swapContract), 10000e18);
     }
 
     function setUp() public {
-        wstETH = new TestERC20("wstETH", "wstETH", 18);
+        eth = new TestERC20("eth", "eth", 18);
         jusd = new TestERC20("jusd", "jusd", 6);
         USDC = new TestERC20("usdc", "usdc", 6);
         ETHOracle = new EmergencyOracle("ETH Oracle");
@@ -190,9 +189,7 @@ contract FundingRateArbitrageTest is Test {
         initFundingRateSetting();
         initSupportSWAP();
         ETHOracle.turnOnOracle();
-        wstETHOracle.turnOnOracle();
         ETHOracle.setMarkPrice(1000e6);
-        wstETHOracle.setMarkPrice(1200e6);
     }
 
     function initAlice() public {
@@ -452,9 +449,9 @@ contract FundingRateArbitrageTest is Test {
         uint256 minReceivedCollateral = 2e18;
         uint256 JUSDRebalanceAmount = 1500e6;
 
-        bytes memory swapData = swapContract.getSwapToWstETHData(
+        bytes memory swapData = swapContract.getSwapToEthData(
             2400e6,
-            address(wstETH)
+            address(eth)
         );
         bytes memory spotTradeParam = abi.encode(
             address(swapContract),
@@ -470,7 +467,7 @@ contract FundingRateArbitrageTest is Test {
             -1010e6
         );
 
-        fundingRateArbitrage.swapBuyWstETH(
+        fundingRateArbitrage.swapBuyEth(
             minReceivedCollateral,
             spotTradeParam
         );
@@ -488,10 +485,10 @@ contract FundingRateArbitrageTest is Test {
     }
 
     function testPoolClosePosition() public {
-        USDC.mint(alice, 2400e6);
+        USDC.mint(alice, 2000e6);
         vm.startPrank(alice);
-        USDC.approve(address(fundingRateArbitrage), 2400e6);
-        fundingRateArbitrage.deposit(2400e6);
+        USDC.approve(address(fundingRateArbitrage), 2000e6);
+        fundingRateArbitrage.deposit(2000e6);
         vm.stopPrank();
 
         vm.startPrank(sender2);
@@ -503,14 +500,14 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(Owner);
         uint256 minReceivedCollateral = 3e18;
         uint256 JUSDRebalanceAmount = 1500e6;
-        bytes memory swapData = swapContract.getSwapToWstETHData(
-            2400e6,
-            address(wstETH)
+        bytes memory swapData = swapContract.getSwapToEthData(
+            2000e6,
+            address(eth)
         );
         bytes memory spotTradeParam = abi.encode(
             address(swapContract),
             address(swapContract),
-            2400e6,
+            2000e6,
             swapData
         );
 
@@ -522,12 +519,12 @@ contract FundingRateArbitrageTest is Test {
         );
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapBuyWstETH(
+        fundingRateArbitrage.swapBuyEth(
             minReceivedCollateral,
             spotTradeParam
         );
         minReceivedCollateral = 2e18;
-        fundingRateArbitrage.swapBuyWstETH(
+        fundingRateArbitrage.swapBuyEth(
             minReceivedCollateral,
             spotTradeParam
         );
@@ -550,7 +547,7 @@ contract FundingRateArbitrageTest is Test {
         uint256 collateralAmount = 2e18;
         bytes memory swapData2 = swapContract.getSwapToUSDCData(
             2e18,
-            address(wstETH)
+            address(eth)
         );
         bytes memory spotTradeParam2 = abi.encode(
             address(swapContract),
@@ -574,7 +571,7 @@ contract FundingRateArbitrageTest is Test {
         fundingRateArbitrage.repay(JUSDRebalanceAmount2);
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapSellWstEth(
+        fundingRateArbitrage.swapSellEth(
             minReceivedUSDC,
             collateralAmount,
             spotTradeParam2
@@ -587,14 +584,14 @@ contract FundingRateArbitrageTest is Test {
             "swap()"
         );
         cheats.expectRevert();
-        fundingRateArbitrage.swapSellWstEth(
+        fundingRateArbitrage.swapSellEth(
             minReceivedUSDC,
             collateralAmount,
             spotTradeParam3
         );
 
-        minReceivedUSDC = 2400e6;
-        fundingRateArbitrage.swapSellWstEth(
+        minReceivedUSDC = 2000e6;
+        fundingRateArbitrage.swapSellEth(
             minReceivedUSDC,
             collateralAmount,
             spotTradeParam2
@@ -612,7 +609,7 @@ contract FundingRateArbitrageTest is Test {
     function testBuildOrderParam() public view {
         bytes memory swapData2 = swapContract.getSwapToUSDCData(
             2e18,
-            address(wstETH)
+            address(eth)
         );
         fundingRateArbitrage.buildSpotSwapData(
             address(swapContract),
@@ -632,5 +629,23 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(Owner);
         fundingRateArbitrage.setWithdrawSettleFee(2e6);
         assertEq(fundingRateArbitrage.withdrawSettleFee(), 2e6);
+    }
+
+    function testDepositTooMuch() public {
+        USDC.mint(alice, 10000e6);
+        vm.startPrank(Owner);
+        fundingRateArbitrage.setMaxNetValue(10010e6);
+        vm.stopPrank();
+        initAlice();
+        USDC.approve(address(fundingRateArbitrage), 10001e6);
+        cheats.expectRevert("usdc amount bigger than quota");
+        fundingRateArbitrage.deposit(10001e6);
+        vm.stopPrank();
+
+        vm.startPrank(Owner);
+        fundingRateArbitrage.setPersonalQuota(alice, 10010e6);
+        vm.stopPrank();
+        vm.startPrank(alice);
+        fundingRateArbitrage.deposit(10001e6);
     }
 }

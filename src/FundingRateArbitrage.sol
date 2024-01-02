@@ -35,9 +35,11 @@ contract FundingRateArbitrage is Ownable {
     uint256 public depositFeeRate;
     uint256 public withdrawFeeRate;
     uint256 public withdrawSettleFee;
+    uint256 public defaultUsdcQuota;
 
     mapping(address => uint256) public earnUSDCBalance;
     mapping(address => uint256) public jusdOutside;
+    mapping(address => uint256) public maxUsdcQuota;
 
     WithdrawalRequest[] public withdrawalRequests;
 
@@ -158,6 +160,14 @@ contract FundingRateArbitrage is Ownable {
         withdrawFeeRate = newWithdrawFeeRate;
     }
 
+    function setDefalutQuota(uint256 defaultQuota) public onlyOwner {
+        defaultUsdcQuota = defaultQuota;
+    }
+
+    function setPersonalQuota(address to, uint256 personalQuota) public onlyOwner {
+        maxUsdcQuota[to] = personalQuota;
+    }
+
     function setWithdrawSettleFee(
         uint256 newWithdrawSettleFee
     ) public onlyOwner {
@@ -168,7 +178,7 @@ contract FundingRateArbitrage is Ownable {
         IERC20(jusd).safeTransfer(msg.sender, amount);
     }
 
-    function swapBuyWstETH(
+    function swapBuyEth(
         uint256 minReceivedCollateral,
         bytes memory spotTradeParam
     ) public onlyOwner {
@@ -177,7 +187,7 @@ contract FundingRateArbitrage is Ownable {
         _depositToJUSDBank(IERC20(collateral).balanceOf(address(this)));
     }
 
-    function swapSellWstEth(
+    function swapSellEth(
         uint256 minReceivedUSDC,
         uint256 collateralAmount,
         bytes memory spotTradeParam
@@ -205,11 +215,11 @@ contract FundingRateArbitrage is Ownable {
 
     function _swap(
         bytes memory param,
-        bool isBuyingWsteth
+        bool isBuyingEth
     ) private returns (uint256 receivedAmount) {
         address fromToken;
         address toToken;
-        if (isBuyingWsteth) {
+        if (isBuyingEth) {
             fromToken = usdc;
             toToken = collateral;
         } else {
@@ -292,6 +302,13 @@ contract FundingRateArbitrage is Ownable {
         jusdOutside[msg.sender] += amount;
         totalEarnUSDCBalance += earnUSDCAmount;
         require(getNetValue() <= maxNetValue, "net value exceed limitation");
+        uint256 quota = maxUsdcQuota[msg.sender] == 0
+            ? defaultUsdcQuota
+            : maxUsdcQuota[msg.sender];
+        require(
+            earnUSDCBalance[msg.sender].decimalMul(getIndex()) <= quota,
+            "usdc amount bigger than quota"
+        );
         emit DepositToHedging(msg.sender, amount, feeAmount, earnUSDCAmount);
     }
 

@@ -71,16 +71,15 @@ contract HelperContract {
     struct HedgingState {
         uint256 USDCWalletBalance;
         int256 USDCPerpBalance;
-        uint256 wstETHWalletBalance;
-        uint256 wstETHBankAmount;
+        uint256 ethWalletBalance;
+        uint256 ethBankAmount;
         uint256 JUSDBorrowAmount;
         uint256 JUSDPerpBalance;
         int256 PositionPerpAmount;
         int256 PositionCreditAmount;
         uint256 earnUSDCRate;
-        uint256 wstETHToETH;
-        uint256 wstETHToUSDC;
-        uint256 wstETHDecimal;
+        uint256 ethToUSDC;
+        uint256 ethDecimal;
         uint256 earnUSDCTotalSupply;
     }
 
@@ -145,14 +144,14 @@ contract HelperContract {
             address(fundingRateArbitrage)
         );
         hedgingState.USDCWalletBalance = USDCWalletBalance;
-        uint256 wstETHWalletBalance = IERC20(fundingRateArbitrage.collateral())
+        uint256 ethWalletBalance = IERC20(fundingRateArbitrage.collateral())
             .balanceOf(address(fundingRateArbitrage));
-        hedgingState.wstETHWalletBalance = wstETHWalletBalance;
-        uint256 wstETHBankAmount = jusdBank.getDepositBalance(
+        hedgingState.ethWalletBalance = ethWalletBalance;
+        uint256 ethBankAmount = jusdBank.getDepositBalance(
             fundingRateArbitrage.collateral(),
             address(fundingRateArbitrage)
         );
-        hedgingState.wstETHBankAmount = wstETHBankAmount;
+        hedgingState.ethBankAmount = ethBankAmount;
         uint256 JUSDBorrowAmount = jusdBank.getBorrowBalance(
             address(fundingRateArbitrage)
         );
@@ -164,14 +163,12 @@ contract HelperContract {
         hedgingState.PositionCreditAmount = PositionCreditAmount;
         uint256 index = fundingRateArbitrage.getIndex();
         hedgingState.earnUSDCRate = index;
-        uint256 wstETHToUSDC = IJUSDBank(jusdBank).getCollateralPrice(
+        uint256 ethToUSDC = IJUSDBank(jusdBank).getCollateralPrice(
             fundingRateArbitrage.collateral()
         );
-        uint256 ETHToUSDC = IDealer(jojoDealer).getMarkPrice(perpetual);
-        hedgingState.wstETHToUSDC = wstETHToUSDC;
-        hedgingState.wstETHDecimal = ERC20(fundingRateArbitrage.collateral())
+        hedgingState.ethDecimal = ERC20(fundingRateArbitrage.collateral())
             .decimals();
-        hedgingState.wstETHToETH = (wstETHToUSDC * 1e18) / ETHToUSDC;
+        hedgingState.ethToUSDC = ethToUSDC;
         hedgingState.earnUSDCTotalSupply = fundingRateArbitrage
             .totalEarnUSDCBalance();
     }

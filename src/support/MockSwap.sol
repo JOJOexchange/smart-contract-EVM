@@ -17,24 +17,24 @@ contract MockSwap {
 
     using SafeERC20 for IERC20;
     address USDC;
-    address wstETH;
+    address eth;
     mapping(address => address) tokenPrice;
 
-    constructor(address _USDC, address _wstETH, address _priceOracle) {
+    constructor(address _USDC, address _eth, address _priceOracle) {
         USDC = _USDC;
-        wstETH = _wstETH;
-        tokenPrice[_wstETH] = _priceOracle;
+        eth = _eth;
+        tokenPrice[_eth] = _priceOracle;
     }
 
     function addTokenPrice(address token, address price) public {
         tokenPrice[token] = price;
     }
 
-    function swapToWstETH(uint256 amount, address token) external {
+    function swapToEth(uint256 amount, address token) external {
         IERC20(USDC).safeTransferFrom(msg.sender, address(this), amount);
         uint256 value = amount * 1e18 /
             IPriceSource(tokenPrice[token]).getAssetPrice();
-        IERC20(wstETH).safeTransfer(msg.sender, value);
+        IERC20(eth).safeTransfer(msg.sender, value);
     }
 
     function swapToUSDC(uint256 amount, address token) external {
@@ -43,11 +43,11 @@ contract MockSwap {
         IERC20(USDC).safeTransfer(msg.sender, value);
     }
 
-    function getSwapToWstETHData(
+    function getSwapToEthData(
         uint256 amount,
         address token
     ) external pure returns (bytes memory) {
-        return abi.encodeWithSignature("swapToWstETH(uint256,address)", amount, token);
+        return abi.encodeWithSignature("swapToEth(uint256,address)", amount, token);
     }
 
     function getSwapToUSDCData(

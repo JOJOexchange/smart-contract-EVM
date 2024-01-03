@@ -32,6 +32,7 @@ interface IJUSDBank {
     /// @param collateral: withdraw collateral type
     /// @param amount: withdraw amount
     /// @param to: is the address receiving asset
+    /// @param isInternal: if deposit to jojo or withdraw to wallet
     function withdraw(
         address collateral,
         uint256 amount,
@@ -44,15 +45,18 @@ interface IJUSDBank {
     /// @param to: repay to whom
     function repay(uint256 amount, address to) external returns (uint256);
 
-    /// @notice liquidate function: The price of user mortgage assets fluctuates.
-    /// If the value of the mortgage collaterals cannot handle the value of JUSD borrowed, the collaterals may be liquidated
+    /// @notice If the value of the mortgage collaterals cannot cover the value of JUSD borrowed, 
+    /// the collaterals may be liquidated.
     /// Liquidation is divided into three steps:
     /// 1. determine whether liquidatedTrader is safe
     /// 2. calculate the collateral amount actually liquidated
     /// 3. transfer the insurance fee
     /// @param liquidatedTrader: is the trader to be liquidated
     /// @param liquidationCollateral: is the liquidated collateral type
+    /// @param liquidator: is who liquidate others
     /// @param liquidationAmount: is the collateral amount liqidator want to take
+    /// @param param: is the customized param passed by users. During the code of liquidation, system will 
+    /// call flashloan function so that users can pass any param they want to do more operations.
     /// @param expectPrice: expect liquidate amount
     function liquidate(
         address liquidatedTrader,
@@ -72,7 +76,7 @@ interface IJUSDBank {
     /// @param collateral collateral type
     /// @param amount withdraw amount
     /// @param to: if repay JUSD, repay to whom
-    /// @param param user input
+    /// @param param users input
     function flashLoan(
         address receiver,
         address collateral,

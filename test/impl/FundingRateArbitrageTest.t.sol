@@ -144,7 +144,7 @@ contract FundingRateArbitrageTest is Test {
         jusd.mint(address(fundingRateArbitrage), 10010e6);
         fundingRateArbitrage.setOperator(sender1, true);
         fundingRateArbitrage.setMaxNetValue(10000e6);
-        fundingRateArbitrage.setDefalutQuota(10000e6);
+        fundingRateArbitrage.setDefaultQuota(10000e6);
         vm.stopPrank();
     }
 

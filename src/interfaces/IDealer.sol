@@ -104,6 +104,7 @@ interface IDealer {
     /// liquidated trader.
     /// @dev Only perpetual contract can call this function.
     /// liqtor is short for liquidator, liqed is short for liquidated trader.
+    /// @param executor is the one who will excute liquidation.
     /// @param liquidator is the one who will take over positions.
     /// @param liquidatedTrader is the one who is being liquidated.
     /// @param requestPaperAmount is the size that the liquidator wants to take.
@@ -221,6 +222,7 @@ interface IDealer {
         address orderSender
     ) external view returns (bool);
 
+    /// @notice check if fastWithdrawl is valid
     function isFastWithdrawalValid(
         address fastWithdrawOperator
     ) external view returns (bool);
@@ -231,6 +233,7 @@ interface IDealer {
         address operator
     ) external view returns (bool);
 
+    /// @notice check if spender can operate from
     function isCreditAllowed(
         address from,
         address spender

@@ -81,6 +81,7 @@ contract HelperContract {
         uint256 ethToUSDC;
         uint256 ethDecimal;
         uint256 earnUSDCTotalSupply;
+        int256 perpNetValue;
     }
 
     struct AccountHedgingState {
@@ -171,6 +172,8 @@ contract HelperContract {
         hedgingState.ethToUSDC = ethToUSDC;
         hedgingState.earnUSDCTotalSupply = fundingRateArbitrage
             .totalEarnUSDCBalance();
+        (int256 perpNetValue, , ,) = jojoDealer.getTraderRisk(address(fundingRateArbitrage));
+        hedgingState.perpNetValue = perpNetValue;
     }
 
     function getAccountsStates(

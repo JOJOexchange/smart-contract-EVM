@@ -6,6 +6,9 @@
 pragma solidity ^0.8.9;
 
 interface IChainlink {
+
+    /// @notice get Chainlink price
+    /// @param answer is the price returned by Chainlink
     function latestRoundData()
         external
         view

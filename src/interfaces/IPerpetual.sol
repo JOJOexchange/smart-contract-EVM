@@ -30,6 +30,7 @@ interface IPerpetual {
     /// Your liquidation will be limited to the position size. For example, if the
     /// position remains 10ETH and you're requesting a 15ETH liquidation. Only 10ETH
     /// will be executed. And the other 5ETH request will be cancelled.
+    /// @param  liquidator is the trader who liquidate others.
     /// @param  liquidatedTrader is the trader you want to liquidate.
     /// @param  requestPaper is the size of position you want to take .
     /// requestPaper is positive when you want to liquidate a long position, negative when short.

@@ -15,3 +15,6 @@ broadcast/
 # VIM
 *.swo
 *.swp
+out/
+report/
+bin/

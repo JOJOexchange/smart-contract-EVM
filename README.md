@@ -25,7 +25,7 @@ There are only two core smart contracts: [Perpetual.sol](./src/Perpetual.sol) an
 
 #### Perpetual.sol: The Balance Sheet
 
-##### Trader Balances
+**Trader Balances**
 
 For traders, their balance consists of paper (asset quantity) and credit. The combination of these two values forms their balance. Both paper and credit can be negative.
 
@@ -49,7 +49,7 @@ The essence of the perpetual contract calculation is the state transfer of balan
 2. Trading
 3. Liquidation
 
-##### Funding Rate
+**Funding Rate**
 The funding rate ensures the perpetual contract price aligns with the spot price. Two scenarios guide its adjustments:
 
 - When the contract price exceeds the spot price, the long side is penalized, and the short side is rewarded. This prompts a decrease in the contract price until it matches the spot price.
@@ -69,12 +69,12 @@ function balanceOf(address trader)
         returns (int256 paper, int256 credit);
 ```
 
-##### Trading
+**Trading**
 A relayer acts as the order sender, gathering orders from both makers and takers, matching them, and then submitting them to the perpetual contract using the `trade` function. Only verified addresses are permitted to be order senders.
 
 The validation and computation processes are handled within the `approveTrade` in [JOJOExternal.sol](./src/JOJOExternal.sol). Given the complexity of this matter, we won't delve into further details.
 
-##### Liquidation
+**Liquidation**
 Liquidation  is a mandatory trading behavior. You can trigger a liquidation by calling the function below:
 
 ```javascript
@@ -97,7 +97,7 @@ Features:
 - Cross model for shared margin across positions.
 - Fixed discount liquidation.
 
-##### Trading
+**Trading**
 The JOJODealer leverages an order book model for liquidity provision, enabling off-chain order placement, cancellation, and matching, with final settlements conducted on-chain.
 
 Users generate signed orders and transmit them to JOJO's server. Upon order matching, JOJO's server promptly submits these orders to the blockchain and instantly notifies users via the front end.
@@ -108,7 +108,7 @@ Moreover, anyone can match orders, and the individual who submits the matching r
 
 Refer to `approveTrade` in [JOJOExternal.sol](./src/JOJOExternal.sol). for implementation details.
 
-##### Cross Mode
+**Cross Mode**
 
 JOJODealer only offers a cross-position mode, where positions under different markets share margin. Positions under either market will affect the account's net value and global exposure.
 
@@ -116,16 +116,16 @@ See `getTraderRisk` in [JOJOView.sol](./src/JOJOView.sol).
 
 If you wish to use the isolated mode, switch wallets or create sub-accounts.
 
-##### Fixed Discount Liquidation
+**Fixed Discount Liquidation**
 
 JOJODealer will sell their positions at a fixed discount for accounts with low margin rates. Anyone can take as many positions as they want if the position is cleared or the account margin rate is healthy.
 
 See `getLiquidationCost` in [JOJOView.sol](./src/JOJOView.sol).
-##### Deposit Margin
+**Deposit Margin**
 
 JOJODealer only accepts USDC and JUSD as margin. Deposits and withdrawals do not require permission from the JOJO server.
 
-##### Pending Withdraw
+**Pending Withdraw**
 
 To save time for the matching engine to cancel orders when users withdraw, user withdrawals need to be submitted in two steps, with a waiting period in between (no more than 1 minute).
 
@@ -153,13 +153,13 @@ Features:
 - Manage to loan JUSD
 - Flash loans for immediate transactions.
 
-##### Loan
+**Loan**
 Within the lending system, users can deposit approved collateral using the deposit function and subsequently borrow JUSD via the borrow function. Following their trading activities, users can repay the borrowed JUSD by invoking the repay function, facilitating the retrieval of their collateral through the withdraw function.
 
 In cases where the value of borrowed JUSD exceeds the total value of deposited collaterals, a trader becomes susceptible to liquidation. The initial liquidation formula is determined by the equation:
 
 `JUSDBorrow > sum(deposit amount * price * liquidationMortgageRate)`
-##### Flashloan
+**Flashloan**
 Flash Loans in JOJO enable the withdrawal of an asset within a single transaction, provided the account remains secure until the transaction ends. Users aren't required to repay JUSD before initiating the transaction.
 
 Two lending system examples include:

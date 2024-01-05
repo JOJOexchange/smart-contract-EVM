@@ -1,23 +1,17 @@
-# JOJO
+# JOJO: Decentralized Perpetual Contract Exchange
 
-JOJO is a decentralized perpetual contract exchange based on an off-chain matching system that can be divided into three parts: trading part, collateral lending part, and arbitrage part. 
+JOJO is a decentralized perpetual contract exchange based on an off-chain matching system that can be divided into three key components: trading, collateral lending, and funding rate arbitrage.
 
-# What is a perpetual contract
+## What is a Perpetual Contract?
 
-A perpetual contract is simply a group of people who buy and sell virtual notes (also known as financial derivatives). In principle, the price of a note can be arbitrary. However, through the mechanism of *funding rate*, it can be anchored to an external number, such as the "price of Bitcoin." 
+A perpetual contract is a financial derivative where participants buy and sell virtual notes, typically anchored to an external reference like the "price of Bitcoin." JOJO utilizes a funding rate mechanism to align the contract price with the spot price, offering traders increased liquidity and leverage compared to the spot market.
 
-In this way, trading such notes is similar to trading bitcoin spot. Since the liquidity of such a note is independent of spot liquidity, it can achieve liquidity and leverage multiples that far exceed those of the spot market. This feature has made perpetual contracts the most popular derivative in the cryptocurrency market.
+## JOJO Code Overview
 
+The JOJO system comprises three main parts: Trading, Lending, and Funding Rate Arbitrage.
 
-# JOJO code overview
+### Trading System
 
-We will walk you through a comprehensive understanding of the whole JOJO system. 
-
-We expect this reading to explain only some of the contract systems. We want to show you where to find the corresponding code for each function. There are enough comments in the code to explain all the details.
-
-There are three parts in the JOJO system; let us discuss them separately.
-
-# Trading system
 There are only two core smart contracts: [Perpetual.sol](./src/Perpetual.sol) and [JOJODealer.sol](./src/JOJODealer.sol).
 
 - `Perpetual.sol` is the core balance sheet of a certain perpetual contract market.
@@ -28,49 +22,46 @@ There are only two core smart contracts: [Perpetual.sol](./src/Perpetual.sol) an
 - `JOJOExternal.sol` contains all "external" functions of `JOJODealer.sol`.
 - [JOJOStorage.sol](./src/JOJOStorage.sol) is where all data stored.
 
-## Perpetual.sol: The balance sheet
 
-From now on, we are going to design a perpetual contract computing system on the blockchain, which is referred to as [Perpetual.sol](./src/Perpetual.sol)
+#### Perpetual.sol: The Balance Sheet
 
-For a trader, we only need to maintain the number of *paper* and *credit* s/he holds. The number of *paper* and *credits* can be negative. We call the combination of these two numbers "balance."
+##### Trader Balances
 
-If a trader long 1BTC at 30,000USD, then his balance is
+For traders, their balance consists of paper (asset quantity) and credit. The combination of these two values forms their balance. Both paper and credit can be negative.
+
+Example:
+
+- Long 1BTC at $30,000:
 
 ```javascript
 paper = 1
 credit = -30000
 ```
-
-If a trader shorts 1BTC at 30,000USD, then his balance is
+- Short 1BTC at $30,000:
 
 ```javascript
 paper = -1
 credit = 30000
 ```
-
 The essence of the perpetual contract calculation is the state transfer of balance. Luckily, there are only three types of operations that affect balance.
 
 1. Funding rate
 2. Trading
 3. Liquidation
 
-### Funding rate
+##### Funding Rate
+The funding rate ensures the perpetual contract price aligns with the spot price. Two scenarios guide its adjustments:
 
-The Dealer is responsible for ensuring the perpetual contract price is anchored to the spot price. Using the funding rate is one of the most common ways to achieve that.
+- When the contract price exceeds the spot price, the long side is penalized, and the short side is rewarded. This prompts a decrease in the contract price until it matches the spot price.
+- Conversely, if the contract price is lower than the spot price, the short side is penalized, and the long side is rewarded, increasing the contract price to match the spot price.
 
-- If the contract price is higher than the spot price, the Dealer should punish the long side and reward the short side. So, the contract price decreases until it equals the spot price.
-- If the contract price is lower than the spot price, the Dealer should punish the short side and reward the long side. So, the contract price increases until it equals the spot price.
+To manage credit adjustments based on paper, a value named "reducedCredit" is recorded. The actual credit is calculated using the formula: 
 
-The funding rate adjusts *credit* according to the *paper* amount. It is impossible to record the number of credits on the chain. Otherwise, modifying thousands of credit values would be too costly each time the funding rate is updated. So we record a value called "reducedCredit" on the chain, and the actual credit is calculated using the following formula:
+`credit = (paper * fundingRate) + reducedCredit` 
 
-`credit = (paper * fundingRate) + reducedCredit`
+This mechanism ensures each trader's credit is automatically adjusted according to changes in the fundingRate, which can be positive or negative. An increase in the fundingRate facilitates the movement of funds from short to long positions, whereas a decrease prompts a shift from long to short positions. These fundingRate updates, managed by the JOJO team, take place every 8 hours.
 
-In this way, each trader's credit is automatically updated each time *fundingRate* is updated. *fundingRate* can be positive or negative. When *fundingRate* increases, the Dealer could transfer funds from short to long positions. When *fundingRate* decreases, the Dealer could move from long to short positions.
-
-JOJO team will update the *fundingRate* every 8 hours.
-
-You can call the function below to check your paper and credit balances:
-
+To check balances, utilize the function:
 ```javascript
 function balanceOf(address trader)
         external
@@ -78,17 +69,13 @@ function balanceOf(address trader)
         returns (int256 paper, int256 credit);
 ```
 
-However, we must point out that we use the cross model, so the balance under a single market does not reflect your risk level. Please refer to `getTraderRisk` in [JOJOView.sol](./src/JOJOView.sol).
+##### Trading
+A relayer acts as the order sender, gathering orders from both makers and takers, matching them, and then submitting them to the perpetual contract using the `trade` function. Only verified addresses are permitted to be order senders.
 
-### Trading
+The validation and computation processes are handled within the `approveTrade` in [JOJOExternal.sol](./src/JOJOExternal.sol). Given the complexity of this matter, we won't delve into further details.
 
-An order sender is a relayer. He collects orders from makers and takers, matches, and submits to the perpetual contract via function `trade.`  Only validated addresses can be order senders.
-
-We leave all the validation and calculations in `approveTrade` [JOJOExternal.sol](./src/JOJOExternal.sol). This is a complex issue, so we will not dive deeper. 
-
-### Liquidation
-
-Liquidation is a mandatory trading behavior. You can trigger a liquidation by calling the function below:
+##### Liquidation
+Liquidation  is a mandatory trading behavior. You can trigger a liquidation by calling the function below:
 
 ```javascript
 function liquidate(
@@ -99,42 +86,29 @@ function liquidate(
 ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange)
 ```
 
-Like trading, we leave it to [JOJOExternal.sol](./contracts/impl/JOJOExternal.sol).
+Like trading, we leave it to [JOJOExternal.sol](./src/JOJOExternal.sol).
 
-So far, we have successfully defined the core Perpetual contract. Next, we will solve the outstanding issues one by one.
+#### JOJODealer.sol: Dealer of the Table
 
-## JOJODealer.sol: Dealer of the table
+Responsible for maintaining funding rates, executing trades, and managing liquidations.
 
-Just as a dealer is at the table, there is a moderator in the perpetual contract game. The Dealer owns the Perpetual; it is responsible for solving all the problems that the Perpetual does not know how to solve. A dealer can have more than one Perpetual at a time.
+Features:
+- Off-chain matching, on-chain settlement.
+- Cross model for shared margin across positions.
+- Fixed discount liquidation.
 
-The Dealer has three primary responsibilities:
+##### Trading
+The JOJODealer leverages an order book model for liquidity provision, enabling off-chain order placement, cancellation, and matching, with final settlements conducted on-chain.
 
-1. Maintain funding rate
-2. Trade
-3. Execute liquidation
+Users generate signed orders and transmit them to JOJO's server. Upon order matching, JOJO's server promptly submits these orders to the blockchain and instantly notifies users via the front end.
 
-The Dealer can be designed in various ways, and JOJODealerV1.0 is just one of the solutions proposed by the JOJO team. For example, you can develop an AMM version of Dealer.
+The only centralized aspect is the JOJO server's deletion of order information and signatures upon user order cancellations. However, users can mitigate risk by opting for orders with very short expiration times, reducing reliance on trusting the JOJO server.
 
-JOJODealer has four main features below: 
+Moreover, anyone can match orders, and the individual who submits the matching result to the blockchain earns trading fees.
 
-- Off-chain matching, on-chain settlement
-- Cross model
-- Fixed discount liquidation
-- Virtual credit
+Refer to `approveTrade` in [JOJOExternal.sol](./src/JOJOExternal.sol). for implementation details.
 
-### Trading: Off-chain matching, on-chain settlement
-
-JOJODealer uses the order book model to provide liquidity. Orders are placed, canceled, and matched off-chain, while the final settlement occurs on-chain. This architecture is similar to 0xProtocol, which allows for an excellent trading experience while keeping the system decentralized enough.
-
-It is implemented by users signing orders and sending them to JOJO's server. Whenever orders are matched, JOJO's server submits these orders to the blockchain and immediately notifies the user on the front end.
-
-The only centralized thing is that the JOJO server will delete order info and signatures when a user cancels an order. However, users may choose to place orders with very short expiration times to de-risk the need for trusting the JOJO server.
-
-In addition, anyone can match orders, and whoever submits the matching result to the blockchain receives trading fees.
-
-See `approveTrade` in [JOJOExternal.sol](./src/JOJOExternal.sol).
-
-### Cross mode
+##### Cross Mode
 
 JOJODealer only offers a cross-position mode, where positions under different markets share margin. Positions under either market will affect the account's net value and global exposure.
 
@@ -142,28 +116,22 @@ See `getTraderRisk` in [JOJOView.sol](./src/JOJOView.sol).
 
 If you wish to use the isolated mode, switch wallets or create sub-accounts.
 
-### Fixed discount liquidation
+##### Fixed Discount Liquidation
 
 JOJODealer will sell their positions at a fixed discount for accounts with low margin rates. Anyone can take as many positions as they want if the position is cleared or the account margin rate is healthy.
 
 See `getLiquidationCost` in [JOJOView.sol](./src/JOJOView.sol).
-
-### Deposit margin
+##### Deposit Margin
 
 JOJODealer only accepts USDC and JUSD as margin. Deposits and withdrawals do not require permission from the JOJO server.
 
-### Pending withdraw
+##### Pending Withdraw
 
 To save time for the matching engine to cancel orders when users withdraw, user withdrawals need to be submitted in two steps, with a waiting period in between (no more than 1 minute).
 
-### Virtual credit
 
-JOJO can grant credit to some accounts to temporarily obtain more margin. This design has two primary purposes:
+### Lending System
 
-- Supporting multi-margin features in the future
-- Matching funds to market makers in exchange for better liquidity
-
-# Lending system
 There are only two core smart contracts: [JUSDBank.sol](./src/JUSDBank.sol) and [JUSDExchange.sol](./src/JUSDExchange.sol)
 
 - `JUSDBank.sol` is the core accounting sheet of the whole collateral lending system and contains all "external" functions.
@@ -173,52 +141,46 @@ There are only two core smart contracts: [JUSDBank.sol](./src/JUSDBank.sol) and 
 - `JUSDMulticall.sol` contains all "multicall" functions of `JUSDBank.sol`.
 - [JUSDBankStorage.sol](./src/JUSDBankStorage.sol) is where all data stored.
 
-## JUSD
+#### JUSD
 
 JUSD is a stablecoin developed by the JOJO system to support multi-collateralization. JUSD works like DAI, and users can mint JUSD using other ERC20 tokens as collateral. Then, JUSD can deposit to the trading system as a position margin. The `secondaryAsset` in the trading system is referred to as JUSD.
 
-### Loan
+#### JUSDBank.sol: Core Accounting Sheet
 
-Users can deposit registered collateral to the lending system in the `deposit` function and then borrow JUSD through the `borrow` function. After trading, users can repay JUSD to the lending system by calling the `repay` function and getting the collateral back in the `withdraw` function. When the value of borrowed JUSD is more than that of deposited collaterals, the trader will be liquidated. The start liquidation formula is `JUSDBorrow > sum(deposit amount * price * liquidationMortgageRate).`
+Manages the collateral lending system, allowing users to borrow JUSD using deposited collateral.
 
-### Flashloan
+Features:
+- Manage to loan JUSD
+- Flash loans for immediate transactions.
 
-Flash Loans in JOJO are special transactions that allow the withdrawal of an asset as long as the account is safe before the end of the transaction. These transactions do not require a user to repay JUSD before engaging in the transaction.
+##### Loan
+Within the lending system, users can deposit approved collateral using the deposit function and subsequently borrow JUSD via the borrow function. Following their trading activities, users can repay the borrowed JUSD by invoking the repay function, facilitating the retrieval of their collateral through the withdraw function.
 
-There are two examples of lending systems: [FlashLoanRepay.sol](./src/FlashLoanRepay.sol) and [FlashLoanLiquidate](./src/FlashLoanLiquidate.sol).
-`FlashLoanRepay` allows users to repay JUSD using the collateral deposited in the lending system.
-`FlashLoanLiquidate`: The primary implementation process involves selling the collateral obtained from liquidation and dividing the resulting USDC into three parts: one for repaying JUSD, another for paying insurance, and if the liquidated collateral still has a remainder, transferring it to the liquidated party in the form of USDC.
+In cases where the value of borrowed JUSD exceeds the total value of deposited collaterals, a trader becomes susceptible to liquidation. The initial liquidation formula is determined by the equation:
 
-# Funding rate arbitrage
+`JUSDBorrow > sum(deposit amount * price * liquidationMortgageRate)`
+##### Flashloan
+Flash Loans in JOJO enable the withdrawal of an asset within a single transaction, provided the account remains secure until the transaction ends. Users aren't required to repay JUSD before initiating the transaction.
 
-The core contract [FundingRateArbitrage](./src/FundingRateArbitrage.sol) involves offsetting trades in both the spot and perpetual markets to capture the funding rate income in Perpetual trading. The liquid provider can deposit usdc to this pool and accumulate interest. 
+Two lending system examples include:
 
-## LP functions
+- FlashLoanRepay.sol: Enables JUSD repayment using deposited collateral.
+- FlashLoanLiquidate.sol: Involves liquidating collateral, distributing resulting USDC into three parts: JUSD repayment, insurance payment, and, if there's surplus, transferring it as USDC to the liquidated party.
 
-LP can deposit usdc to the arbitrage pool in the `deposit` function to earn interest. Users can request a withdrawal if they want to withdraw the interest and capital. Our system will execute the request in 24 hours by calling `permitWithdrawRequests.`
+### Funding Rate Arbitrage
+The core contract [FundingRateArbitrage](./src/FundingRateArbitrage.sol) involves offsetting trades in both spot and perpetual markets to capture funding rate income in perpetual trading.
 
-## Arbitrage process
+Key functions:
+- LPs can deposit USDC into the arbitrage pool via the deposit function, earning interest. Withdrawal requests for both interest and capital can be made by users, executed within 24 hours through permitWithdrawRequests.
+- Upon users depositing USDC into the arbitrage pool, the admin utilizes the USDC to purchase ETH and deposits it into the JUSDBank system via the swapBuyEth function. Subsequently, the admin borrows JUSD using borrow and deposits it into the trading system. Finally, the admin initiates short interest in the trading system to accumulate funding fees.
 
-After users deposit USDC to the arbitrage pool, the admin will use the USDC to buy ETH and deposit it to the JUSDBank system (through the `swapBuyEth` function). Then, the admin will call `borrow` to borrow JUSD and deposit it into the trading system. At last, the admin will open short interest in the trading system to earn funding fees.
+### Other Components
 
-# Other questions
+- **Index price & Mark price:** Obtained from third-party price oracles.
+- **Subaccount:** Implemented for separating positions and risks, allowing delegation of trading access.
+- **Insurance:** Charged for liquidations, covering bad debts and utilizing insurance funds.
 
-## Index price & Mark price
-
-3rd parties' price oracle provides index and mark prices. 
-
-## Subaccount
-
-This feature is implemented by peripheral smart contracts [subaccount](./contracts/subaccount/).
-Subaccounts can help you separate positions and risks. You can also give trading access to others and let a professional team trade for you.
-
-## Insurance
-
-For each liquidation, an insurance fee is charged. When there is a bad debt, it will be covered by insurance funds. 
-If the insurance account is insufficient to cover the bad debt, the insurance fund will stay negative until it is paid off.
-
-
-# Start up
+## Getting Started
 
 ### Install
 

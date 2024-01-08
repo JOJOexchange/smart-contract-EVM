@@ -7,7 +7,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IJUSDBank.sol";
-import "./interfaces/IFlashloanReceive.sol";
+import "./interfaces/IFlashLoanReceive.sol";
 import "./interfaces/IDealer.sol";
 import "./interfaces/internal/IPriceSource.sol";
 import "./JUSDOperation.sol";
@@ -261,7 +261,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
     ) external nonFlashLoanReentrant {
         Types.UserInfo storage user = userInfo[msg.sender];
         _withdraw(amount, collateral, receiver, msg.sender, false);
-        IFlashloanReceive(receiver).JOJOFlashLoan(
+        IFlashLoanReceive(receiver).JOJOFlashLoan(
             collateral,
             amount,
             to,
@@ -442,7 +442,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
             liquidateData.actualLiquidated = liquidateAmount;
         } else {
             /*
-                actualJUSD 
+                actualJUSD
                     = actualCollateral * priceOff
                     = JUSDBorrowed * priceOff / priceOff * (1-insuranceFeeRate)
                     = JUSDBorrowed / (1-insuranceFeeRate)
@@ -510,7 +510,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
             false
         );
         param = abi.encode(liquidateData, param);
-        IFlashloanReceive(flashloanAddress).JOJOFlashLoan(
+        IFlashLoanReceive(flashloanAddress).JOJOFlashLoan(
             collateral,
             flashloanAmount,
             liquidated,

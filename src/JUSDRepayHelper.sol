@@ -7,12 +7,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IJUSDExchange.sol";
 import "./JUSDBank.sol";
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 contract JUSDRepayHelper is Ownable {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
-    
+
     address public immutable JusdBank;
     address public immutable JUSD;
     address public immutable USDC;

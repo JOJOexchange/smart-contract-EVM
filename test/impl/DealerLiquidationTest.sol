@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
@@ -281,7 +281,6 @@ contract LiquidationTest is Checkers {
         assertEq(creditLiquidator, 393900000);
         assertEq(paperLiquidated, -99e16);
         assertEq(creditLiquidated, 29599161e3);
-
     }
 
     function testExecuteLiquidationBadDebt() public {

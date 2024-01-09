@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 /// @notice JUSDExchange is an exchange system that allow users to exchange USDC to JUSD in 1:1
 interface IJUSDExchange {

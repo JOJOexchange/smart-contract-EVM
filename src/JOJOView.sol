@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -104,7 +104,6 @@ abstract contract JOJOView is JOJOStorage, IDealer {
     function isSafe(address trader) external view returns (bool safe) {
         return Liquidation._isMMSafe(state, trader);
     }
-
 
     function isIMSafe(address trader) external view returns (bool safe) {
         return Liquidation._isIMSafe(state, trader);

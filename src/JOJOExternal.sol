@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -177,7 +177,10 @@ abstract contract JOJOExternal is JOJOStorage, IDealer {
             );
             orderHashList[i] = orderHash;
             // validate signature
-            (address recoverSigner, ) = ECDSA.tryRecover(orderHash, signatureList[i]);
+            (address recoverSigner, ) = ECDSA.tryRecover(
+                orderHash,
+                signatureList[i]
+            );
             if (
                 recoverSigner != order.signer &&
                 !state.operatorRegistry[order.signer][recoverSigner]

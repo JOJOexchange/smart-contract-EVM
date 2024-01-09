@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -195,7 +195,7 @@ contract LiquidateCollateralInsuranceNotEnough is Ownable {
 contract LiquidateCollateralLiquidatedNotEnough is Ownable {
     // add this to be excluded from coverage report
     function test() public {}
-    
+
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 

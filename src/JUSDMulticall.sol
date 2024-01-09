@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "./libraries/SignedDecimalMath.sol";
 import "./JUSDBank.sol";

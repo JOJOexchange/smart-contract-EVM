@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "forge-std/Test.sol";
@@ -467,10 +467,7 @@ contract FundingRateArbitrageTest is Test {
             -1010e6
         );
 
-        fundingRateArbitrage.swapBuyEth(
-            minReceivedCollateral,
-            spotTradeParam
-        );
+        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
         fundingRateArbitrage.borrow(JUSDRebalanceAmount);
         vm.stopPrank();
 
@@ -519,15 +516,9 @@ contract FundingRateArbitrageTest is Test {
         );
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapBuyEth(
-            minReceivedCollateral,
-            spotTradeParam
-        );
+        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
         minReceivedCollateral = 2e18;
-        fundingRateArbitrage.swapBuyEth(
-            minReceivedCollateral,
-            spotTradeParam
-        );
+        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
 
         fundingRateArbitrage.borrow(JUSDRebalanceAmount);
         vm.stopPrank();

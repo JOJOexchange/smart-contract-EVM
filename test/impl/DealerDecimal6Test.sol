@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../init/TradingInit.sol";
 
@@ -39,10 +39,7 @@ contract Decimal6Test is TradingInit {
 
     function testLiqPrice() public {
         deposit();
-        jojoDealer.getLiquidationPrice(
-            traders[0],
-            address(perpList[0])
-        );
+        jojoDealer.getLiquidationPrice(traders[0], address(perpList[0]));
         trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
         uint256 liquidationPrice0 = jojoDealer.getLiquidationPrice(
             traders[0],
@@ -52,10 +49,7 @@ contract Decimal6Test is TradingInit {
             traders[1],
             address(perpList[0])
         );
-        jojoDealer.getLiquidationPrice(
-            traders[0],
-            address(perpList[1])
-        );
+        jojoDealer.getLiquidationPrice(traders[0], address(perpList[1]));
         assertEq(liquidationPrice0, 20634020618);
         assertEq(liquidationPrice1, 38832038834);
         priceSourceList[0].setMarkPrice(20000e6);

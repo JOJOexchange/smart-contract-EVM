@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../libraries/Types.sol";
 
@@ -45,7 +45,7 @@ interface IJUSDBank {
     /// @param to: repay to whom
     function repay(uint256 amount, address to) external returns (uint256);
 
-    /// @notice If the value of the mortgage collaterals cannot cover the value of JUSD borrowed, 
+    /// @notice If the value of the mortgage collaterals cannot cover the value of JUSD borrowed,
     /// the collaterals may be liquidated.
     /// Liquidation is divided into three steps:
     /// 1. determine whether liquidatedTrader is safe
@@ -55,7 +55,7 @@ interface IJUSDBank {
     /// @param liquidationCollateral: is the liquidated collateral type
     /// @param liquidator: is who liquidate others
     /// @param liquidationAmount: is the collateral amount liqidator want to take
-    /// @param param: is the customized param passed by users. During the code of liquidation, system will 
+    /// @param param: is the customized param passed by users. During the code of liquidation, system will
     /// call flashloan function so that users can pass any param they want to do more operations.
     /// @param expectPrice: expect liquidate amount
     function liquidate(

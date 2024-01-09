@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../../src/DepositStableCoinToDealer.sol";
 import "../init/JUSDBankInit.t.sol";
@@ -188,7 +188,7 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
         assertEq(eth.balanceOf(alice), 4e18);
     }
 
-// general Repay revert
+    // general Repay revert
     function testRepayCollateralWalletTooBig() public {
         eth.transfer(alice, 15e18);
         generalRepay.setWhiteListContract(address(swapContract), false);
@@ -249,7 +249,6 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
         assertEq(usdc.balanceOf(alice), 1002e6);
     }
 
-
     function testFlashloanRepay() public {
         eth.transfer(alice, 15e18);
         flashLoanRepay.setWhiteListContract(address(swapContract), false);
@@ -268,12 +267,24 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
             data
         );
         cheats.expectRevert("approve target is not in the whitelist");
-        jusdBank.flashLoan(address(flashLoanRepay), address(eth), 2e18, alice, param);
+        jusdBank.flashLoan(
+            address(flashLoanRepay),
+            address(eth),
+            2e18,
+            alice,
+            param
+        );
         vm.stopPrank();
         flashLoanRepay.setWhiteListContract(address(swapContract), true);
         vm.startPrank(alice);
         cheats.expectRevert("swap target is not in the whitelist");
-        jusdBank.flashLoan(address(flashLoanRepay), address(eth), 2e18, alice, param);
+        jusdBank.flashLoan(
+            address(flashLoanRepay),
+            address(eth),
+            2e18,
+            alice,
+            param
+        );
 
         bytes memory param2 = abi.encode(
             swapContract,
@@ -282,7 +293,13 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
             data
         );
         cheats.expectRevert("receive amount is too small");
-        jusdBank.flashLoan(address(flashLoanRepay), address(eth), 2e18, alice, param2);
+        jusdBank.flashLoan(
+            address(flashLoanRepay),
+            address(eth),
+            2e18,
+            alice,
+            param2
+        );
 
         bytes memory data2 = abi.encodeWithSignature("swap");
         bytes memory param3 = abi.encode(
@@ -292,14 +309,26 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
             data2
         );
         cheats.expectRevert();
-        jusdBank.flashLoan(address(flashLoanRepay), address(eth), 2e18, alice, param3);
+        jusdBank.flashLoan(
+            address(flashLoanRepay),
+            address(eth),
+            2e18,
+            alice,
+            param3
+        );
         bytes memory param4 = abi.encode(
             swapContract,
             swapContract,
             500e6,
             data
         );
-        jusdBank.flashLoan(address(flashLoanRepay), address(eth), 5e17, alice, param4);
+        jusdBank.flashLoan(
+            address(flashLoanRepay),
+            address(eth),
+            5e17,
+            alice,
+            param4
+        );
         assertEq(jusdBank.getBorrowBalance(alice), 500e6);
         bytes memory datan = swapContract.getSwapToUSDCData(1e18, address(eth));
         bytes memory paramn = abi.encode(
@@ -308,10 +337,15 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
             1000e6,
             datan
         );
-        jusdBank.flashLoan(address(flashLoanRepay), address(eth), 1e18, alice, paramn);
+        jusdBank.flashLoan(
+            address(flashLoanRepay),
+            address(eth),
+            1e18,
+            alice,
+            paramn
+        );
         assertEq(jusdBank.getBorrowBalance(alice), 0);
     }
-
 
     function testDepositToJOJODealerByDepositOtherToken() public {
         DepositStableCoinToDealer stableCoinDeposit = new DepositStableCoinToDealer(
@@ -330,37 +364,61 @@ contract JUSDBankRepayTest is JUSDBankInitTest {
             data
         );
         cheats.expectRevert("approve target is not in the whitelist");
-        stableCoinDeposit.depositStableCoin(address(eth), 2e18, alice, param, 2000e6);
+        stableCoinDeposit.depositStableCoin(
+            address(eth),
+            2e18,
+            alice,
+            param,
+            2000e6
+        );
         vm.stopPrank();
         stableCoinDeposit.setWhiteListContract(address(swapContract), true);
         vm.startPrank(alice);
         vm.deal(alice, 100e18);
         cheats.expectRevert("swap target is not in the whitelist");
-        stableCoinDeposit.depositStableCoin{value: 2e18}(address(eth), 2e18, alice, param, 2000e6);
-        cheats.expectRevert("swap target is not in the whitelist");
-        stableCoinDeposit.depositStableCoin(address(eth), 2e18, alice, param, 2000e6);
-        bytes memory param2 = abi.encode(
-            swapContract,
-            swapContract,
-            data
+        stableCoinDeposit.depositStableCoin{value: 2e18}(
+            address(eth),
+            2e18,
+            alice,
+            param,
+            2000e6
         );
+        cheats.expectRevert("swap target is not in the whitelist");
+        stableCoinDeposit.depositStableCoin(
+            address(eth),
+            2e18,
+            alice,
+            param,
+            2000e6
+        );
+        bytes memory param2 = abi.encode(swapContract, swapContract, data);
         cheats.expectRevert("receive amount is too small");
-        stableCoinDeposit.depositStableCoin(address(eth), 2e18, alice, param2, 3000e6);
+        stableCoinDeposit.depositStableCoin(
+            address(eth),
+            2e18,
+            alice,
+            param2,
+            3000e6
+        );
 
         bytes memory data2 = abi.encodeWithSignature("swap");
-        bytes memory param3 = abi.encode(
-            swapContract,
-            swapContract,
-            data2
-        );
+        bytes memory param3 = abi.encode(swapContract, swapContract, data2);
         cheats.expectRevert();
-        stableCoinDeposit.depositStableCoin(address(eth), 2e18, alice, param3, 2000e6);
-
-        bytes memory param4 = abi.encode(
-            swapContract,
-            swapContract,
-            data
+        stableCoinDeposit.depositStableCoin(
+            address(eth),
+            2e18,
+            alice,
+            param3,
+            2000e6
         );
-        stableCoinDeposit.depositStableCoin(address(eth), 2e18, alice, param4, 2000e6);
+
+        bytes memory param4 = abi.encode(swapContract, swapContract, data);
+        stableCoinDeposit.depositStableCoin(
+            address(eth),
+            2e18,
+            alice,
+            param4,
+            2000e6
+        );
     }
 }

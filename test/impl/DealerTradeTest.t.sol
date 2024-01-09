@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
@@ -37,7 +37,7 @@ import "../../src/subaccount/DegenSubaccountFactory.sol";
   - order over filled
   - be liquidated
 */
-// Check dealer's trade 
+// Check dealer's trade
 contract TradeTest is Checkers {
     function before() public {
         vm.startPrank(traders[0]);

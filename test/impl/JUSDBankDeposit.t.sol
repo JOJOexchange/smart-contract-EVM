@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../init/JUSDBankInit.t.sol";
 
@@ -88,7 +88,7 @@ contract JUSDBankTest is JUSDBankInitTest {
     }
 
     function testDepositTokenNotInReserve() public {
-        TestERC20 mk = new TestERC20("mk","mk",18);
+        TestERC20 mk = new TestERC20("mk", "mk", 18);
         mk.mint(alice, 10e18);
         vm.startPrank(alice);
         mk.approve(address(jusdBank), 10e18);

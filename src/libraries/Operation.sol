@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 import "../interfaces/IPerpetual.sol";
 import "../interfaces/internal/IDecimalERC20.sol";
 import "../libraries/Errors.sol";

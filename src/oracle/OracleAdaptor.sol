@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -90,7 +90,6 @@ contract OracleAdaptor is Ownable {
             uint256 diff = JOJOPrice >= chainLinkPrice
                 ? JOJOPrice - chainLinkPrice
                 : chainLinkPrice - JOJOPrice;
-            //Comparing diff and chainlink feed prices, who be the threshold, compare with whom; use chainlink for threshold
             require(
                 (diff * 1e18) / chainLinkPrice <= priceThreshold,
                 "deviation is too big"

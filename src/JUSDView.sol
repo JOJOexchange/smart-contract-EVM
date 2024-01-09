@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "./interfaces/IJUSDBank.sol";
 import "./interfaces/internal/IPriceSource.sol";
@@ -155,7 +155,6 @@ abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     }
 
     /// @notice Determine whether the account is safe by liquidationMortgageRate
-    // If the collateral delisted. When calculating the boundary conditions for collateral to be liquidated, treat the value of collateral as 0
     // liquidationMaxMintAmount = sum(depositAmount * price * liquidationMortgageRate)
     function _isStartLiquidation(
         Types.UserInfo storage liquidatedTraderInfo,

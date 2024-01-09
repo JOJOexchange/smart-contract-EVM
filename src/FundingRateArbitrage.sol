@@ -11,7 +11,7 @@ import "./interfaces/IPerpetual.sol";
 import "./interfaces/IJUSDBank.sol";
 import "./libraries/SignedDecimalMath.sol";
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 /// @notice This contract involves offsetting trades in both the spot and perpetual contract markets
 /// to capture the funding rate income in perpetual contract trading. Liquidy provider can deposit usdc
@@ -172,9 +172,12 @@ contract FundingRateArbitrage is Ownable {
     function setDefaultQuota(uint256 defaultQuota) public onlyOwner {
         defaultUsdcQuota = defaultQuota;
     }
- 
+
     /// @notice this function is to set the personal deposit quota
-    function setPersonalQuota(address to, uint256 personalQuota) public onlyOwner {
+    function setPersonalQuota(
+        address to,
+        uint256 personalQuota
+    ) public onlyOwner {
         maxUsdcQuota[to] = personalQuota;
     }
 
@@ -345,8 +348,8 @@ contract FundingRateArbitrage is Ownable {
 
     /// @notice this function is to submit a withdrawal which wiil permit by our system in 24 hours
     /// The main purpose of this function is to capture the interest and avoid the DOS attacks.
-    /// @dev users need to withdraw jusd from trading system firstly or by jusd, then transfer jusd to 
-    /// the pool and get usdc back 
+    /// @dev users need to withdraw jusd from trading system firstly or by jusd, then transfer jusd to
+    /// the pool and get usdc back
     /// @param repayJUSDAmount is the repat jusd amount
     function requestWithdraw(
         uint256 repayJUSDAmount

@@ -5,14 +5,14 @@
     DO NOT DEPLOY IN PRODUCTION ENV
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TestERC20 is ERC20 {
     // add this to be excluded from coverage report
     function test() public {}
-    
+
     uint8 _decimals_;
 
     constructor(
@@ -40,7 +40,5 @@ contract TestERC20 is ERC20 {
         }
     }
 
-    function deposit() public payable {
-        
-    }
+    function deposit() public payable {}
 }

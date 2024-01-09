@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../../src/DepositStableCoinToDealer.sol";
 import "../init/TradingInit.sol";
@@ -155,22 +155,8 @@ contract FundTest is Checkers {
         jojoDealer.approveFundOperator(traders[1], 100e6, 100e6);
         vm.stopPrank();
         vm.startPrank(traders[1]);
-        jojoDealer.fastWithdraw(
-            traders[0],
-            traders[0],
-            100e6,
-            0,
-            false,
-            ""
-        );
-        jojoDealer.fastWithdraw(
-            traders[0],
-            traders[0],
-            0,
-            100e6,
-            false,
-            ""
-        );
+        jojoDealer.fastWithdraw(traders[0], traders[0], 100e6, 0, false, "");
+        jojoDealer.fastWithdraw(traders[0], traders[0], 0, 100e6, false, "");
         cheats.expectRevert("Ownable: caller is not the owner");
         jojoDealer.fastWithdraw(
             traders[1],
@@ -178,7 +164,10 @@ contract FundTest is Checkers {
             100e6,
             100e6,
             false,
-            abi.encodeWithSignature("setSecondaryAsset(address)", address(jojoDealer))
+            abi.encodeWithSignature(
+                "setSecondaryAsset(address)",
+                address(jojoDealer)
+            )
         );
         cheats.expectRevert("target is not a contract");
         jojoDealer.fastWithdraw(
@@ -187,7 +176,10 @@ contract FundTest is Checkers {
             100e6,
             100e6,
             false,
-            abi.encodeWithSignature("setSecondaryAsset(address)", address(jojoDealer))
+            abi.encodeWithSignature(
+                "setSecondaryAsset(address)",
+                address(jojoDealer)
+            )
         );
         vm.stopPrank();
     }

@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "forge-std/Test.sol";
@@ -24,7 +24,7 @@ interface Cheats {
 contract TradingInit is Test {
     // add this to be excluded from coverage report
     function test() public {}
-    
+
     Cheats internal constant cheats =
         Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
@@ -136,7 +136,11 @@ contract TradingInit is Test {
             address(jojoDealer)
         );
         bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, EIP712Test._structHash(order))
+            abi.encodePacked(
+                "\x19\x01",
+                domainSeparator,
+                EIP712Test._structHash(order)
+            )
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
         signature = abi.encodePacked(r, s, v);

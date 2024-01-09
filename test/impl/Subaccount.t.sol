@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../init/JUSDBankInit.t.sol";
 import "../../src/subaccount/DegenSubaccount.sol";
@@ -257,10 +257,21 @@ contract SubaccountTest is JUSDBankInitTest {
         cheats.expectRevert("withdraw amount is too big");
         DegenSubaccount(degenAccount).requestWithdrawPrimaryAsset(100e6);
         DegenSubaccount(degenAccount).requestWithdrawPrimaryAsset(10e6);
-        DegenSubaccount(degenAccount).executeWithdrawPrimaryAsset(degenAccount, false);
+        DegenSubaccount(degenAccount).executeWithdrawPrimaryAsset(
+            degenAccount,
+            false
+        );
         cheats.expectRevert("withdraw amount is too big");
-        DegenSubaccount(degenAccount).fastWithdrawPrimaryAsset(1000e6, degenAccount, false);
-        DegenSubaccount(degenAccount).fastWithdrawPrimaryAsset(10e6, degenAccount, false);
+        DegenSubaccount(degenAccount).fastWithdrawPrimaryAsset(
+            1000e6,
+            degenAccount,
+            false
+        );
+        DegenSubaccount(degenAccount).fastWithdrawPrimaryAsset(
+            10e6,
+            degenAccount,
+            false
+        );
         assertEq(usdc.balanceOf(degenAccount), 20e6);
         vm.stopPrank();
 
@@ -270,8 +281,10 @@ contract SubaccountTest is JUSDBankInitTest {
         jojoDealer.deposit(0, 50e6, degenAccount);
         DegenSubaccount(degenAccount).requestWithdrawSecondaryAsset(10e6);
         DegenSubaccount(degenAccount).executeWithdrawSecondaryAsset();
-        DegenSubaccount(degenAccount).fastWithdrawSecondaryAsset(address(this), 10e6);
-
+        DegenSubaccount(degenAccount).fastWithdrawSecondaryAsset(
+            address(this),
+            10e6
+        );
     }
 
     function testBotSubaccount() public {
@@ -300,7 +313,12 @@ contract SubaccountTest is JUSDBankInitTest {
         jojoDealer.deposit(100e6, 0, botAccount);
         BotSubaccount(botAccount).requestWithdrawAsset(50e6, 0);
         BotSubaccount(botAccount).executeWithdrawAsset(botAccount, false);
-        BotSubaccount(botAccount).fastWithdrawAsset(address(this), 10e6, 0, false);
+        BotSubaccount(botAccount).fastWithdrawAsset(
+            address(this),
+            10e6,
+            0,
+            false
+        );
         vm.stopPrank();
         BotSubaccount(botAccount).requestWithdrawAsset(50e6, 0);
         cheats.expectRevert("globalOperator only can transfer to owner");
@@ -308,8 +326,12 @@ contract SubaccountTest is JUSDBankInitTest {
         BotSubaccount(botAccount).requestWithdrawAsset(10e6, 0);
         BotSubaccount(botAccount).executeWithdrawAsset(alice, false);
         cheats.expectRevert("globalOperator only can transfer to owner");
-        BotSubaccount(botAccount).fastWithdrawAsset(address(this),10e6, 0, false);
-        BotSubaccount(botAccount).fastWithdrawAsset(alice,10e6, 0, false);
-
+        BotSubaccount(botAccount).fastWithdrawAsset(
+            address(this),
+            10e6,
+            0,
+            false
+        );
+        BotSubaccount(botAccount).fastWithdrawAsset(alice, 10e6, 0, false);
     }
 }

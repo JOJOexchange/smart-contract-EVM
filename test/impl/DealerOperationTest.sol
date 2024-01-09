@@ -3,12 +3,12 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
 
-// Check dealer's operation 
+// Check dealer's operation
 contract OperationTest is Checkers {
     function testRemovePerp() public {
         Types.RiskParams memory paramETH2 = Types.RiskParams({
@@ -52,7 +52,7 @@ contract OperationTest is Checkers {
         cheats.expectRevert("JOJO_INVALID_RISK_PARAM");
         jojoDealer.setPerpRiskParams(address(perpList[0]), paramBTC2);
     }
-    
+
     function testSecondaryAssetCanNotChange() public {
         cheats.expectRevert("JOJO_SECONDARY_ASSET_ALREADY_EXIST");
         jojoDealer.setSecondaryAsset(address(perpList[0]));

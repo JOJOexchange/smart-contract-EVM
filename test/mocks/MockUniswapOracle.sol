@@ -3,12 +3,12 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
 
 contract MockUniswapOracle {
     // add this to be excluded from coverage report
     function test() public {}
-    
+
     function quoteSpecificPoolsWithTimePeriod(
         uint128,
         address,

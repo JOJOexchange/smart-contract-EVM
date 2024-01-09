@@ -10,7 +10,6 @@ node_modules/
 coverage/
 interact/
 joscelynTest/
-script/
 broadcast/
 # VIM
 *.swo
@@ -18,4 +17,3 @@ broadcast/
 out/
 report/
 lcov.info
-soljson-v0.8.9+commit.e5eed63a.js

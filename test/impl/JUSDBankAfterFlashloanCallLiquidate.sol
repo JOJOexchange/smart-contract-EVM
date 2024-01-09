@@ -18,25 +18,15 @@ struct LiquidateData {
 // Check jusdbank's liquidation and flash loan
 contract JUSDExploitTest is JUSDBankInitTest {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     // Alice deposit 10e18 JUSD
     // Bob deposit 10e18 JUSD
     // Alice borrow 10e18 JUSD
     function testAfterFlashloanLiquidate() public {
-        Repay flashloanRepay = new Repay(
-            address(eth),
-            address(jusdBank),
-            address(jusdExchange),
-            insurance
-        );
-        Attack attack = new Attack(
-            address(eth),
-            address(jusdBank),
-            address(jusdExchange),
-            insurance,
-            address(flashloanRepay)
-        );
+        Repay flashloanRepay = new Repay(address(eth), address(jusdBank), address(jusdExchange), insurance);
+        Attack attack =
+            new Attack(address(eth), address(jusdBank), address(jusdExchange), insurance, address(flashloanRepay));
 
         eth.transfer(alice, 10e18);
         eth.transfer(address(flashloanRepay), 10e18);
@@ -50,49 +40,26 @@ contract JUSDExploitTest is JUSDBankInitTest {
         console.log("Alice jusd balance : %d", jusdBalance); //8e8
 
         bytes memory param = abi.encode(
-            address(jusdBank),
-            address(jusdExchange),
-            address(eth),
-            address(jusd),
-            insurance,
-            address(flashloanRepay)
+            address(jusdBank), address(jusdExchange), address(eth), address(jusd), insurance, address(flashloanRepay)
         );
 
-        cheats.expectRevert(
-            "ReentrancyGuard: Withdraw or Borrow or Liquidate flashLoan reentrant call"
-        );
-        jusdBank.flashLoan(
-            address(attack),
-            address(eth),
-            10e18 - 1,
-            alice,
-            param
-        );
+        cheats.expectRevert("ReentrancyGuard: Withdraw or Borrow or Liquidate flashLoan reentrant call");
+        jusdBank.flashLoan(address(attack), address(eth), 10e18 - 1, alice, param);
         vm.stopPrank();
         // hack end
         console.log("HackEnd");
-        uint256 flashloanRepayJusdBalance = jusd.balanceOf(
-            address(flashloanRepay)
-        );
-        uint256 flashloanRepayethBalance = eth.balanceOf(
-            address(flashloanRepay)
-        );
+        uint256 flashloanRepayJusdBalance = jusd.balanceOf(address(flashloanRepay));
+        uint256 flashloanRepayethBalance = eth.balanceOf(address(flashloanRepay));
         console.log("Alice jusd balance : %d", jusd.balanceOf(alice)); //0
         console.log("Alice eth balance : %d", eth.balanceOf(alice)); //0
-        console.log(
-            "flashloanRepay jusd balance : %d",
-            flashloanRepayJusdBalance
-        ); //8e8
-        console.log(
-            "flashloanRepay eth balance : %d",
-            flashloanRepayethBalance
-        ); //0
+        console.log("flashloanRepay jusd balance : %d", flashloanRepayJusdBalance); //8e8
+        console.log("flashloanRepay eth balance : %d", flashloanRepayethBalance); //0
     }
 }
 
 contract Attack {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     address public eth;
     address public jusdBank;
@@ -101,13 +68,7 @@ contract Attack {
     address public insurance;
     address public flashloanRepay;
 
-    constructor(
-        address _eth,
-        address _jusdBank,
-        address _jusdExchange,
-        address _insurance,
-        address _flashloanRepay
-    ) {
+    constructor(address _eth, address _jusdBank, address _jusdExchange, address _insurance, address _flashloanRepay) {
         eth = _eth;
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
@@ -120,36 +81,26 @@ contract Attack {
         uint256,
         address to, //alice
         bytes calldata param
-    ) external {
+    )
+        external
+    {
         bytes memory afterParam = abi.encode(flashloanRepay, param);
 
-        JUSDBank(jusdBank).liquidate(
-            to,
-            address(eth),
-            address(this),
-            1,
-            afterParam,
-            0
-        );
+        JUSDBank(jusdBank).liquidate(to, address(eth), address(this), 1, afterParam, 0);
         IERC20(asset).transfer(to, IERC20(asset).balanceOf(address(this)));
     }
 }
 
 contract Repay {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     address public eth;
     address public jusdBank;
     address public jusdExchange;
     address public insurance;
 
-    constructor(
-        address _eth,
-        address _jusdBank,
-        address _jusdExchange,
-        address _insurance
-    ) {
+    constructor(address _eth, address _jusdBank, address _jusdExchange, address _insurance) {
         eth = _eth;
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
@@ -161,11 +112,10 @@ contract Repay {
         uint256,
         address to, //alice
         bytes calldata param
-    ) external {
-        (LiquidateData memory liquidateData, ) = abi.decode(
-            param,
-            (LiquidateData, bytes)
-        );
+    )
+        external
+    {
+        (LiquidateData memory liquidateData,) = abi.decode(param, (LiquidateData, bytes));
         uint256 assetAmount = IERC20(asset).balanceOf(address(this));
         IERC20(asset).approve(jusdBank, 10e18);
         // 2. insurance
@@ -177,10 +127,8 @@ contract Repay {
         // 4. transfer to liquidator
         IERC20(asset).transfer(
             to,
-            assetAmount -
-                liquidateData.insuranceFee -
-                liquidateData.actualLiquidated -
-                liquidateData.liquidatedRemainUSDC
+            assetAmount - liquidateData.insuranceFee - liquidateData.actualLiquidated
+                - liquidateData.liquidatedRemainUSDC
         );
     }
 }

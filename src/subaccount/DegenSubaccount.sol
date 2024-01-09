@@ -30,10 +30,7 @@ contract DegenSubaccount {
     }
 
     modifier onlyGlobalOperator() {
-        require(
-            jojoOperator == msg.sender,
-            "Ownable: caller is not the globalOperator"
-        );
+        require(jojoOperator == msg.sender, "Ownable: caller is not the globalOperator");
         _;
     }
 
@@ -59,30 +56,19 @@ contract DegenSubaccount {
         IDealer(dealer).setOperator(operator, isValid);
     }
 
-    function getMaxWithdrawAmount(
-        address trader
-    ) public view returns (uint256, uint256) {
-        (int256 primaryCredit, , uint256 pendingPrimaryWithdraw, , ) = IDealer(
-            dealer
-        ).getCreditOf(address(this));
+    function getMaxWithdrawAmount(address trader) public view returns (uint256, uint256) {
+        (int256 primaryCredit,, uint256 pendingPrimaryWithdraw,,) = IDealer(dealer).getCreditOf(address(this));
 
         uint256 positionMargin;
         int256 positionNetValue;
         address[] memory positions = IDealer(dealer).getPositions(trader);
 
-        for (uint256 i = 0; i < positions.length; ) {
-            (int256 paperAmount, int256 creditAmount) = IPerpetual(positions[i])
-                .balanceOf(trader);
+        for (uint256 i = 0; i < positions.length;) {
+            (int256 paperAmount, int256 creditAmount) = IPerpetual(positions[i]).balanceOf(trader);
 
-            Types.RiskParams memory params = IDealer(dealer).getRiskParams(
-                positions[i]
-            );
-            int256 price = SafeCast.toInt256(
-                IPriceSource(params.markPriceSource).getMarkPrice()
-            );
-            positionMargin +=
-                (paperAmount.decimalMul(price).abs() * 1e16) /
-                1e18;
+            Types.RiskParams memory params = IDealer(dealer).getRiskParams(positions[i]);
+            int256 price = SafeCast.toInt256(IPriceSource(params.markPriceSource).getMarkPrice());
+            positionMargin += (paperAmount.decimalMul(price).abs() * 1e16) / 1e18;
 
             positionNetValue += paperAmount.decimalMul(price) + creditAmount;
             unchecked {
@@ -92,64 +78,30 @@ contract DegenSubaccount {
 
         int256 netValue = positionNetValue + primaryCredit;
         require(netValue > 0, "netValue is less than 0");
-        require(
-            SafeCast.toUint256(netValue) >= positionMargin,
-            "netValue is less than maintenance margin"
-        );
-        uint256 maxWithxdrawAmount = SafeCast.toUint256(netValue) -
-            positionMargin;
+        require(SafeCast.toUint256(netValue) >= positionMargin, "netValue is less than maintenance margin");
+        uint256 maxWithxdrawAmount = SafeCast.toUint256(netValue) - positionMargin;
         return (maxWithxdrawAmount, pendingPrimaryWithdraw);
     }
 
-    function requestWithdrawPrimaryAsset(
-        uint256 withdrawAmount
-    ) external onlyOwner {
-        (uint256 maxWithdrawValue, ) = getMaxWithdrawAmount(address(this));
-        require(
-            withdrawAmount <= maxWithdrawValue,
-            "withdraw amount is too big"
-        );
+    function requestWithdrawPrimaryAsset(uint256 withdrawAmount) external onlyOwner {
+        (uint256 maxWithdrawValue,) = getMaxWithdrawAmount(address(this));
+        require(withdrawAmount <= maxWithdrawValue, "withdraw amount is too big");
         IDealer(dealer).requestWithdraw(address(this), withdrawAmount, 0);
     }
 
-    function executeWithdrawPrimaryAsset(
-        address to,
-        bool toInternal
-    ) external onlyOwner {
-        (
-            uint256 maxWithdrawValue,
-            uint256 pendingPrimaryWithdraw
-        ) = getMaxWithdrawAmount(address(this));
-        require(
-            pendingPrimaryWithdraw <= maxWithdrawValue,
-            "withdraw amount is too big"
-        );
+    function executeWithdrawPrimaryAsset(address to, bool toInternal) external onlyOwner {
+        (uint256 maxWithdrawValue, uint256 pendingPrimaryWithdraw) = getMaxWithdrawAmount(address(this));
+        require(pendingPrimaryWithdraw <= maxWithdrawValue, "withdraw amount is too big");
         IDealer(dealer).executeWithdraw(address(this), to, toInternal, "");
     }
 
-    function fastWithdrawPrimaryAsset(
-        uint256 withdrawAmount,
-        address to,
-        bool toInternal
-    ) external onlyOwner {
-        (uint256 maxWithdrawValue, ) = getMaxWithdrawAmount(address(this));
-        require(
-            withdrawAmount <= maxWithdrawValue,
-            "withdraw amount is too big"
-        );
-        IDealer(dealer).fastWithdraw(
-            address(this),
-            to,
-            withdrawAmount,
-            0,
-            toInternal,
-            ""
-        );
+    function fastWithdrawPrimaryAsset(uint256 withdrawAmount, address to, bool toInternal) external onlyOwner {
+        (uint256 maxWithdrawValue,) = getMaxWithdrawAmount(address(this));
+        require(withdrawAmount <= maxWithdrawValue, "withdraw amount is too big");
+        IDealer(dealer).fastWithdraw(address(this), to, withdrawAmount, 0, toInternal, "");
     }
 
-    function requestWithdrawSecondaryAsset(
-        uint256 secondaryAmount
-    ) external onlyGlobalOperator {
+    function requestWithdrawSecondaryAsset(uint256 secondaryAmount) external onlyGlobalOperator {
         // only Global operator can request JUSD
         IDealer(dealer).requestWithdraw(address(this), 0, secondaryAmount);
     }
@@ -159,17 +111,7 @@ contract DegenSubaccount {
         IDealer(dealer).executeWithdraw(address(this), jojoOperator, false, "");
     }
 
-    function fastWithdrawSecondaryAsset(
-        address to,
-        uint256 secondaryAmount
-    ) external onlyGlobalOperator {
-        IDealer(dealer).fastWithdraw(
-            address(this),
-            to,
-            0,
-            secondaryAmount,
-            false,
-            ""
-        );
+    function fastWithdrawSecondaryAsset(address to, uint256 secondaryAmount) external onlyGlobalOperator {
+        IDealer(dealer).fastWithdraw(address(this), to, 0, secondaryAmount, false, "");
     }
 }

@@ -13,7 +13,6 @@ There are only two core smart contracts: [Perpetual.sol](./src/Perpetual.sol) an
 - `Perpetual.sol` is the core balance sheet of a certain perpetual contract market.
 - `JOJODealer.sol` owns `Perpetual.sol`. One `JOJODealer.sol` may have several `Perpetual.sol` simultaneously.
 
-
 ### Perpetual.sol: The Balance Sheet
 
 For traders, their balance consists of paper (asset quantity) and credit. The combination of these two values forms their balance. Both paper and credit can be negative.
@@ -23,15 +22,17 @@ Example:
 - Long 1BTC at $30,000:
 
 ```javascript
-paper = 1
-credit = -30000
+paper = 1;
+credit = -30000;
 ```
+
 - Short 1BTC at $30,000:
 
 ```javascript
-paper = -1
-credit = 30000
+paper = -1;
+credit = 30000;
 ```
+
 The essence of the perpetual contract calculation is the state transfer of balance. Luckily, there are only three types of operations that affect balance.
 
 1. Funding rate
@@ -45,13 +46,14 @@ The funding rate ensures the perpetual contract price aligns with the spot price
 - When the contract price exceeds the spot price, the long side is penalized, and the short side is rewarded. This prompts a decrease in the contract price until it matches the spot price.
 - Conversely, if the contract price is lower than the spot price, the short side is penalized, and the long side is rewarded, increasing the contract price to match the spot price.
 
-To manage credit adjustments based on paper, a value named "reducedCredit" is recorded. The actual credit is calculated using the formula: 
+To manage credit adjustments based on paper, a value named "reducedCredit" is recorded. The actual credit is calculated using the formula:
 
-`credit = (paper * fundingRate) + reducedCredit` 
+`credit = (paper * fundingRate) + reducedCredit`
 
 This mechanism ensures each trader's credit is automatically adjusted according to changes in the fundingRate, which can be positive or negative. An increase in the fundingRate facilitates the movement of funds from short to long positions, whereas a decrease prompts a shift from long to short positions. These fundingRate updates, managed by the JOJO team, take place every 8 hours.
 
 To check balances, utilize the function:
+
 ```javascript
 function balanceOf(address trader)
         external
@@ -67,7 +69,7 @@ The validation and computation processes are handled within the `approveTrade` i
 
 #### Liquidation
 
-Liquidation  is a mandatory trading behavior. You can trigger a liquidation by calling the function below:
+Liquidation is a mandatory trading behavior. You can trigger a liquidation by calling the function below:
 
 ```javascript
 function liquidate(
@@ -85,6 +87,7 @@ Like trading, we leave it to [JOJOExternal.sol](./src/JOJOExternal.sol).
 Responsible for maintaining funding rates, executing trades, and managing liquidations.
 
 Features:
+
 - Off-chain matching, on-chain settlement.
 - Cross model for shared margin across positions.
 - Fixed discount liquidation.
@@ -125,7 +128,7 @@ We have two withdrawal modes: pending withdrawal and fast withdrawal. In fast wi
 
 ### Subaccount
 
-We use a specially designed contract as a trading account, and the user's wallet address is the owner of this contract. This design can free users from changing their wallet address, and also an easy way for other protocols to build on JOJO. Subaccounts can help their owner manage risk and positions. Users can open orders with isolated positions via Subaccount, and can also let others trade for you by setting them as authorized operators. 
+We use a specially designed contract as a trading account, and the user's wallet address is the owner of this contract. This design can free users from changing their wallet address, and also an easy way for other protocols to build on JOJO. Subaccounts can help their owner manage risk and positions. Users can open orders with isolated positions via Subaccount, and can also let others trade for you by setting them as authorized operators.
 
 See `newSubaccount()` in [SubaccountFactory.sol](./src/subaccount/SubaccountFactory.sol).
 
@@ -144,6 +147,7 @@ JUSD is a stablecoin developed by the JOJO system to support multi-collateraliza
 Manages the collateral lending system, allowing users to borrow JUSD using deposited collateral.
 
 Features:
+
 - Manage to loan JUSD
 - Flash loans for immediate transactions.
 
@@ -165,9 +169,11 @@ Two lending system examples include:
 - FlashLoanLiquidate.sol: Involves liquidating collateral, distributing resulting USDC into three parts: JUSD repayment, insurance payment, and, if there's surplus, transferring it as USDC to the liquidated party.
 
 ## Funding Rate Arbitrage
+
 The core contract [FundingRateArbitrage](./src/FundingRateArbitrage.sol) involves offsetting trades in both spot and perpetual markets to capture funding rate income in perpetual trading.
 
 Key functions:
+
 - LPs can deposit USDC into the arbitrage pool via the deposit function, earning interest. Withdrawal requests for both interest and capital can be made by users, executed within 24 hours through permitWithdrawRequests.
 - Upon users depositing USDC into the arbitrage pool, the admin utilizes the USDC to purchase ETH and deposits it into the JUSDBank system via the swapBuyEth function. Subsequently, the admin borrows JUSD using borrow and deposits it into the trading system. Finally, the admin initiates short interest in the trading system to accumulate funding fees.
 

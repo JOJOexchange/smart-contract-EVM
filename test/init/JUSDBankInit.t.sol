@@ -27,8 +27,7 @@ interface Cheats {
 }
 
 contract JUSDBankInitTest is Test {
-    Cheats internal constant cheats =
-        Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+    Cheats internal constant cheats = Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
     uint256 public constant ONE = 1e18;
 
@@ -63,7 +62,7 @@ contract JUSDBankInitTest is Test {
         uint256[] memory amountBTC = new uint256[](1);
         amountBTC[0] = 4000e8;
         uint256[] memory amountETH = new uint256[](1);
-        amountETH[0] = 40000e18;
+        amountETH[0] = 40_000e18;
         btc.mintBatch(user, amountBTC);
         eth.mintBatch(user, amountETH);
         jusd = new JUSD(6);
@@ -86,17 +85,17 @@ contract JUSDBankInitTest is Test {
     function initJUSDBankAndExchange() public {
         btcOracle = new EmergencyOracle("BTC oracle");
         ethOracle = new EmergencyOracle("ETH oracle");
-        jusd.mint(200000e6);
-        jusd.mint(100000e6);
+        jusd.mint(200_000e6);
+        jusd.mint(100_000e6);
         jusdBank = new JUSDBank( // maxReservesAmount_
             10,
             insurance,
             address(jusd),
             address(jojoDealer),
             // maxBorrowAmountPerAccount_
-            100000000000,
+            100_000_000_000,
             // maxBorrowAmount_
-            100000000001,
+            100_000_000_001,
             // borrowFeeRate_
             2e16,
             address(usdc)
@@ -112,7 +111,7 @@ contract JUSDBankInitTest is Test {
             // maxDepositAmountPerAccount
             210e8,
             // maxBorrowValue
-            100000e6,
+            100_000e6,
             // liquidateMortgageRate
             8e17,
             // liquidationPriceOff
@@ -131,7 +130,7 @@ contract JUSDBankInitTest is Test {
             // maxDepositAmountPerAccount
             2030e18,
             // maxBorrowValue
-            100000e6,
+            100_000e6,
             // liquidateMortgageRate
             825e15,
             // liquidationPriceOff
@@ -143,46 +142,27 @@ contract JUSDBankInitTest is Test {
         ethOracle.turnOnOracle();
         btcOracle.turnOnOracle();
         ethOracle.setMarkPrice(1000e6);
-        btcOracle.setMarkPrice(20000e16);
-        jusd.transfer(address(jusdBank), 200000e6);
+        btcOracle.setMarkPrice(20_000e16);
+        jusd.transfer(address(jusdBank), 200_000e6);
         jusdExchange = new JUSDExchange(address(usdc), address(jusd));
-        jusd.transfer(address(jusdExchange), 100000e6);
+        jusd.transfer(address(jusdExchange), 100_000e6);
     }
 
     function initSwap() public {
-        swapContract = new MockSwap(
-            address(usdc),
-            address(eth),
-            address(ethOracle)
-        );
-        usdc.mint(address(swapContract), 100000e6);
+        swapContract = new MockSwap(address(usdc), address(eth), address(ethOracle));
+        usdc.mint(address(swapContract), 100_000e6);
     }
 
     function initGeneralRepay() public {
-        generalRepay = new GeneralRepay(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd)
-        );
+        generalRepay = new GeneralRepay(address(jusdBank), address(jusdExchange), address(usdc), address(jusd));
 
-        flashLoanRepay = new FlashLoanRepay(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd)
-        );
+        flashLoanRepay = new FlashLoanRepay(address(jusdBank), address(jusdExchange), address(usdc), address(jusd));
         flashLoanRepay.setWhiteListContract(address(swapContract), true);
         generalRepay.setWhiteListContract(address(swapContract), true);
     }
 
     function initRepayHelper() public {
-        jusdRepayHelper = new JUSDRepayHelper(
-            address(jusdBank),
-            address(jusd),
-            address(usdc),
-            address(jusdExchange)
-        );
+        jusdRepayHelper = new JUSDRepayHelper(address(jusdBank), address(jusd), address(usdc), address(jusdExchange));
         jusdRepayHelper.setWhiteList(address(jojoDealer), true);
     }
 
@@ -207,16 +187,16 @@ contract JUSDBankInitTest is Test {
     }
 
     function testInitMint() public {
-        assertEq(jusd.balanceOf(address(jusdBank)), 200000e6);
+        assertEq(jusd.balanceOf(address(jusdBank)), 200_000e6);
     }
 
     function testRefundJUSDBank() public {
-        jusdBank.refundJUSD(100000e6);
-        assertEq(jusd.balanceOf(address(jusdBank)), 100000e6);
+        jusdBank.refundJUSD(100_000e6);
+        assertEq(jusd.balanceOf(address(jusdBank)), 100_000e6);
     }
 
     function testRefundJUSDExechange() public {
-        jusdExchange.refundJUSD(50000e6);
-        assertEq(jusd.balanceOf(address(jusdExchange)), 50000e6);
+        jusdExchange.refundJUSD(50_000e6);
+        assertEq(jusd.balanceOf(address(jusdExchange)), 50_000e6);
     }
 }

@@ -32,13 +32,7 @@ contract Subaccount {
     }
 
     // ========== event ==========
-    event ExecuteTransaction(
-        address indexed owner,
-        address subaccount,
-        address to,
-        bytes data,
-        uint256 value
-    );
+    event ExecuteTransaction(address indexed owner, address subaccount, address to, bytes data, uint256 value);
 
     // ========== functions ==========
 
@@ -52,10 +46,15 @@ contract Subaccount {
         address to,
         bytes calldata data,
         uint256 value
-    ) external payable onlyOwner returns (bytes memory) {
+    )
+        external
+        payable
+        onlyOwner
+        returns (bytes memory)
+    {
         require(to != address(0), "execute address is empty");
         require(msg.value == value, "TRANSFER_PAYMENT_NOT_MATCH");
-        (bool success, bytes memory returnData) = to.call{value: value}(data);
+        (bool success, bytes memory returnData) = to.call{ value: value }(data);
         if (!success) {
             assembly {
                 let ptr := mload(0x40)

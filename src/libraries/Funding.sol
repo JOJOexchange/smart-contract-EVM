@@ -20,61 +20,27 @@ library Funding {
 
     // ========== events ==========
 
-    event Deposit(
-        address indexed to,
-        address indexed payer,
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    );
+    event Deposit(address indexed to, address indexed payer, uint256 primaryAmount, uint256 secondaryAmount);
 
-    event Withdraw(
-        address indexed to,
-        address indexed payer,
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    );
+    event Withdraw(address indexed to, address indexed payer, uint256 primaryAmount, uint256 secondaryAmount);
 
     event RequestWithdraw(
-        address indexed payer,
-        uint256 primaryAmount,
-        uint256 secondaryAmount,
-        uint256 executionTimestamp
+        address indexed payer, uint256 primaryAmount, uint256 secondaryAmount, uint256 executionTimestamp
     );
 
-    event TransferIn(
-        address trader,
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    );
+    event TransferIn(address trader, uint256 primaryAmount, uint256 secondaryAmount);
 
-    event TransferOut(
-        address trader,
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    );
+    event TransferOut(address trader, uint256 primaryAmount, uint256 secondaryAmount);
 
     // ========== deposit ==========
 
-    function deposit(
-        Types.State storage state,
-        uint256 primaryAmount,
-        uint256 secondaryAmount,
-        address to
-    ) external {
+    function deposit(Types.State storage state, uint256 primaryAmount, uint256 secondaryAmount, address to) external {
         if (primaryAmount > 0) {
-            IERC20(state.primaryAsset).safeTransferFrom(
-                msg.sender,
-                address(this),
-                primaryAmount
-            );
+            IERC20(state.primaryAsset).safeTransferFrom(msg.sender, address(this), primaryAmount);
             state.primaryCredit[to] += SafeCast.toInt256(primaryAmount);
         }
         if (secondaryAmount > 0) {
-            IERC20(state.secondaryAsset).safeTransferFrom(
-                msg.sender,
-                address(this),
-                secondaryAmount
-            );
+            IERC20(state.secondaryAsset).safeTransferFrom(msg.sender, address(this), secondaryAmount);
             state.secondaryCredit[to] += secondaryAmount;
         }
         emit Deposit(to, msg.sender, primaryAmount, secondaryAmount);
@@ -88,11 +54,16 @@ library Funding {
         address from,
         uint256 primaryAmount,
         uint256 secondaryAmount
-    ) internal view returns (bool) {
-        return
-            spender == from ||
-            (state.primaryCreditAllowed[from][spender] >= primaryAmount &&
-                state.secondaryCreditAllowed[from][spender] >= secondaryAmount);
+    )
+        internal
+        view
+        returns (bool)
+    {
+        return spender == from
+            || (
+                state.primaryCreditAllowed[from][spender] >= primaryAmount
+                    && state.secondaryCreditAllowed[from][spender] >= secondaryAmount
+            );
     }
 
     function requestWithdraw(
@@ -100,28 +71,14 @@ library Funding {
         address from,
         uint256 primaryAmount,
         uint256 secondaryAmount
-    ) external {
-        require(
-            isWithdrawValid(
-                state,
-                msg.sender,
-                from,
-                primaryAmount,
-                secondaryAmount
-            ),
-            Errors.WITHDRAW_INVALID
-        );
+    )
+        external
+    {
+        require(isWithdrawValid(state, msg.sender, from, primaryAmount, secondaryAmount), Errors.WITHDRAW_INVALID);
         state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
         state.pendingSecondaryWithdraw[msg.sender] = secondaryAmount;
-        state.withdrawExecutionTimestamp[msg.sender] =
-            block.timestamp +
-            state.withdrawTimeLock;
-        emit RequestWithdraw(
-            msg.sender,
-            primaryAmount,
-            secondaryAmount,
-            state.withdrawExecutionTimestamp[msg.sender]
-        );
+        state.withdrawExecutionTimestamp[msg.sender] = block.timestamp + state.withdrawTimeLock;
+        emit RequestWithdraw(msg.sender, primaryAmount, secondaryAmount, state.withdrawExecutionTimestamp[msg.sender]);
     }
 
     function executeWithdraw(
@@ -130,37 +87,18 @@ library Funding {
         address to,
         bool isInternal,
         bytes memory param
-    ) external {
-        require(
-            state.withdrawExecutionTimestamp[from] <= block.timestamp,
-            Errors.WITHDRAW_PENDING
-        );
+    )
+        external
+    {
+        require(state.withdrawExecutionTimestamp[from] <= block.timestamp, Errors.WITHDRAW_PENDING);
         uint256 primaryAmount = state.pendingPrimaryWithdraw[from];
         uint256 secondaryAmount = state.pendingSecondaryWithdraw[from];
-        require(
-            isWithdrawValid(
-                state,
-                msg.sender,
-                from,
-                primaryAmount,
-                secondaryAmount
-            ),
-            Errors.WITHDRAW_INVALID
-        );
+        require(isWithdrawValid(state, msg.sender, from, primaryAmount, secondaryAmount), Errors.WITHDRAW_INVALID);
         state.pendingPrimaryWithdraw[from] = 0;
         state.pendingSecondaryWithdraw[from] = 0;
         // No need to change withdrawExecutionTimestamp, because we set pending
         // withdraw amount to 0.
-        _withdraw(
-            state,
-            msg.sender,
-            from,
-            to,
-            primaryAmount,
-            secondaryAmount,
-            isInternal,
-            param
-        );
+        _withdraw(state, msg.sender, from, to, primaryAmount, secondaryAmount, isInternal, param);
     }
 
     function fastWithdraw(
@@ -171,32 +109,14 @@ library Funding {
         uint256 secondaryAmount,
         bool isInternal,
         bytes memory param
-    ) external {
+    )
+        external
+    {
         require(
-            !state.fastWithdrawDisabled ||
-                state.fastWithdrawalWhitelist[msg.sender],
-            Errors.FAST_WITHDRAW_NOT_ALLOWED
+            !state.fastWithdrawDisabled || state.fastWithdrawalWhitelist[msg.sender], Errors.FAST_WITHDRAW_NOT_ALLOWED
         );
-        require(
-            isWithdrawValid(
-                state,
-                msg.sender,
-                from,
-                primaryAmount,
-                secondaryAmount
-            ),
-            Errors.WITHDRAW_INVALID
-        );
-        _withdraw(
-            state,
-            msg.sender,
-            from,
-            to,
-            primaryAmount,
-            secondaryAmount,
-            isInternal,
-            param
-        );
+        require(isWithdrawValid(state, msg.sender, from, primaryAmount, secondaryAmount), Errors.WITHDRAW_INVALID);
+        _withdraw(state, msg.sender, from, to, primaryAmount, secondaryAmount, isInternal, param);
     }
 
     function _withdraw(
@@ -208,15 +128,14 @@ library Funding {
         uint256 secondaryAmount,
         bool isInternal,
         bytes memory param
-    ) private {
+    )
+        private
+    {
         if (spender != from) {
             state.primaryCreditAllowed[from][spender] -= primaryAmount;
             state.secondaryCreditAllowed[from][spender] -= secondaryAmount;
             emit Operation.FundOperatorAllowedChange(
-                from,
-                spender,
-                state.primaryCreditAllowed[from][spender],
-                state.secondaryCreditAllowed[from][spender]
+                from, spender, state.primaryCreditAllowed[from][spender], state.secondaryCreditAllowed[from][spender]
             );
         }
         if (primaryAmount > 0) {
@@ -238,16 +157,10 @@ library Funding {
 
         if (primaryAmount > 0) {
             // if trader withdraw primary asset, we should check if solid safe
-            require(
-                Liquidation._isSolidIMSafe(state, from),
-                Errors.ACCOUNT_NOT_SAFE
-            );
+            require(Liquidation._isSolidIMSafe(state, from), Errors.ACCOUNT_NOT_SAFE);
         } else {
             // if trader didn't withdraw primary asset, normal safe check is enough
-            require(
-                Liquidation._isIMSafe(state, from),
-                Errors.ACCOUNT_NOT_SAFE
-            );
+            require(Liquidation._isIMSafe(state, from), Errors.ACCOUNT_NOT_SAFE);
         }
 
         if (isInternal) {
@@ -259,7 +172,7 @@ library Funding {
 
         if (param.length != 0) {
             require(Address.isContract(to), "target is not a contract");
-            (bool success, ) = to.call(param);
+            (bool success,) = to.call(param);
             if (success == false) {
                 assembly {
                     let ptr := mload(0x40)

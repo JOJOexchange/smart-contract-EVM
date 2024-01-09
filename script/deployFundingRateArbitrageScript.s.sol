@@ -7,7 +7,7 @@ import "../src/FundingRateArbitrage.sol";
 
 contract FundingRateArbitrageScript is Script {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");

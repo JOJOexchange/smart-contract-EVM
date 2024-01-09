@@ -15,12 +15,7 @@ interface IJUSDBank {
     /// @param collateral: deposit collateral type.
     /// @param amount: collateral amount
     /// @param to: account that user want to deposit to
-    function deposit(
-        address from,
-        address collateral,
-        uint256 amount,
-        address to
-    ) external;
+    function deposit(address from, address collateral, uint256 amount, address to) external;
 
     /// @notice borrow function: get JUSD based on the amount of user's collaterals.
     /// @param amount: borrow JUSD amount
@@ -33,12 +28,7 @@ interface IJUSDBank {
     /// @param amount: withdraw amount
     /// @param to: is the address receiving asset
     /// @param isInternal: if deposit to jojo or withdraw to wallet
-    function withdraw(
-        address collateral,
-        uint256 amount,
-        address to,
-        bool isInternal
-    ) external;
+    function withdraw(address collateral, uint256 amount, address to, bool isInternal) external;
 
     /// @notice repay function: repay the JUSD in order to avoid account liquidation by liquidators
     /// @param amount: repay JUSD amount
@@ -65,7 +55,9 @@ interface IJUSDBank {
         uint256 liquidationAmount,
         bytes memory param,
         uint256 expectPrice
-    ) external returns (Types.LiquidateData memory liquidateData);
+    )
+        external
+        returns (Types.LiquidateData memory liquidateData);
 
     /// @notice insurance account take bad debts on unsecured accounts
     /// @param liquidatedTraders traders who have bad debts
@@ -77,59 +69,41 @@ interface IJUSDBank {
     /// @param amount withdraw amount
     /// @param to: if repay JUSD, repay to whom
     /// @param param users input
-    function flashLoan(
-        address receiver,
-        address collateral,
-        uint256 amount,
-        address to,
-        bytes memory param
-    ) external;
+    function flashLoan(address receiver, address collateral, uint256 amount, address to, bytes memory param) external;
 
     /// @notice get the all collateral list
     function getReservesList() external view returns (address[] memory);
 
     /// @notice return the max borrow JUSD amount from the deposit amount
-    function getDepositMaxMintAmount(
-        address user
-    ) external view returns (uint256);
+    function getDepositMaxMintAmount(address user) external view returns (uint256);
 
     /// @notice return the collateral's max borrow JUSD amount
     function getCollateralMaxMintAmount(
         address collateral,
         uint256 amoount
-    ) external view returns (uint256 maxAmount);
+    )
+        external
+        view
+        returns (uint256 maxAmount);
 
     /// @notice return the collateral's max withdraw amount
-    function getMaxWithdrawAmount(
-        address collateral,
-        address user
-    ) external view returns (uint256 maxAmount);
+    function getMaxWithdrawAmount(address collateral, address user) external view returns (uint256 maxAmount);
 
     /// @notice return is account safe
     function isAccountSafe(address user) external view returns (bool);
 
     /// @notice get collateral price
-    function getCollateralPrice(
-        address collateral
-    ) external view returns (uint256);
+    function getCollateralPrice(address collateral) external view returns (uint256);
 
     /// @notice get if has collateral
-    function getIfHasCollateral(
-        address from,
-        address collateral
-    ) external view returns (bool);
+    function getIfHasCollateral(address from, address collateral) external view returns (bool);
 
     /// @notice get deposit balance
-    function getDepositBalance(
-        address collateral,
-        address from
-    ) external view returns (uint256);
+    function getDepositBalance(address collateral, address from) external view returns (uint256);
 
     /// @notice get borrow balance
     function getBorrowBalance(address from) external view returns (uint256);
 
     /// @notice get user collateral list
-    function getUserCollateralList(
-        address from
-    ) external view returns (address[] memory);
+    function getUserCollateralList(address from) external view returns (address[] memory);
 }

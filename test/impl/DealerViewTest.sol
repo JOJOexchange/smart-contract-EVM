@@ -16,20 +16,12 @@ contract JOJOViewTest is Checkers {
         bool ifWithdrawValid = jojoDealer.isFastWithdrawalValid(address(this));
         assertEq(ifWithdrawValid, false);
 
-        (uint256 primaryCreditAllowed, ) = jojoDealer.isCreditAllowed(
-            traders[0],
-            address(this)
-        );
+        (uint256 primaryCreditAllowed,) = jojoDealer.isCreditAllowed(traders[0], address(this));
         assertEq(primaryCreditAllowed, 0);
 
         jojoDealer.getOrderFilledAmount(Types.ORDER_TYPEHASH);
         jojoDealer.getRequestWithdrawCallData(address(this), 0, 0);
-        jojoDealer.getExecuteWithdrawCallData(
-            address(this),
-            address(this),
-            false,
-            ""
-        );
+        jojoDealer.getExecuteWithdrawCallData(address(this), address(this), false, "");
         jojoDealer.isIMSafe(address(this));
     }
 

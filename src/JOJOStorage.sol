@@ -17,26 +17,16 @@ abstract contract JOJOStorage is Ownable, ReentrancyGuard {
     bytes32 public immutable domainSeparator;
 
     constructor() Ownable() {
-        domainSeparator = EIP712._buildDomainSeparator(
-            "JOJO",
-            "1",
-            address(this)
-        );
+        domainSeparator = EIP712._buildDomainSeparator("JOJO", "1", address(this));
     }
 
     modifier onlyFundingRateKeeper() {
-        require(
-            msg.sender == state.fundingRateKeeper,
-            Errors.INVALID_FUNDING_RATE_KEEPER
-        );
+        require(msg.sender == state.fundingRateKeeper, Errors.INVALID_FUNDING_RATE_KEEPER);
         _;
     }
 
     modifier onlyRegisteredPerp() {
-        require(
-            state.perpRiskParams[msg.sender].isRegistered,
-            Errors.PERP_NOT_REGISTERED
-        );
+        require(state.perpRiskParams[msg.sender].isRegistered, Errors.PERP_NOT_REGISTERED);
         _;
     }
 }

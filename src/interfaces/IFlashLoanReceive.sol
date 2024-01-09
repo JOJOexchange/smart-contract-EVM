@@ -10,10 +10,5 @@ interface IFlashLoanReceive {
     /// @param asset is the amount of asset you want to flashloan.
     /// @param amount is the amount of asset you want to flashloan.
     /// @param param is the customized params pass by users
-    function JOJOFlashLoan(
-        address asset,
-        uint256 amount,
-        address to,
-        bytes calldata param
-    ) external;
+    function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external;
 }

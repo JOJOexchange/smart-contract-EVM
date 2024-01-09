@@ -5,8 +5,8 @@ import { Test } from "forge-std/Test.sol";
 
 contract Utils is Test {
     // add this to be excluded from coverage report
-    function test() public {}
-    
+    function test() public { }
+
     bytes32 internal nextUser = keccak256(abi.encodePacked("user address"));
 
     function getNextUserAddress() external returns (address payable) {

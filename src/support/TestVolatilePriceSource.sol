@@ -13,17 +13,13 @@ pragma solidity ^0.8.20;
 // To produce super volatile market change for failed cases test
 contract TestVolatilePriceSource is Ownable {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     uint256 public price;
     uint256 public updatedAt;
     uint256 public roundId;
 
-    event AnswerUpdated(
-        int256 indexed current,
-        uint256 indexed roundId,
-        uint256 updatedAt
-    );
+    event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
 
     function getMarkPrice() external view returns (uint256) {
         // offset [0, 27% price]

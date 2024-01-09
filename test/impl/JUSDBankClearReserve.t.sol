@@ -25,37 +25,16 @@ contract JUSDBankClearReserveTest is JUSDBankInitTest {
         //eth relist
         jusdBank.delistReserve(address(eth));
 
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         //bob liquidate alice
         vm.startPrank(bob);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            10000e6,
-            data
-        );
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 10_000e6, data);
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
 
-        Types.LiquidateData memory liq = jusdBank.liquidate(
-            alice,
-            address(eth),
-            bob,
-            10e18,
-            afterParam,
-            1000e6
-        );
+        Types.LiquidateData memory liq = jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 1000e6);
 
         // logs
 
@@ -95,13 +74,10 @@ contract JUSDBankClearReserveTest is JUSDBankInitTest {
 
         cheats.expectRevert("AFTER_WITHDRAW_ACCOUNT_IS_NOT_SAFE");
         jusdBank.withdraw(address(btc), 1e8, alice, false);
-        uint256 maxWithdrawBTC = jusdBank.getMaxWithdrawAmount(
-            address(btc),
-            alice
-        );
+        uint256 maxWithdrawBTC = jusdBank.getMaxWithdrawAmount(address(btc), alice);
         uint256 maxMint = jusdBank.getDepositMaxMintAmount(alice);
-        assertEq(maxMint, 14000e6);
-        assertEq(maxWithdrawBTC, 78571428);
+        assertEq(maxMint, 14_000e6);
+        assertEq(maxWithdrawBTC, 78_571_428);
         vm.stopPrank();
     }
 

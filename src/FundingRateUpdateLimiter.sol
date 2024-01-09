@@ -34,18 +34,12 @@ contract FundingRateUpdateLimiter is Ownable {
         speedMultiplier = _speedMultiplier;
     }
 
-    function updateFundingRate(
-        address[] calldata perpList,
-        int256[] calldata rateList
-    ) external onlyOwner {
-        for (uint256 i = 0; i < perpList.length; ) {
+    function updateFundingRate(address[] calldata perpList, int256[] calldata rateList) external onlyOwner {
+        for (uint256 i = 0; i < perpList.length;) {
             address perp = perpList[i];
             int256 oldRate = IPerpetual(perp).getFundingRate();
             uint256 maxChange = getMaxChange(perp);
-            require(
-                (rateList[i] - oldRate).abs() <= maxChange,
-                "FUNDING_RATE_CHANGE_TOO_MUCH"
-            );
+            require((rateList[i] - oldRate).abs() <= maxChange, "FUNDING_RATE_CHANGE_TOO_MUCH");
             fundingRateUpdateTimestamp[perp] = block.timestamp;
             unchecked {
                 ++i;
@@ -59,11 +53,8 @@ contract FundingRateUpdateLimiter is Ownable {
     function getMaxChange(address perp) public view returns (uint256) {
         Types.RiskParams memory params = IDealer(dealer).getRiskParams(perp);
         uint256 markPrice = IPriceSource(params.markPriceSource).getMarkPrice();
-        uint256 timeInterval = block.timestamp -
-            fundingRateUpdateTimestamp[perp];
-        uint256 maxChangeRate = (speedMultiplier *
-            timeInterval *
-            params.liquidationThreshold) / (1 days);
+        uint256 timeInterval = block.timestamp - fundingRateUpdateTimestamp[perp];
+        uint256 maxChangeRate = (speedMultiplier * timeInterval * params.liquidationThreshold) / (1 days);
         uint256 maxChange = (maxChangeRate * markPrice) / Types.ONE;
         return maxChange;
     }

@@ -44,28 +44,15 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
     // Event
 
     event Deposit(
-        address indexed collateral,
-        address indexed from,
-        address indexed to,
-        address operator,
-        uint256 amount
+        address indexed collateral, address indexed from, address indexed to, address operator, uint256 amount
     );
 
-    event Borrow(
-        address indexed from,
-        address indexed to,
-        uint256 amount,
-        bool isDepositToJOJO
-    );
+    event Borrow(address indexed from, address indexed to, uint256 amount, bool isDepositToJOJO);
 
     event Repay(address indexed from, address indexed to, uint256 amount);
 
     event Withdraw(
-        address indexed collateral,
-        address indexed from,
-        address indexed to,
-        uint256 amount,
-        bool ifInternal
+        address indexed collateral, address indexed from, address indexed to, uint256 amount, bool ifInternal
     );
 
     event Liquidate(
@@ -85,19 +72,13 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
     // Modifier
 
     modifier isValidOperator(address operator, address client) {
-        require(
-            msg.sender == client || operatorRegistry[client][operator],
-            Errors.CAN_NOT_OPERATE_ACCOUNT
-        );
+        require(msg.sender == client || operatorRegistry[client][operator], Errors.CAN_NOT_OPERATE_ACCOUNT);
         _;
     }
 
     modifier isLiquidator(address liquidator) {
         if (isLiquidatorWhitelistOpen) {
-            require(
-                isLiquidatorWhiteList[liquidator],
-                "liquidator is not in the liquidator white list"
-            );
+            require(isLiquidatorWhiteList[liquidator], "liquidator is not in the liquidator white list");
         }
         _;
     }
@@ -110,7 +91,12 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address collateral,
         uint256 amount,
         address to
-    ) external override nonReentrant isValidOperator(msg.sender, from) {
+    )
+        external
+        override
+        nonReentrant
+        isValidOperator(msg.sender, from)
+    {
         Types.ReserveInfo storage reserve = reserveInfo[collateral];
         Types.UserInfo storage user = userInfo[to];
         _deposit(reserve, user, amount, collateral, to, from);
@@ -121,21 +107,20 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         uint256 amount,
         address to,
         bool isDepositToJOJO
-    ) external override nonReentrant nonFlashLoanReentrant {
+    )
+        external
+        override
+        nonReentrant
+        nonFlashLoanReentrant
+    {
         Types.UserInfo storage user = userInfo[msg.sender];
         accrueRate();
         _borrow(user, isDepositToJOJO, to, amount, msg.sender);
-        require(
-            _isAccountSafe(user, tRate),
-            Errors.AFTER_BORROW_ACCOUNT_IS_NOT_SAFE
-        );
+        require(_isAccountSafe(user, tRate), Errors.AFTER_BORROW_ACCOUNT_IS_NOT_SAFE);
     }
 
     /// @inheritdoc IJUSDBank
-    function repay(
-        uint256 amount,
-        address to
-    ) external override nonReentrant returns (uint256) {
+    function repay(uint256 amount, address to) external override nonReentrant returns (uint256) {
         Types.UserInfo storage user = userInfo[to];
         accrueRate();
         return _repay(user, msg.sender, to, amount, tRate);
@@ -147,14 +132,16 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         uint256 amount,
         address to,
         bool isInternal
-    ) external override nonReentrant nonFlashLoanReentrant {
+    )
+        external
+        override
+        nonReentrant
+        nonFlashLoanReentrant
+    {
         Types.UserInfo storage user = userInfo[msg.sender];
         _withdraw(amount, collateral, to, msg.sender, isInternal);
         uint256 tRate = getTRate();
-        require(
-            _isAccountSafe(user, tRate),
-            Errors.AFTER_WITHDRAW_ACCOUNT_IS_NOT_SAFE
-        );
+        require(_isAccountSafe(user, tRate), Errors.AFTER_WITHDRAW_ACCOUNT_IS_NOT_SAFE);
     }
 
     /// @inheritdoc IJUSDBank
@@ -174,12 +161,8 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
     {
         accrueRate();
         uint256 JUSDBorrowedT0 = userInfo[liquidated].t0BorrowBalance;
-        uint256 primaryLiquidatedAmount = IERC20(primaryAsset).balanceOf(
-            address(this)
-        );
-        uint256 primaryInsuranceAmount = IERC20(primaryAsset).balanceOf(
-            insurance
-        );
+        uint256 primaryLiquidatedAmount = IERC20(primaryAsset).balanceOf(address(this));
+        uint256 primaryInsuranceAmount = IERC20(primaryAsset).balanceOf(insurance);
         isValidLiquidator(liquidated, liquidator);
 
         {
@@ -190,47 +173,30 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
             }
         }
 
-        liquidateData = _calculateLiquidateAmount(
-            liquidated,
-            collateral,
-            amount
-        );
+        liquidateData = _calculateLiquidateAmount(liquidated, collateral, amount);
         require(
             // condition: actual liquidate price < max buy price,
-            (liquidateData.insuranceFee + liquidateData.actualLiquidated)
-                .decimalDiv(liquidateData.actualCollateral) <= expectPrice,
+            (liquidateData.insuranceFee + liquidateData.actualLiquidated).decimalDiv(liquidateData.actualCollateral)
+                <= expectPrice,
             Errors.LIQUIDATION_PRICE_PROTECTION
         );
 
-        _afterLiquidateOperation(
-            afterOperationParam,
-            amount,
-            collateral,
-            liquidated,
-            liquidateData
-        );
+        _afterLiquidateOperation(afterOperationParam, amount, collateral, liquidated, liquidateData);
 
         require(
-            JUSDBorrowedT0 - userInfo[liquidated].t0BorrowBalance >=
-                liquidateData.actualLiquidatedT0,
+            JUSDBorrowedT0 - userInfo[liquidated].t0BorrowBalance >= liquidateData.actualLiquidatedT0,
             Errors.REPAY_AMOUNT_NOT_ENOUGH
         );
         require(
-            IERC20(primaryAsset).balanceOf(insurance) -
-                primaryInsuranceAmount >=
-                liquidateData.insuranceFee,
+            IERC20(primaryAsset).balanceOf(insurance) - primaryInsuranceAmount >= liquidateData.insuranceFee,
             Errors.INSURANCE_AMOUNT_NOT_ENOUGH
         );
         require(
-            IERC20(primaryAsset).balanceOf(address(this)) -
-                primaryLiquidatedAmount >=
-                liquidateData.liquidatedRemainUSDC,
+            IERC20(primaryAsset).balanceOf(address(this)) - primaryLiquidatedAmount
+                >= liquidateData.liquidatedRemainUSDC,
             Errors.LIQUIDATED_AMOUNT_NOT_ENOUGH
         );
-        IERC20(primaryAsset).safeTransfer(
-            liquidated,
-            liquidateData.liquidatedRemainUSDC
-        );
+        IERC20(primaryAsset).safeTransfer(liquidated, liquidateData.liquidatedRemainUSDC);
         emit Liquidate(
             collateral,
             liquidator,
@@ -243,9 +209,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
     }
 
     /// @inheritdoc IJUSDBank
-    function handleDebt(
-        address[] calldata liquidatedTraders
-    ) external onlyOwner {
+    function handleDebt(address[] calldata liquidatedTraders) external onlyOwner {
         for (uint256 i; i < liquidatedTraders.length; i = i + 1) {
             _handleBadDebt(liquidatedTraders[i]);
         }
@@ -258,19 +222,14 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         uint256 amount,
         address to,
         bytes memory param
-    ) external nonFlashLoanReentrant {
+    )
+        external
+        nonFlashLoanReentrant
+    {
         Types.UserInfo storage user = userInfo[msg.sender];
         _withdraw(amount, collateral, receiver, msg.sender, false);
-        IFlashLoanReceive(receiver).JOJOFlashLoan(
-            collateral,
-            amount,
-            to,
-            param
-        );
-        require(
-            _isAccountSafe(user, getTRate()),
-            Errors.AFTER_FLASHLOAN_ACCOUNT_IS_NOT_SAFE
-        );
+        IFlashLoanReceive(receiver).JOJOFlashLoan(collateral, amount, to, param);
+        require(_isAccountSafe(user, getTRate()), Errors.AFTER_FLASHLOAN_ACCOUNT_IS_NOT_SAFE);
         emit FlashLoan(collateral, amount);
     }
 
@@ -287,7 +246,9 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address collateral,
         address to,
         address from
-    ) internal {
+    )
+        internal
+    {
         require(reserve.isDepositAllowed, Errors.RESERVE_NOT_ALLOW_DEPOSIT);
         require(amount != 0, Errors.DEPOSIT_AMOUNT_IS_ZERO);
         IERC20(collateral).safeTransferFrom(from, address(this), amount);
@@ -295,14 +256,10 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         user.depositBalance[collateral] += amount;
         reserve.totalDepositAmount += amount;
         require(
-            user.depositBalance[collateral] <=
-                reserve.maxDepositAmountPerAccount,
+            user.depositBalance[collateral] <= reserve.maxDepositAmountPerAccount,
             Errors.EXCEED_THE_MAX_DEPOSIT_AMOUNT_PER_ACCOUNT
         );
-        require(
-            reserve.totalDepositAmount <= reserve.maxTotalDepositAmount,
-            Errors.EXCEED_THE_MAX_DEPOSIT_AMOUNT_TOTAL
-        );
+        require(reserve.totalDepositAmount <= reserve.maxTotalDepositAmount, Errors.EXCEED_THE_MAX_DEPOSIT_AMOUNT_TOTAL);
         emit Deposit(collateral, from, to, msg.sender, amount);
     }
 
@@ -312,10 +269,10 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address to,
         uint256 tAmount,
         address from
-    ) internal {
-        uint256 t0Amount = tAmount.decimalRemainder(tRate)
-            ? tAmount.decimalDiv(tRate)
-            : tAmount.decimalDiv(tRate) + 1;
+    )
+        internal
+    {
+        uint256 t0Amount = tAmount.decimalRemainder(tRate) ? tAmount.decimalDiv(tRate) : tAmount.decimalDiv(tRate) + 1;
         user.t0BorrowBalance += t0Amount;
         t0TotalBorrowAmount += t0Amount;
         if (isDepositToJOJO) {
@@ -329,8 +286,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
             Errors.EXCEED_THE_MAX_BORROW_AMOUNT_PER_ACCOUNT
         );
         require(
-            t0TotalBorrowAmount.decimalMul(tRate) <= maxTotalBorrowAmount,
-            Errors.EXCEED_THE_MAX_BORROW_AMOUNT_TOTAL
+            t0TotalBorrowAmount.decimalMul(tRate) <= maxTotalBorrowAmount, Errors.EXCEED_THE_MAX_BORROW_AMOUNT_TOTAL
         );
         emit Borrow(from, to, tAmount, isDepositToJOJO);
     }
@@ -341,7 +297,10 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address to,
         uint256 amount,
         uint256 tRate
-    ) internal returns (uint256) {
+    )
+        internal
+        returns (uint256)
+    {
         require(amount != 0, Errors.REPAY_AMOUNT_IS_ZERO);
         uint256 JUSDBorrowed = user.t0BorrowBalance.decimalMul(tRate);
         uint256 tBorrowAmount;
@@ -360,20 +319,11 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         return tBorrowAmount;
     }
 
-    function _withdraw(
-        uint256 amount,
-        address collateral,
-        address to,
-        address from,
-        bool isInternal
-    ) internal {
+    function _withdraw(uint256 amount, address collateral, address to, address from, bool isInternal) internal {
         Types.ReserveInfo storage reserve = reserveInfo[collateral];
         Types.UserInfo storage fromAccount = userInfo[from];
         require(amount != 0, Errors.WITHDRAW_AMOUNT_IS_ZERO);
-        require(
-            amount <= fromAccount.depositBalance[collateral],
-            Errors.WITHDRAW_AMOUNT_IS_TOO_BIG
-        );
+        require(amount <= fromAccount.depositBalance[collateral], Errors.WITHDRAW_AMOUNT_IS_TOO_BIG);
         fromAccount.depositBalance[collateral] -= amount;
         if (isInternal) {
             require(reserve.isDepositAllowed, Errors.RESERVE_NOT_ALLOW_DEPOSIT);
@@ -381,8 +331,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
             _addCollateralIfNotExists(toAccount, collateral);
             toAccount.depositBalance[collateral] += amount;
             require(
-                toAccount.depositBalance[collateral] <=
-                    reserve.maxDepositAmountPerAccount,
+                toAccount.depositBalance[collateral] <= reserve.maxDepositAmountPerAccount,
                 Errors.EXCEED_THE_MAX_DEPOSIT_AMOUNT_PER_ACCOUNT
             );
         } else {
@@ -393,16 +342,10 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         _removeEmptyCollateral(fromAccount, collateral);
     }
 
-    function isValidLiquidator(
-        address liquidated,
-        address liquidator
-    ) internal view {
+    function isValidLiquidator(address liquidated, address liquidator) internal view {
         require(liquidator != liquidated, Errors.SELF_LIQUIDATION_NOT_ALLOWED);
         if (isLiquidatorWhitelistOpen) {
-            require(
-                isLiquidatorWhiteList[liquidator],
-                Errors.LIQUIDATOR_NOT_IN_THE_WHITELIST
-            );
+            require(isLiquidatorWhiteList[liquidator], Errors.LIQUIDATOR_NOT_IN_THE_WHITELIST);
         }
     }
 
@@ -410,20 +353,17 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address liquidated,
         address collateral,
         uint256 amount
-    ) internal view returns (Types.LiquidateData memory liquidateData) {
+    )
+        internal
+        view
+        returns (Types.LiquidateData memory liquidateData)
+    {
         Types.UserInfo storage liquidatedInfo = userInfo[liquidated];
-        require(
-            _isStartLiquidation(liquidatedInfo, tRate),
-            Errors.ACCOUNT_IS_SAFE
-        );
+        require(_isStartLiquidation(liquidatedInfo, tRate), Errors.ACCOUNT_IS_SAFE);
         Types.ReserveInfo memory reserve = reserveInfo[collateral];
         uint256 price = IPriceSource(reserve.oracle).getAssetPrice();
-        uint256 priceOff = price.decimalMul(
-            Types.ONE - reserve.liquidationPriceOff
-        );
-        uint256 liquidateAmount = amount.decimalMul(priceOff).decimalMul(
-            Types.ONE - reserve.insuranceFeeRate
-        );
+        uint256 priceOff = price.decimalMul(Types.ONE - reserve.liquidationPriceOff);
+        uint256 liquidateAmount = amount.decimalMul(priceOff).decimalMul(Types.ONE - reserve.insuranceFeeRate);
         uint256 JUSDBorrowed = liquidatedInfo.t0BorrowBalance.decimalMul(tRate);
         /*
             liquidateAmount <= JUSDBorrowed
@@ -433,12 +373,8 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         */
         if (liquidateAmount <= JUSDBorrowed) {
             liquidateData.actualCollateral = amount;
-            liquidateData.insuranceFee = amount.decimalMul(priceOff).decimalMul(
-                reserve.insuranceFeeRate
-            );
-            liquidateData.actualLiquidatedT0 = liquidateAmount.decimalDiv(
-                tRate
-            );
+            liquidateData.insuranceFee = amount.decimalMul(priceOff).decimalMul(reserve.insuranceFeeRate);
+            liquidateData.actualLiquidatedT0 = liquidateAmount.decimalDiv(tRate);
             liquidateData.actualLiquidated = liquidateAmount;
         } else {
             /*
@@ -450,34 +386,25 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
                     = actualCollateral * priceOff * insuranceFeeRate
                     = JUSDBorrowed * insuranceFeeRate / (1- insuranceFeeRate)
             */
-            liquidateData.actualCollateral = JUSDBorrowed
-                .decimalDiv(priceOff)
-                .decimalDiv(Types.ONE - reserve.insuranceFeeRate);
-            liquidateData.insuranceFee = JUSDBorrowed
-                .decimalMul(reserve.insuranceFeeRate)
-                .decimalDiv(Types.ONE - reserve.insuranceFeeRate);
+            liquidateData.actualCollateral =
+                JUSDBorrowed.decimalDiv(priceOff).decimalDiv(Types.ONE - reserve.insuranceFeeRate);
+            liquidateData.insuranceFee =
+                JUSDBorrowed.decimalMul(reserve.insuranceFeeRate).decimalDiv(Types.ONE - reserve.insuranceFeeRate);
             liquidateData.actualLiquidatedT0 = liquidatedInfo.t0BorrowBalance;
             liquidateData.actualLiquidated = JUSDBorrowed;
         }
 
-        liquidateData.liquidatedRemainUSDC = (amount -
-            liquidateData.actualCollateral).decimalMul(price);
+        liquidateData.liquidatedRemainUSDC = (amount - liquidateData.actualCollateral).decimalMul(price);
     }
 
-    function _addCollateralIfNotExists(
-        Types.UserInfo storage user,
-        address collateral
-    ) internal {
+    function _addCollateralIfNotExists(Types.UserInfo storage user, address collateral) internal {
         if (!user.hasCollateral[collateral]) {
             user.hasCollateral[collateral] = true;
             user.collateralList.push(collateral);
         }
     }
 
-    function _removeEmptyCollateral(
-        Types.UserInfo storage user,
-        address collateral
-    ) internal {
+    function _removeEmptyCollateral(Types.UserInfo storage user, address collateral) internal {
         if (user.depositBalance[collateral] == 0) {
             user.hasCollateral[collateral] = false;
             address[] storage collaterals = user.collateralList;
@@ -497,36 +424,19 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address collateral,
         address liquidated,
         Types.LiquidateData memory liquidateData
-    ) internal {
-        (address flashloanAddress, bytes memory param) = abi.decode(
-            afterOperationParam,
-            (address, bytes)
-        );
-        _withdraw(
-            flashloanAmount,
-            collateral,
-            flashloanAddress,
-            liquidated,
-            false
-        );
+    )
+        internal
+    {
+        (address flashloanAddress, bytes memory param) = abi.decode(afterOperationParam, (address, bytes));
+        _withdraw(flashloanAmount, collateral, flashloanAddress, liquidated, false);
         param = abi.encode(liquidateData, param);
-        IFlashLoanReceive(flashloanAddress).JOJOFlashLoan(
-            collateral,
-            flashloanAmount,
-            liquidated,
-            param
-        );
+        IFlashLoanReceive(flashloanAddress).JOJOFlashLoan(collateral, flashloanAmount, liquidated, param);
     }
 
     function _handleBadDebt(address liquidatedTrader) internal {
-        Types.UserInfo storage liquidatedTraderInfo = userInfo[
-            liquidatedTrader
-        ];
+        Types.UserInfo storage liquidatedTraderInfo = userInfo[liquidatedTrader];
         uint256 tRate = getTRate();
-        if (
-            liquidatedTraderInfo.collateralList.length == 0 &&
-            _isStartLiquidation(liquidatedTraderInfo, tRate)
-        ) {
+        if (liquidatedTraderInfo.collateralList.length == 0 && _isStartLiquidation(liquidatedTraderInfo, tRate)) {
             Types.UserInfo storage insuranceInfo = userInfo[insurance];
             uint256 borrowJUSDT0 = liquidatedTraderInfo.t0BorrowBalance;
             insuranceInfo.t0BorrowBalance += borrowJUSDT0;

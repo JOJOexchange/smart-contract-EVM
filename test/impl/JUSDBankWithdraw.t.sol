@@ -46,7 +46,7 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         uint256 maxToken1 = jusdBank.getMaxWithdrawAmount(address(eth), alice);
         maxToken2 = jusdBank.getMaxWithdrawAmount(address(btc), alice);
         assertEq(maxToken1, 0);
-        assertEq(maxToken2, 971428571);
+        assertEq(maxToken2, 971_428_571);
 
         vm.stopPrank();
         vm.startPrank(bob);
@@ -84,19 +84,16 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         uint256 rate2 = jusdBank.getTRate();
         uint256 maxToken2 = jusdBank.getMaxWithdrawAmount(address(btc), alice);
         uint256 maxToken1 = jusdBank.getMaxWithdrawAmount(address(eth), alice);
-        emit log_uint(
-            ((8500e6 - jusdBank.getBorrowBalance(alice)) * 1e18) /
-                ((5e17 * 800000000) / 1e18)
-        );
+        emit log_uint(((8500e6 - jusdBank.getBorrowBalance(alice)) * 1e18) / ((5e17 * 800_000_000) / 1e18));
         emit log_uint((5000e6 * 1e18) / rate);
         uint256 balance = eth.balanceOf(alice);
         uint256 aliceJusd = jusdBank.getBorrowBalance(alice);
         emit log_uint(aliceJusd);
         uint256 maxMint = jusdBank.getDepositMaxMintAmount(alice);
         assertEq(balance, 1e18);
-        assertEq(aliceJusd, (4999993662 * rate2) / 1e18);
-        assertEq(maxMint, 107200e6);
-        assertEq(maxToken2, 1000000000);
+        assertEq(aliceJusd, (4_999_993_662 * rate2) / 1e18);
+        assertEq(maxMint, 107_200e6);
+        assertEq(maxToken2, 1_000_000_000);
         assertEq(maxToken1, 9e18);
         vm.stopPrank();
     }
@@ -126,7 +123,7 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         uint256 balance2 = btc.balanceOf(alice);
         uint256 aliceBorrow = jusdBank.getBorrowBalance(alice);
         assertEq(balance1, 5);
-        assertEq(aliceBorrow, (1000001904 * rateT3) / 1e18);
+        assertEq(aliceBorrow, (1_000_001_904 * rateT3) / 1e18);
         assertEq(balance2, 5);
         vm.stopPrank();
     }
@@ -171,10 +168,8 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         uint256 adjustAmount = jusdBank.getBorrowBalance(alice);
         uint256 rateT3 = jusdBank.tRate();
 
-        emit log_uint(
-            6000e6 - (((5000e6 * 1e18) / rateT2 + 1) * rateT3) / 1e18
-        );
-        assertEq(jusd.balanceOf(alice), 999996829);
+        emit log_uint(6000e6 - (((5000e6 * 1e18) / rateT2 + 1) * rateT3) / 1e18);
+        assertEq(jusd.balanceOf(alice), 999_996_829);
         assertEq(0, adjustAmount);
         assertEq(100e18, eth.balanceOf(alice));
         assertEq(false, jusdBank.getIfHasCollateral(alice, address(eth)));
@@ -182,23 +177,14 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
     }
 
     function testDepositTooManyThenWithdraw() public {
-        jusdBank.updateReserveParam(
-            address(eth),
-            8e17,
-            2300e18,
-            230e18,
-            100000e18
-        );
-        jusdBank.updateMaxBorrowAmount(200000e18, 300000e18);
+        jusdBank.updateReserveParam(address(eth), 8e17, 2300e18, 230e18, 100_000e18);
+        jusdBank.updateMaxBorrowAmount(200_000e18, 300_000e18);
         eth.transfer(alice, 200e18);
         vm.startPrank(alice);
         eth.approve(address(jusdBank), 200e18);
         jusdBank.deposit(alice, address(eth), 200e18, alice);
-        jusdBank.borrow(100000e6, alice, false);
-        uint256 withdrawAmount = jusdBank.getMaxWithdrawAmount(
-            address(eth),
-            alice
-        );
+        jusdBank.borrow(100_000e6, alice, false);
+        uint256 withdrawAmount = jusdBank.getMaxWithdrawAmount(address(eth), alice);
         assertEq(withdrawAmount, 75e18);
         jusdBank.withdraw(address(eth), 75e18, alice, false);
         vm.stopPrank();
@@ -210,10 +196,7 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         eth.approve(address(jusdBank), 10e18);
         jusdBank.deposit(alice, address(eth), 10e18, alice);
         jusdBank.withdraw(address(eth), 1e18, bob, true);
-        assertEq(
-            IJUSDBank(jusdBank).getDepositBalance(address(eth), bob),
-            1e18
-        );
+        assertEq(IJUSDBank(jusdBank).getDepositBalance(address(eth), bob), 1e18);
     }
 
     function testWithdrawInternalExceed() public {
@@ -237,7 +220,7 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         vm.startPrank(alice);
         eth.approve(address(jusdBank), 10e18);
         jusdBank.deposit(alice, address(eth), 10e18, alice);
-        for (uint i = 0; i < 100; i++) {
+        for (uint256 i = 0; i < 100; i++) {
             jusdBank.withdraw(address(eth), 10e18, alice, true);
         }
 
@@ -249,6 +232,6 @@ contract JUSDBankWithdrawTest is JUSDBankInitTest {
         assertEq(list.length, 1);
 
         cheats.expectRevert("AFTER_BORROW_ACCOUNT_IS_NOT_SAFE");
-        jusdBank.borrow(100000e6, alice, false);
+        jusdBank.borrow(100_000e6, alice, false);
     }
 }

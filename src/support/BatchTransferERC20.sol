@@ -12,13 +12,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract BatchTransferERC20 is Ownable {
     using SafeERC20 for IERC20;
 
-    function batchTransfer(
-        address token,
-        address[] memory receivers,
-        uint256[] memory amounts
-    ) public onlyOwner {
+    function batchTransfer(address token, address[] memory receivers, uint256[] memory amounts) public onlyOwner {
         require(receivers.length == amounts.length, "PARAM_LENGTH_INVALID");
-        for (uint i = 0; i < receivers.length; i++) {
+        for (uint256 i = 0; i < receivers.length; i++) {
             IERC20(token).safeTransfer(receivers[i], amounts[i]);
         }
     }

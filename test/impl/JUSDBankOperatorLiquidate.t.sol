@@ -7,7 +7,11 @@ pragma solidity ^0.8.20;
 
 import "../init/JUSDBankInit.t.sol";
 import "../../src/FlashLoanLiquidate.sol";
-import {LiquidateCollateralRepayNotEnough, LiquidateCollateralInsuranceNotEnough, LiquidateCollateralLiquidatedNotEnough} from "../mocks/MockWrongLiquidateFlashloan.sol";
+import {
+    LiquidateCollateralRepayNotEnough,
+    LiquidateCollateralInsuranceNotEnough,
+    LiquidateCollateralLiquidatedNotEnough
+} from "../mocks/MockWrongLiquidateFlashloan.sol";
 
 // Check jusdbank's liquidation
 contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
@@ -25,29 +29,15 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.warp(2000);
         ethOracle.setMarkPrice(900e6);
 
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            address(this),
-            address(bob),
-            9000e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, address(this), address(bob), 9000e6, data);
         // liquidate
         vm.startPrank(bob);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
 
         cheats.expectRevert("approve target is not in the whitelist");
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
@@ -57,32 +47,14 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         cheats.expectRevert("swap target is not in the whitelist");
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
 
-        bytes memory param2 = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            19000e6,
-            data
-        );
+        bytes memory param2 = abi.encode(swapContract, swapContract, address(bob), 19_000e6, data);
         cheats.expectRevert("receive amount is too small");
-        bytes memory afterParam2 = abi.encode(
-            address(flashLoanLiquidate),
-            param2
-        );
+        bytes memory afterParam2 = abi.encode(address(flashLoanLiquidate), param2);
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam2, 900e6);
 
         bytes memory data2 = abi.encodeWithSignature("swap");
-        bytes memory param3 = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            9000e6,
-            data2
-        );
-        bytes memory afterParam3 = abi.encode(
-            address(flashLoanLiquidate),
-            param3
-        );
+        bytes memory param3 = abi.encode(swapContract, swapContract, address(bob), 9000e6, data2);
+        bytes memory afterParam3 = abi.encode(address(flashLoanLiquidate), param3);
         cheats.expectRevert();
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam3, 900e6);
         vm.stopPrank();
@@ -100,49 +72,29 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         // price exchange 900 * 10 * 0.825 = 7425
-        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD = 8,251.1111111111 insuranceFee = 8,25.11111111111
+        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD =
+        // 8,251.1111111111 insuranceFee = 8,25.11111111111
         // actualCollateral 9.6504223522
         vm.warp(2000);
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            9000e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 9000e6, data);
 
         // liquidate
 
         vm.startPrank(bob);
 
         uint256 aliceUsedBorrowed = jusdBank.getBorrowBalance(alice);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
-        Types.LiquidateData memory liq = jusdBank.liquidate(
-            alice,
-            address(eth),
-            bob,
-            10e18,
-            afterParam,
-            900e6
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
+        Types.LiquidateData memory liq = jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
 
         //judge
         uint256 bobDeposit = jusdBank.getDepositBalance(address(eth), bob);
@@ -152,7 +104,7 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         uint256 insuranceUSDC = IERC20(usdc).balanceOf(insurance);
         uint256 aliceUSDC = IERC20(usdc).balanceOf(alice);
         uint256 bobUSDC = IERC20(usdc).balanceOf(bob);
-        console.log((((aliceUsedBorrowed * 1e18) / 855000000) * 1e18) / 9e17);
+        console.log((((aliceUsedBorrowed * 1e18) / 855_000_000) * 1e18) / 9e17);
         console.log((((aliceUsedBorrowed * 1e17) / 1e18) * 1e18) / 9e17);
         console.log(((10e18 - liq.actualCollateral) * 900e6) / 1e18);
         console.log((((liq.actualCollateral * 900e6) / 1e18) * 5e16) / 1e18);
@@ -161,10 +113,10 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         assertEq(bobDeposit, 0);
         assertEq(bobBorrow, 0);
         assertEq(aliceBorrow, 0);
-        assertEq(liq.actualCollateral, 9650428473034437946);
-        assertEq(insuranceUSDC, 825111634);
-        assertEq(aliceUSDC, 314614374);
-        assertEq(bobUSDC, 434269282);
+        assertEq(liq.actualCollateral, 9_650_428_473_034_437_946);
+        assertEq(insuranceUSDC, 825_111_634);
+        assertEq(aliceUSDC, 314_614_374);
+        assertEq(bobUSDC, 434_269_282);
 
         // logs
         console.log("liquidate amount", liq.actualCollateral);
@@ -190,56 +142,32 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         jusdBank.deposit(alice, address(eth), 10e18, aliceSub);
         vm.warp(1000);
 
-        bytes memory dataBorrow = jusdBank.getBorrowData(
-            7426e6,
-            aliceSub,
-            false
-        );
+        bytes memory dataBorrow = jusdBank.getBorrowData(7426e6, aliceSub, false);
         Subaccount(aliceSub).execute(address(jusdBank), dataBorrow, 0);
         vm.stopPrank();
 
         // price exchange 900 * 10 * 0.825 = 7425
-        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD = 8,251.1111111111 insuranceFee = 8,25.11111111111
+        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD =
+        // 8,251.1111111111 insuranceFee = 8,25.11111111111
         // actualCollateral 9.6504223522
         vm.warp(2000);
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            9000e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 9000e6, data);
 
         // liquidate
 
         vm.startPrank(bob);
         // uint256 aliceSubUsedBorrowed = jusdBank.getBorrowBalance(aliceSub);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
-        Types.LiquidateData memory liq = jusdBank.liquidate(
-            aliceSub,
-            address(eth),
-            bob,
-            10e18,
-            afterParam,
-            900e6
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
+        Types.LiquidateData memory liq = jusdBank.liquidate(aliceSub, address(eth), bob, 10e18, afterParam, 900e6);
 
         //judge
         // uint256 bobBorrow = jusdBank.getBorrowBalance(bob);
@@ -254,10 +182,10 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
 
         // assertEq(bobBorrow, 0);
         // assertEq(aliceSubBorrow, 0);
-        assertEq(liq.actualCollateral, 9650428473034437946);
-        assertEq(insuranceUSDC, 825111634);
-        assertEq(aliceSubUSDC, 314614374);
-        assertEq(bobUSDC, 434269282);
+        assertEq(liq.actualCollateral, 9_650_428_473_034_437_946);
+        assertEq(insuranceUSDC, 825_111_634);
+        assertEq(aliceSubUSDC, 314_614_374);
+        assertEq(bobUSDC, 434_269_282);
 
         // logs
         console.log("liquidate amount", liq.actualCollateral);
@@ -269,11 +197,7 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        bytes memory transferData = abi.encodeWithSignature(
-            "transfer(address,uint256)",
-            alice,
-            aliceSubUSDC
-        );
+        bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", alice, aliceSubUSDC);
         Subaccount(aliceSub).execute(address(usdc), transferData, 0);
         assertEq(IERC20(usdc).balanceOf(aliceSub), 0);
         assertEq(IERC20(usdc).balanceOf(alice), aliceSubUSDC);
@@ -295,49 +219,29 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         // price exchange 900 * 10 * 0.825 = 7425
-        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD = 8,251.1111111111 insuranceFee = 8,25.11111111111
+        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD =
+        // 8,251.1111111111 insuranceFee = 8,25.11111111111
         // actualCollateral 9.6504223522
         vm.warp(2000);
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            9000e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 9000e6, data);
 
         // liquidate
 
         vm.startPrank(bob);
 
         uint256 aliceUsedBorrowed = jusdBank.getBorrowBalance(alice);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
-        Types.LiquidateData memory liq = jusdBank.liquidate(
-            alice,
-            address(eth),
-            bob,
-            10e18,
-            afterParam,
-            900e6
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
+        Types.LiquidateData memory liq = jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
 
         //judge
         uint256 bobDeposit = jusdBank.getDepositBalance(address(eth), bob);
@@ -347,7 +251,7 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         uint256 insuranceUSDC = IERC20(usdc).balanceOf(insurance);
         uint256 aliceUSDC = IERC20(usdc).balanceOf(alice);
         uint256 bobUSDC = IERC20(usdc).balanceOf(bob);
-        console.log((((aliceUsedBorrowed * 1e18) / 855000000) * 1e18) / 9e17);
+        console.log((((aliceUsedBorrowed * 1e18) / 855_000_000) * 1e18) / 9e17);
         console.log((((aliceUsedBorrowed * 1e17) / 1e18) * 1e18) / 9e17);
         console.log(((10e18 - liq.actualCollateral) * 900e6) / 1e18);
         console.log((((liq.actualCollateral * 900e6) / 1e18) * 5e16) / 1e18);
@@ -356,10 +260,10 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         assertEq(bobDeposit, 0);
         assertEq(bobBorrow, 0);
         assertEq(aliceBorrow, 0);
-        assertEq(liq.actualCollateral, 9650428473034437946);
-        assertEq(insuranceUSDC, 825111634);
-        assertEq(aliceUSDC, 314614374);
-        assertEq(bobUSDC, 434269282);
+        assertEq(liq.actualCollateral, 9_650_428_473_034_437_946);
+        assertEq(insuranceUSDC, 825_111_634);
+        assertEq(aliceUSDC, 314_614_374);
+        assertEq(bobUSDC, 434_269_282);
 
         // logs
         console.log("liquidate amount", liq.actualCollateral);
@@ -385,50 +289,30 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         // price exchange 900 * 10 * 0.825 = 7425
-        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD = 8,251.1111111111 insuranceFee = 8,25.11111111111
+        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD =
+        // 8,251.1111111111 insuranceFee = 8,25.11111111111
         // actualCollateral 9.6504223522
         vm.warp(2000);
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         // flashLoanLiquidate.setOracle(address(eth), address(jojoOracle900));
 
         bytes memory data = swapContract.getSwapToUSDCData(5e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            4500e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 4500e6, data);
 
         // liquidate
 
         vm.startPrank(bob);
 
         uint256 aliceUsedBorrowed = jusdBank.getBorrowBalance(alice);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
-        Types.LiquidateData memory liq = jusdBank.liquidate(
-            alice,
-            address(eth),
-            bob,
-            5e18,
-            afterParam,
-            900e6
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
+        Types.LiquidateData memory liq = jusdBank.liquidate(alice, address(eth), bob, 5e18, afterParam, 900e6);
 
         assertEq(jusdBank.isAccountSafe(alice), true);
 
@@ -440,18 +324,18 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         uint256 insuranceUSDC = IERC20(usdc).balanceOf(insurance);
         uint256 aliceUSDC = IERC20(usdc).balanceOf(alice);
         uint256 bobUSDC = IERC20(usdc).balanceOf(bob);
-        console.log((((5e18 * 855000000) / 1e18) * 9e17) / 1e18);
+        console.log((((5e18 * 855_000_000) / 1e18) * 9e17) / 1e18);
         // console.log((aliceUsedBorrowed * 1e17 / 1e18)* 1e18 / 9e17);
         console.log((((liq.actualCollateral * 900e6) / 1e18) * 5e16) / 1e18);
 
         assertEq(aliceDeposit, 5e18);
         assertEq(bobDeposit, 0);
         assertEq(bobBorrow, 0);
-        assertEq(aliceBorrow, aliceUsedBorrowed - 3847500000);
+        assertEq(aliceBorrow, aliceUsedBorrowed - 3_847_500_000);
         assertEq(liq.actualCollateral, 5e18);
-        assertEq(insuranceUSDC, 427500000);
+        assertEq(insuranceUSDC, 427_500_000);
         assertEq(aliceUSDC, 0);
-        assertEq(bobUSDC, 225000000);
+        assertEq(bobUSDC, 225_000_000);
 
         // logs
         console.log("liquidate amount", liq.actualCollateral);
@@ -478,49 +362,29 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         // price exchange 900 * 10 * 0.825 = 7425
-        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD = 8,251.1111111111 insuranceFee = 8,25.11111111111
+        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD =
+        // 8,251.1111111111 insuranceFee = 8,25.11111111111
         // actualCollateral 9.6504223522
         vm.warp(2000);
         ethOracle.setMarkPrice(500e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            5000e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 5000e6, data);
 
         // liquidate
 
         vm.startPrank(bob);
 
         uint256 aliceUsedBorrowed = jusdBank.getBorrowBalance(alice);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
-        Types.LiquidateData memory liq = jusdBank.liquidate(
-            alice,
-            address(eth),
-            bob,
-            10e18,
-            afterParam,
-            900e6
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
+        Types.LiquidateData memory liq = jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
 
         //judge
         uint256 bobDeposit = jusdBank.getDepositBalance(address(eth), bob);
@@ -537,9 +401,9 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         assertEq(bobBorrow, 0);
         assertEq(aliceBorrow, aliceUsedBorrowed - 4275e6);
         assertEq(liq.actualCollateral, 10e18);
-        assertEq(insuranceUSDC, 475000000);
+        assertEq(insuranceUSDC, 475_000_000);
         assertEq(aliceUSDC, 0);
-        assertEq(bobUSDC, 250000000);
+        assertEq(bobUSDC, 250_000_000);
         assertEq(insuranceBorrow, 0);
 
         // logs
@@ -572,31 +436,19 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
         LiquidateCollateralRepayNotEnough flashLoanLiquidate = new LiquidateCollateralRepayNotEnough(
-                address(jusdBank),
-                address(jusdExchange),
-                address(usdc),
-                address(jusd),
-                insurance
-            );
+            address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance
+        );
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
 
         // liquidate
         vm.startPrank(bob);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
         cheats.expectRevert("REPAY_AMOUNT_NOT_ENOUGH");
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
     }
@@ -616,31 +468,19 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
         LiquidateCollateralInsuranceNotEnough flashLoanLiquidate = new LiquidateCollateralInsuranceNotEnough(
-                address(jusdBank),
-                address(jusdExchange),
-                address(usdc),
-                address(jusd),
-                insurance
-            );
+            address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance
+        );
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
 
         // liquidate
         vm.startPrank(bob);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
         cheats.expectRevert("INSURANCE_AMOUNT_NOT_ENOUGH");
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
     }
@@ -660,31 +500,19 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
         LiquidateCollateralLiquidatedNotEnough flashLoanLiquidate = new LiquidateCollateralLiquidatedNotEnough(
-                address(jusdBank),
-                address(jusdExchange),
-                address(usdc),
-                address(jusd),
-                insurance
-            );
+            address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance
+        );
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
 
         // liquidate
         vm.startPrank(bob);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
         cheats.expectRevert("LIQUIDATED_AMOUNT_NOT_ENOUGH");
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
     }
@@ -706,31 +534,21 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         // price exchange 900 * 10 * 0.825 = 7425
-        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD = 8,251.1111111111 insuranceFee = 8,25.11111111111
+        // liquidateAmount = 7695, USDJBorrow 7426 liquidationPriceOff = 0.05 priceOff = 855 actualJUSD =
+        // 8,251.1111111111 insuranceFee = 8,25.11111111111
         // actualCollateral 9.6504223522
         vm.warp(2000);
         ethOracle.setMarkPrice(900e6);
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            9000e6,
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), 9000e6, data);
 
         // liquidate
 
@@ -738,18 +556,8 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         jusdBank.setOperator(jim, true);
         vm.stopPrank();
         vm.startPrank(jim);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
-        Types.LiquidateData memory liqBefore = jusdBank.liquidate(
-            alice,
-            address(eth),
-            bob,
-            10e18,
-            afterParam,
-            900e6
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
+        Types.LiquidateData memory liqBefore = jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
 
         //judge
         uint256 bobDeposit = jusdBank.getDepositBalance(address(eth), bob);
@@ -764,10 +572,10 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         assertEq(bobDeposit, 0);
         assertEq(bobBorrow, 0);
         assertEq(aliceBorrow, 0);
-        assertEq(liqBefore.actualCollateral, 9650428473034437946);
-        assertEq(insuranceUSDC, 825111634);
-        assertEq(aliceUSDC, 314614374);
-        assertEq(bobUSDC, 434269282);
+        assertEq(liqBefore.actualCollateral, 9_650_428_473_034_437_946);
+        assertEq(insuranceUSDC, 825_111_634);
+        assertEq(aliceUSDC, 314_614_374);
+        assertEq(bobUSDC, 434_269_282);
         vm.stopPrank();
 
         jusdBank.removeLiquidator(bob);
@@ -790,31 +598,18 @@ contract JUSDBankOperatorLiquidateTest is JUSDBankInitTest {
         vm.stopPrank();
 
         //init flashloanRepay
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
 
         flashLoanLiquidate.setWhiteListContract(address(swapContract), true);
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
 
         // liquidate
         vm.startPrank(jim);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
         cheats.expectRevert("CAN_NOT_OPERATE_ACCOUNT");
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 900e6);
         vm.stopPrank();

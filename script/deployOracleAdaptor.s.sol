@@ -7,7 +7,7 @@ import "../src/oracle/OracleAdaptor.sol";
 
 contract OracleAdaptorScript is Script {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
@@ -18,8 +18,8 @@ contract OracleAdaptorScript is Script {
             // decimalCorrection
             20,
             //heartbeatInterval
-            86400,
-            86400,
+            86_400,
+            86_400,
             // usdc
             0x0153002d20B96532C639313c2d54c3dA09109309,
             5e16

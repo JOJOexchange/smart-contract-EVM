@@ -24,10 +24,7 @@ contract BotSubaccount {
     // ========== modifier ==========
 
     modifier onlyGlobalOperatorAndOwner() {
-        require(
-            jojoOperator == msg.sender || owner == msg.sender,
-            "Ownable: caller is not the globalOperator or owner"
-        );
+        require(jojoOperator == msg.sender || owner == msg.sender, "Ownable: caller is not the globalOperator or owner");
         _;
     }
 
@@ -37,12 +34,7 @@ contract BotSubaccount {
     /// @notice if the botSuaccount is created by subaccount,
     /// then `_operator` is the owner of subaccount.
     /// can not delete operator
-    function init(
-        address _owner,
-        address _operator,
-        address _dealer,
-        address _JOJOoperator
-    ) external {
+    function init(address _owner, address _operator, address _dealer, address _JOJOoperator) external {
         require(!initialized, "ALREADY INITIALIZED");
         initialized = true;
         owner = _owner;
@@ -53,21 +45,11 @@ contract BotSubaccount {
         IDealer(dealer).setOperator(_operator, true);
     }
 
-    function requestWithdrawAsset(
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    ) external onlyGlobalOperatorAndOwner {
-        IDealer(dealer).requestWithdraw(
-            address(this),
-            primaryAmount,
-            secondaryAmount
-        );
+    function requestWithdrawAsset(uint256 primaryAmount, uint256 secondaryAmount) external onlyGlobalOperatorAndOwner {
+        IDealer(dealer).requestWithdraw(address(this), primaryAmount, secondaryAmount);
     }
 
-    function executeWithdrawAsset(
-        address to,
-        bool toInternal
-    ) external onlyGlobalOperatorAndOwner {
+    function executeWithdrawAsset(address to, bool toInternal) external onlyGlobalOperatorAndOwner {
         if (msg.sender == jojoOperator) {
             require(to == owner, "globalOperator only can transfer to owner");
         }
@@ -79,18 +61,14 @@ contract BotSubaccount {
         uint256 primaryAmount,
         uint256 secondaryAmount,
         bool isInternal
-    ) external onlyGlobalOperatorAndOwner {
+    )
+        external
+        onlyGlobalOperatorAndOwner
+    {
         if (msg.sender == jojoOperator) {
             require(to == owner, "globalOperator only can transfer to owner");
         }
 
-        IDealer(dealer).fastWithdraw(
-            address(this),
-            to,
-            primaryAmount,
-            secondaryAmount,
-            isInternal,
-            ""
-        );
+        IDealer(dealer).fastWithdraw(address(this), to, primaryAmount, secondaryAmount, isInternal, "");
     }
 }

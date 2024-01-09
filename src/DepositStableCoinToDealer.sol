@@ -26,10 +26,7 @@ contract DepositStableCoinToDealer is Ownable {
         weth = _weth;
     }
 
-    function setWhiteListContract(
-        address targetContract,
-        bool isValid
-    ) public onlyOwner {
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
         whiteListContract[targetContract] = isValid;
     }
 
@@ -39,26 +36,22 @@ contract DepositStableCoinToDealer is Ownable {
         address to,
         bytes calldata param,
         uint256 minReceive
-    ) external payable {
+    )
+        external
+        payable
+    {
         if (asset == weth && msg.value == amount) {
-            IWETH(weth).deposit{value: amount}();
+            IWETH(weth).deposit{ value: amount }();
         } else {
             IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
         }
-        (address approveTarget, address swapTarget, bytes memory data) = abi
-            .decode(param, (address, address, bytes));
-        require(
-            whiteListContract[approveTarget],
-            "approve target is not in the whitelist"
-        );
-        require(
-            whiteListContract[swapTarget],
-            "swap target is not in the whitelist"
-        );
+        (address approveTarget, address swapTarget, bytes memory data) = abi.decode(param, (address, address, bytes));
+        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
         // if usdt
         IERC20(asset).safeApprove(approveTarget, 0);
         IERC20(asset).safeApprove(approveTarget, amount);
-        (bool success, ) = swapTarget.call(data);
+        (bool success,) = swapTarget.call(data);
         if (success == false) {
             assembly {
                 let ptr := mload(0x40)

@@ -23,12 +23,7 @@ contract JUSDRepayHelper is Ownable {
     event UpdateAdmin(address admin, bool isValid);
     event HelpToTransfer(address from, address to, uint256 amount);
 
-    constructor(
-        address _jusdBank,
-        address _JUSD,
-        address _USDC,
-        address _JUSDExchange
-    ) Ownable() {
+    constructor(address _jusdBank, address _JUSD, address _USDC, address _JUSDExchange) Ownable() {
         // set params
         JusdBank = _jusdBank;
         JUSD = _JUSD;
@@ -38,10 +33,7 @@ contract JUSDRepayHelper is Ownable {
     }
 
     modifier onlyAdminWhiteList() {
-        require(
-            adminWhiteList[msg.sender],
-            "caller is not in the admin white list"
-        );
+        require(adminWhiteList[msg.sender], "caller is not in the admin white list");
         _;
     }
 

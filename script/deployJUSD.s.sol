@@ -7,7 +7,7 @@ import "../src/token/JUSD.sol";
 
 contract JUSDScript is Script {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("JOJO_OP_DEPLOYER_PK");

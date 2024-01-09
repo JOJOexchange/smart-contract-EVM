@@ -21,11 +21,7 @@ contract OracleAdaptor is Ownable {
     bool public isSelfOracle;
 
     // Align with chainlink
-    event AnswerUpdated(
-        int256 indexed current,
-        uint256 indexed roundId,
-        uint256 updatedAt
-    );
+    event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
 
     event UpdateThreshold(uint256 oldThreshold, uint256 newThreshold);
 
@@ -67,19 +63,11 @@ contract OracleAdaptor is Ownable {
     function getChainLinkPrice() public view returns (uint256) {
         int256 rawPrice;
         uint256 updatedAt;
-        (, rawPrice, , updatedAt, ) = IChainlink(chainlink).latestRoundData();
-        (, int256 usdcPrice, , uint256 usdcUpdatedAt, ) = IChainlink(usdcSource)
-            .latestRoundData();
-        require(
-            block.timestamp - updatedAt <= heartbeatInterval,
-            "ORACLE_HEARTBEAT_FAILED"
-        );
-        require(
-            block.timestamp - usdcUpdatedAt <= usdcHeartbeat,
-            "USDC_ORACLE_HEARTBEAT_FAILED"
-        );
-        uint256 tokenPrice = (SafeCast.toUint256(rawPrice) * 1e8) /
-            SafeCast.toUint256(usdcPrice);
+        (, rawPrice,, updatedAt,) = IChainlink(chainlink).latestRoundData();
+        (, int256 usdcPrice,, uint256 usdcUpdatedAt,) = IChainlink(usdcSource).latestRoundData();
+        require(block.timestamp - updatedAt <= heartbeatInterval, "ORACLE_HEARTBEAT_FAILED");
+        require(block.timestamp - usdcUpdatedAt <= usdcHeartbeat, "USDC_ORACLE_HEARTBEAT_FAILED");
+        uint256 tokenPrice = (SafeCast.toUint256(rawPrice) * 1e8) / SafeCast.toUint256(usdcPrice);
         return (tokenPrice * 1e18) / decimalsCorrection;
     }
 
@@ -87,13 +75,8 @@ contract OracleAdaptor is Ownable {
         uint256 chainLinkPrice = getChainLinkPrice();
         if (isSelfOracle) {
             uint256 JOJOPrice = price;
-            uint256 diff = JOJOPrice >= chainLinkPrice
-                ? JOJOPrice - chainLinkPrice
-                : chainLinkPrice - JOJOPrice;
-            require(
-                (diff * 1e18) / chainLinkPrice <= priceThreshold,
-                "deviation is too big"
-            );
+            uint256 diff = JOJOPrice >= chainLinkPrice ? JOJOPrice - chainLinkPrice : chainLinkPrice - JOJOPrice;
+            require((diff * 1e18) / chainLinkPrice <= priceThreshold, "deviation is too big");
             return price;
         } else {
             return chainLinkPrice;

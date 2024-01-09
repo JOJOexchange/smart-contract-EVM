@@ -16,14 +16,7 @@ contract JUSDViewTest is JUSDBankInitTest {
         MockUniswapOracle MockUni = new MockUniswapOracle();
         address[] memory pools;
         UniswapPriceAdaptor UNIOracle = new UniswapPriceAdaptor(
-            address(MockUni),
-            18,
-            address(BTC),
-            address(usdc),
-            pools,
-            600,
-            address(ethOracle),
-            100000000000000000
+            address(MockUni), 18, address(BTC), address(usdc), pools, 600, address(ethOracle), 100_000_000_000_000_000
         );
         UNIOracle.getAssetPrice();
         UNIOracle.getMarkPrice();
@@ -43,7 +36,7 @@ contract JUSDViewTest is JUSDBankInitTest {
             // maxDepositAmountPerAccount
             210e8,
             // maxBorrowValue
-            100000e18,
+            100_000e18,
             // liquidateMortgageRate
             75e16,
             // liquidationPriceOff
@@ -63,23 +56,17 @@ contract JUSDViewTest is JUSDBankInitTest {
         jusdBank.deposit(alice, address(BTC), 1e8, alice);
 
         uint256 maxMintAmount = jusdBank.getDepositMaxMintAmount(alice);
-        uint256 maxWithdrawBTC = jusdBank.getMaxWithdrawAmount(
-            address(BTC),
-            alice
-        );
-        uint256 maxWithdrawETH = jusdBank.getMaxWithdrawAmount(
-            address(eth),
-            alice
-        );
-        assertEq(maxMintAmount, 22000000000);
+        uint256 maxWithdrawBTC = jusdBank.getMaxWithdrawAmount(address(BTC), alice);
+        uint256 maxWithdrawETH = jusdBank.getMaxWithdrawAmount(address(eth), alice);
+        assertEq(maxMintAmount, 22_000_000_000);
         assertEq(maxWithdrawBTC, 1e8);
         assertEq(maxWithdrawETH, 10e18);
 
         jusdBank.borrow(7200e6, alice, false);
         maxWithdrawBTC = jusdBank.getMaxWithdrawAmount(address(BTC), alice);
         maxWithdrawETH = jusdBank.getMaxWithdrawAmount(address(eth), alice);
-        assertEq(maxWithdrawBTC, 100000000);
-        assertEq(maxWithdrawETH, 10000000000000000000);
+        assertEq(maxWithdrawBTC, 100_000_000);
+        assertEq(maxWithdrawETH, 10_000_000_000_000_000_000);
 
         jusdBank.borrow(800e6, alice, false);
         jusdBank.withdraw(address(BTC), 1e8, alice, false);

@@ -25,10 +25,7 @@ contract BotSubaccountFactory {
     // ========== event ==========
 
     event NewBotSubaccount(
-        address indexed master,
-        address indexed operator,
-        uint256 botSubaccountIndex,
-        address botSubaccountAddress
+        address indexed master, address indexed operator, uint256 botSubaccountIndex, address botSubaccountAddress
     );
 
     // ========== constructor ==========
@@ -37,12 +34,7 @@ contract BotSubaccountFactory {
         template = address(new BotSubaccount());
         dealer = _dealer;
         globalOperator = _operator;
-        BotSubaccount(template).init(
-            address(this),
-            address(this),
-            dealer,
-            globalOperator
-        );
+        BotSubaccount(template).init(address(this), address(this), dealer, globalOperator);
     }
 
     // ========== functions ==========
@@ -51,36 +43,18 @@ contract BotSubaccountFactory {
     /// is a standard protocol for deploying minimal proxy contracts,
     /// also known as "clones".
     // owner should be the EOA
-    function newSubaccount(
-        address owner,
-        address operator
-    ) external returns (address botSubaccount) {
+    function newSubaccount(address owner, address operator) external returns (address botSubaccount) {
         botSubaccount = Clones.clone(template);
-        BotSubaccount(botSubaccount).init(
-            owner,
-            operator,
-            dealer,
-            globalOperator
-        );
+        BotSubaccount(botSubaccount).init(owner, operator, dealer, globalOperator);
         botSubaccountRegistry[owner].push(botSubaccount);
-        emit NewBotSubaccount(
-            owner,
-            operator,
-            botSubaccountRegistry[owner].length - 1,
-            botSubaccount
-        );
+        emit NewBotSubaccount(owner, operator, botSubaccountRegistry[owner].length - 1, botSubaccount);
     }
 
-    function getBotSubaccounts(
-        address master
-    ) external view returns (address[] memory) {
+    function getBotSubaccounts(address master) external view returns (address[] memory) {
         return botSubaccountRegistry[master];
     }
 
-    function getBotSubaccount(
-        address master,
-        uint256 index
-    ) external view returns (address) {
+    function getBotSubaccount(address master, uint256 index) external view returns (address) {
         return botSubaccountRegistry[master][index];
     }
 }

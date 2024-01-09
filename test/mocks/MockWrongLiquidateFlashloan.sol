@@ -16,7 +16,7 @@ import "../../src/libraries/SignedDecimalMath.sol";
 
 contract LiquidateCollateralRepayNotEnough is Ownable {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
@@ -36,13 +36,7 @@ contract LiquidateCollateralRepayNotEnough is Ownable {
         uint256 liquidatedRemainUSDC;
     }
 
-    constructor(
-        address _jusdBank,
-        address _jusdExchange,
-        address _USDC,
-        address _JUSD,
-        address _insurance
-    ) {
+    constructor(address _jusdBank, address _jusdExchange, address _USDC, address _JUSD, address _insurance) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
@@ -50,36 +44,21 @@ contract LiquidateCollateralRepayNotEnough is Ownable {
         insurance = _insurance;
     }
 
-    function setWhiteListContract(
-        address targetContract,
-        bool isValid
-    ) public onlyOwner {
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
         whiteListContract[targetContract] = isValid;
     }
 
-    function JOJOFlashLoan(
-        address asset,
-        uint256 amount,
-        address to,
-        bytes calldata param
-    ) external {
+    function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external {
         //swapContract swap
-        (LiquidateData memory liquidateData, bytes memory originParam) = abi
-            .decode(param, (LiquidateData, bytes));
-        (address approveTarget, address swapTarget, , bytes memory data) = abi
-            .decode(originParam, (address, address, address, bytes));
+        (LiquidateData memory liquidateData, bytes memory originParam) = abi.decode(param, (LiquidateData, bytes));
+        (address approveTarget, address swapTarget,, bytes memory data) =
+            abi.decode(originParam, (address, address, address, bytes));
 
-        require(
-            whiteListContract[approveTarget],
-            "approve target is not in the whitelist"
-        );
-        require(
-            whiteListContract[swapTarget],
-            "swap target is not in the whitelist"
-        );
+        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
 
         IERC20(asset).approve(approveTarget, amount);
-        (bool success, ) = swapTarget.call(data);
+        (bool success,) = swapTarget.call(data);
         if (success == false) {
             assembly {
                 let ptr := mload(0x40)
@@ -90,10 +69,7 @@ contract LiquidateCollateralRepayNotEnough is Ownable {
         }
 
         IERC20(USDC).approve(jusdExchange, liquidateData.actualLiquidated - 1);
-        IJUSDExchange(jusdExchange).buyJUSD(
-            liquidateData.actualLiquidated - 1,
-            address(this)
-        );
+        IJUSDExchange(jusdExchange).buyJUSD(liquidateData.actualLiquidated - 1, address(this));
         IERC20(JUSD).approve(jusdBank, liquidateData.actualLiquidated - 1);
         IJUSDBank(jusdBank).repay(liquidateData.actualLiquidated - 1, to);
     }
@@ -101,7 +77,7 @@ contract LiquidateCollateralRepayNotEnough is Ownable {
 
 contract LiquidateCollateralInsuranceNotEnough is Ownable {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
@@ -121,13 +97,7 @@ contract LiquidateCollateralInsuranceNotEnough is Ownable {
         uint256 liquidatedRemainUSDC;
     }
 
-    constructor(
-        address _jusdBank,
-        address _jusdExchange,
-        address _USDC,
-        address _JUSD,
-        address _insurance
-    ) {
+    constructor(address _jusdBank, address _jusdExchange, address _USDC, address _JUSD, address _insurance) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
@@ -135,36 +105,21 @@ contract LiquidateCollateralInsuranceNotEnough is Ownable {
         insurance = _insurance;
     }
 
-    function setWhiteListContract(
-        address targetContract,
-        bool isValid
-    ) public onlyOwner {
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
         whiteListContract[targetContract] = isValid;
     }
 
-    function JOJOFlashLoan(
-        address asset,
-        uint256 amount,
-        address to,
-        bytes calldata param
-    ) external {
+    function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external {
         //swapContract swap
-        (LiquidateData memory liquidateData, bytes memory originParam) = abi
-            .decode(param, (LiquidateData, bytes));
-        (address approveTarget, address swapTarget, , bytes memory data) = abi
-            .decode(originParam, (address, address, address, bytes));
+        (LiquidateData memory liquidateData, bytes memory originParam) = abi.decode(param, (LiquidateData, bytes));
+        (address approveTarget, address swapTarget,, bytes memory data) =
+            abi.decode(originParam, (address, address, address, bytes));
 
-        require(
-            whiteListContract[approveTarget],
-            "approve target is not in the whitelist"
-        );
-        require(
-            whiteListContract[swapTarget],
-            "swap target is not in the whitelist"
-        );
+        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
 
         IERC20(asset).approve(approveTarget, amount);
-        (bool success, ) = swapTarget.call(data);
+        (bool success,) = swapTarget.call(data);
         if (success == false) {
             assembly {
                 let ptr := mload(0x40)
@@ -175,10 +130,7 @@ contract LiquidateCollateralInsuranceNotEnough is Ownable {
         }
 
         IERC20(USDC).approve(jusdExchange, liquidateData.actualLiquidated);
-        IJUSDExchange(jusdExchange).buyJUSD(
-            liquidateData.actualLiquidated,
-            address(this)
-        );
+        IJUSDExchange(jusdExchange).buyJUSD(liquidateData.actualLiquidated, address(this));
         IERC20(JUSD).approve(jusdBank, liquidateData.actualLiquidated);
         IJUSDBank(jusdBank).repay(liquidateData.actualLiquidated, to);
 
@@ -194,7 +146,7 @@ contract LiquidateCollateralInsuranceNotEnough is Ownable {
 
 contract LiquidateCollateralLiquidatedNotEnough is Ownable {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
@@ -214,13 +166,7 @@ contract LiquidateCollateralLiquidatedNotEnough is Ownable {
         uint256 liquidatedRemainUSDC;
     }
 
-    constructor(
-        address _jusdBank,
-        address _jusdExchange,
-        address _USDC,
-        address _JUSD,
-        address _insurance
-    ) {
+    constructor(address _jusdBank, address _jusdExchange, address _USDC, address _JUSD, address _insurance) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
@@ -228,36 +174,21 @@ contract LiquidateCollateralLiquidatedNotEnough is Ownable {
         insurance = _insurance;
     }
 
-    function setWhiteListContract(
-        address targetContract,
-        bool isValid
-    ) public onlyOwner {
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
         whiteListContract[targetContract] = isValid;
     }
 
-    function JOJOFlashLoan(
-        address asset,
-        uint256 amount,
-        address to,
-        bytes calldata param
-    ) external {
+    function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external {
         //swapContract swap
-        (LiquidateData memory liquidateData, bytes memory originParam) = abi
-            .decode(param, (LiquidateData, bytes));
-        (address approveTarget, address swapTarget, , bytes memory data) = abi
-            .decode(originParam, (address, address, address, bytes));
+        (LiquidateData memory liquidateData, bytes memory originParam) = abi.decode(param, (LiquidateData, bytes));
+        (address approveTarget, address swapTarget,, bytes memory data) =
+            abi.decode(originParam, (address, address, address, bytes));
 
-        require(
-            whiteListContract[approveTarget],
-            "approve target is not in the whitelist"
-        );
-        require(
-            whiteListContract[swapTarget],
-            "swap target is not in the whitelist"
-        );
+        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
 
         IERC20(asset).approve(approveTarget, amount);
-        (bool success, ) = swapTarget.call(data);
+        (bool success,) = swapTarget.call(data);
         if (success == false) {
             assembly {
                 let ptr := mload(0x40)
@@ -268,10 +199,7 @@ contract LiquidateCollateralLiquidatedNotEnough is Ownable {
         }
 
         IERC20(USDC).approve(jusdExchange, liquidateData.actualLiquidated);
-        IJUSDExchange(jusdExchange).buyJUSD(
-            liquidateData.actualLiquidated,
-            address(this)
-        );
+        IJUSDExchange(jusdExchange).buyJUSD(liquidateData.actualLiquidated, address(this));
         IERC20(JUSD).approve(jusdBank, liquidateData.actualLiquidated);
         IJUSDBank(jusdBank).repay(liquidateData.actualLiquidated, to);
 

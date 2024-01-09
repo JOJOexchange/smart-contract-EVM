@@ -10,12 +10,7 @@ import "../init/JUSDBankInit.t.sol";
 // Check jusdbank's multiCall
 contract JUSDBankMulticallTest is JUSDBankInitTest {
     function testHelperDeposit() public {
-        bytes memory a = jusdBank.getDepositData(
-            alice,
-            address(btc),
-            10e18,
-            alice
-        );
+        bytes memory a = jusdBank.getDepositData(alice, address(btc), 10e18, alice);
 
         emit log_bytes(a);
     }
@@ -31,12 +26,7 @@ contract JUSDBankMulticallTest is JUSDBankInitTest {
     }
 
     function testHelperWithdraw() public {
-        bytes memory a = jusdBank.getWithdrawData(
-            address(btc),
-            10e18,
-            alice,
-            false
-        );
+        bytes memory a = jusdBank.getWithdrawData(address(btc), 10e18, alice, false);
         emit log_bytes(a);
     }
 
@@ -82,10 +72,7 @@ contract JUSDBankMulticallTest is JUSDBankInitTest {
     }
 
     function testSetOperator() public {
-        bytes memory data = jusdBank.getSetOperator(
-            address(0x55483C180181b68c3F4213E8f4C774FB0D393148),
-            true
-        );
+        bytes memory data = jusdBank.getSetOperator(address(0x55483C180181b68c3F4213E8f4C774FB0D393148), true);
         emit log_bytes(data);
     }
 }

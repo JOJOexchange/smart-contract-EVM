@@ -11,9 +11,7 @@ interface IPerpetual {
     /// negative when the trader holds a short position.
     /// @return credit is not related to position direction or entry price,
     /// only used to calculate risk ratio and net value.
-    function balanceOf(
-        address trader
-    ) external view returns (int256 paper, int256 credit);
+    function balanceOf(address trader) external view returns (int256 paper, int256 credit);
 
     /// @notice Match and settle orders.
     /// @dev tradeData will be forwarded to the Dealer contract and waiting
@@ -43,7 +41,9 @@ interface IPerpetual {
         address liquidatedTrader,
         int256 requestPaper,
         int256 expectCredit
-    ) external returns (int256 liqtorPaperChange, int256 liqtorCreditChange);
+    )
+        external
+        returns (int256 liqtorPaperChange, int256 liqtorCreditChange);
 
     /// @notice Get funding rate of this perpetual market.
     /// Funding rate is a 1e18 based decimal.

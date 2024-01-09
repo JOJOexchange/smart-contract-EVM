@@ -12,9 +12,10 @@ import "../interfaces/internal/IPriceSource.sol";
 
 contract MockSwap {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     using SafeERC20 for IERC20;
+
     address USDC;
     address eth;
     mapping(address => address) tokenPrice;
@@ -31,39 +32,21 @@ contract MockSwap {
 
     function swapToEth(uint256 amount, address token) external {
         IERC20(USDC).safeTransferFrom(msg.sender, address(this), amount);
-        uint256 value = (amount * 1e18) /
-            IPriceSource(tokenPrice[token]).getAssetPrice();
+        uint256 value = (amount * 1e18) / IPriceSource(tokenPrice[token]).getAssetPrice();
         IERC20(eth).safeTransfer(msg.sender, value);
     }
 
     function swapToUSDC(uint256 amount, address token) external {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        uint256 value = (amount *
-            IPriceSource(tokenPrice[token]).getAssetPrice()) / 1e18;
+        uint256 value = (amount * IPriceSource(tokenPrice[token]).getAssetPrice()) / 1e18;
         IERC20(USDC).safeTransfer(msg.sender, value);
     }
 
-    function getSwapToEthData(
-        uint256 amount,
-        address token
-    ) external pure returns (bytes memory) {
-        return
-            abi.encodeWithSignature(
-                "swapToEth(uint256,address)",
-                amount,
-                token
-            );
+    function getSwapToEthData(uint256 amount, address token) external pure returns (bytes memory) {
+        return abi.encodeWithSignature("swapToEth(uint256,address)", amount, token);
     }
 
-    function getSwapToUSDCData(
-        uint256 amount,
-        address token
-    ) external pure returns (bytes memory) {
-        return
-            abi.encodeWithSignature(
-                "swapToUSDC(uint256,address)",
-                amount,
-                token
-            );
+    function getSwapToUSDCData(uint256 amount, address token) external pure returns (bytes memory) {
+        return abi.encodeWithSignature("swapToUSDC(uint256,address)", amount, token);
     }
 }

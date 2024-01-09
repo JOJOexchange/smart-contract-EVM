@@ -9,7 +9,7 @@ import "../init/TradingInit.sol";
 
 contract Checkers is TradingInit {
     // add this to be excluded from coverage report
-    function testC() public {}
+    function testC() public { }
 
     struct Credit {
         int256 primaryCredit;
@@ -24,11 +24,7 @@ contract Checkers is TradingInit {
         uint256 credit;
     }
 
-    function checkCredit(
-        address trader,
-        int256 primary,
-        uint256 secondary
-    ) public returns (Credit memory credit) {
+    function checkCredit(address trader, int256 primary, uint256 secondary) public returns (Credit memory credit) {
         (
             int256 primaryCredit,
             uint256 secondaryCredit,

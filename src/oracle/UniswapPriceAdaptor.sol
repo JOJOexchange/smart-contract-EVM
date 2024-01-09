@@ -24,7 +24,10 @@ interface IStaticOracle {
         address quoteToken,
         address[] calldata pools,
         uint32 period
-    ) external view returns (uint256 quoteAmount);
+    )
+        external
+        view
+        returns (uint256 quoteAmount);
 }
 
 contract UniswapPriceAdaptor is Ownable {
@@ -62,22 +65,13 @@ contract UniswapPriceAdaptor is Ownable {
     }
 
     function getPrice() internal view returns (uint256) {
-        uint256 uniswapPriceFeed = IStaticOracle(UNISWAP_V3_ORACLE)
-            .quoteSpecificPoolsWithTimePeriod(
-                uint128(10 ** decimal),
-                baseToken,
-                quoteToken,
-                pools,
-                period
-            );
-        uint256 jojoPriceFeed = EmergencyOracle(priceFeedOracle).getMarkPrice();
-        uint256 diff = jojoPriceFeed >= uniswapPriceFeed
-            ? jojoPriceFeed - uniswapPriceFeed
-            : uniswapPriceFeed - jojoPriceFeed;
-        require(
-            (diff * 1e18) / jojoPriceFeed <= impact,
-            "deviation is too big"
+        uint256 uniswapPriceFeed = IStaticOracle(UNISWAP_V3_ORACLE).quoteSpecificPoolsWithTimePeriod(
+            uint128(10 ** decimal), baseToken, quoteToken, pools, period
         );
+        uint256 jojoPriceFeed = EmergencyOracle(priceFeedOracle).getMarkPrice();
+        uint256 diff =
+            jojoPriceFeed >= uniswapPriceFeed ? jojoPriceFeed - uniswapPriceFeed : uniswapPriceFeed - jojoPriceFeed;
+        require((diff * 1e18) / jojoPriceFeed <= impact, "deviation is too big");
         return uniswapPriceFeed;
     }
 

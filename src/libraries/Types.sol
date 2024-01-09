@@ -90,9 +90,7 @@ library Types {
 
     // EIP712 component
     bytes32 public constant ORDER_TYPEHASH =
-        keccak256(
-            "Order(address perp,address signer,int128 paperAmount,int128 creditAmount,bytes32 info)"
-        );
+        keccak256("Order(address perp,address signer,int128 paperAmount,int128 creditAmount,bytes32 info)");
 
     /// @notice risk params of a perpetual market
     struct RiskParams {

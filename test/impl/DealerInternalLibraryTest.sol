@@ -27,11 +27,7 @@ contract InternalLibraryTest {
         SignedDecimalMath.decimalRemainder(a, b);
     }
 
-    function tEIP712(
-        string memory name,
-        string memory version,
-        address verifyingContract
-    ) public view {
+    function tEIP712(string memory name, string memory version, address verifyingContract) public view {
         EIP712._buildDomainSeparator(name, version, verifyingContract);
     }
 }

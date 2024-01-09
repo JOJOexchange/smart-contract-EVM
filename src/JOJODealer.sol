@@ -15,7 +15,7 @@ import "./JOJOView.sol";
 /// owner-only methods -> JOJOOperation
 /// data structure -> JOJOStorage
 contract JOJODealer is JOJOExternal, JOJOOperation, JOJOView {
-    constructor(address _primaryAsset) JOJOStorage() {
+    constructor(address _primaryAsset) JOJOStorage {
         state.primaryAsset = _primaryAsset;
     }
 

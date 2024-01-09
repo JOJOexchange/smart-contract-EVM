@@ -17,8 +17,7 @@ abstract contract FlashLoanReentrancyGuard {
 
     modifier nonFlashLoanReentrant() {
         require(
-            _status != _CAN_NOT_FLASHLOAN,
-            "ReentrancyGuard: Withdraw or Borrow or Liquidate flashLoan reentrant call"
+            _status != _CAN_NOT_FLASHLOAN, "ReentrancyGuard: Withdraw or Borrow or Liquidate flashLoan reentrant call"
         );
 
         _status = _CAN_NOT_FLASHLOAN;

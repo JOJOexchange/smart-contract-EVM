@@ -38,28 +38,15 @@ contract JOJOOracleAdaptorWstETH is Ownable {
     }
 
     function getAssetPrice() external view returns (uint256) {
-        (, int256 price, , uint256 updatedAt, ) = IChainlink(chainlink)
-            .latestRoundData();
-        (, int256 usdcPrice, , uint256 usdcUpdatedAt, ) = IChainlink(usdcSource)
-            .latestRoundData();
-        (, int256 ETHPrice, , uint256 ETHUpdatedAt, ) = IChainlink(ETHSource)
-            .latestRoundData();
+        (, int256 price,, uint256 updatedAt,) = IChainlink(chainlink).latestRoundData();
+        (, int256 usdcPrice,, uint256 usdcUpdatedAt,) = IChainlink(usdcSource).latestRoundData();
+        (, int256 ETHPrice,, uint256 ETHUpdatedAt,) = IChainlink(ETHSource).latestRoundData();
 
-        require(
-            block.timestamp - updatedAt <= heartbeatInterval,
-            "ORACLE_HEARTBEAT_FAILED"
-        );
-        require(
-            block.timestamp - usdcUpdatedAt <= usdcHeartbeat,
-            "USDC_ORACLE_HEARTBEAT_FAILED"
-        );
-        require(
-            block.timestamp - ETHUpdatedAt <= ETHHeartbeat,
-            "ETH_ORACLE_HEARTBEAT_FAILED"
-        );
-        uint256 tokenPrice = (((SafeCast.toUint256(price) *
-            SafeCast.toUint256(ETHPrice)) / Types.ONE) * 1e8) /
-            SafeCast.toUint256(usdcPrice);
+        require(block.timestamp - updatedAt <= heartbeatInterval, "ORACLE_HEARTBEAT_FAILED");
+        require(block.timestamp - usdcUpdatedAt <= usdcHeartbeat, "USDC_ORACLE_HEARTBEAT_FAILED");
+        require(block.timestamp - ETHUpdatedAt <= ETHHeartbeat, "ETH_ORACLE_HEARTBEAT_FAILED");
+        uint256 tokenPrice = (((SafeCast.toUint256(price) * SafeCast.toUint256(ETHPrice)) / Types.ONE) * 1e8)
+            / SafeCast.toUint256(usdcPrice);
         return (tokenPrice * Types.ONE) / decimalsCorrection;
     }
 }

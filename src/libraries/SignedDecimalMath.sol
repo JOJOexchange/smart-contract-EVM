@@ -30,10 +30,7 @@ library SignedDecimalMath {
         return (a * ONE) / b;
     }
 
-    function decimalRemainder(
-        uint256 a,
-        uint256 b
-    ) internal pure returns (bool) {
+    function decimalRemainder(uint256 a, uint256 b) internal pure returns (bool) {
         if ((a * ONE) % b == 0) {
             return true;
         } else {

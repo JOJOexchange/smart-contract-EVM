@@ -22,49 +22,26 @@ contract FlashLoanRepay is Ownable {
     address public jusdExchange;
     mapping(address => bool) public whiteListContract;
 
-    constructor(
-        address _jusdBank,
-        address _jusdExchange,
-        address _USDC,
-        address _JUSD
-    ) {
+    constructor(address _jusdBank, address _jusdExchange, address _USDC, address _JUSD) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
         JUSD = _JUSD;
     }
 
-    function setWhiteListContract(
-        address targetContract,
-        bool isValid
-    ) public onlyOwner {
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
         whiteListContract[targetContract] = isValid;
     }
 
-    function JOJOFlashLoan(
-        address asset,
-        uint256 amount,
-        address to,
-        bytes calldata param
-    ) external {
-        (
-            address approveTarget,
-            address swapTarget,
-            uint256 minReceive,
-            bytes memory data
-        ) = abi.decode(param, (address, address, uint256, bytes));
+    function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external {
+        (address approveTarget, address swapTarget, uint256 minReceive, bytes memory data) =
+            abi.decode(param, (address, address, uint256, bytes));
 
-        require(
-            whiteListContract[approveTarget],
-            "approve target is not in the whitelist"
-        );
-        require(
-            whiteListContract[swapTarget],
-            "swap target is not in the whitelist"
-        );
+        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
         IERC20(asset).safeApprove(approveTarget, 0);
         IERC20(asset).safeApprove(approveTarget, amount);
-        (bool success, ) = swapTarget.call(data);
+        (bool success,) = swapTarget.call(data);
         if (success == false) {
             assembly {
                 let ptr := mload(0x40)

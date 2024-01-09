@@ -59,29 +59,16 @@ contract JUSDBankLiquidateCollateralTest is JUSDBankInitTest {
         jusdBank.borrow(7426e6, alice, false);
         vm.stopPrank();
         ethOracle.setMarkPrice(900e6);
-        jusd.mint(50000e6);
-        IERC20(jusd).transfer(address(jusdExchange), 50000e6);
-        FlashLoanLiquidate flashLoanLiquidate = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        jusd.mint(50_000e6);
+        IERC20(jusd).transfer(address(jusdExchange), 50_000e6);
+        FlashLoanLiquidate flashLoanLiquidate =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
 
         bytes memory data = swapContract.getSwapToUSDCData(10e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
 
         vm.startPrank(bob);
-        bytes memory afterParam = abi.encode(
-            address(flashLoanLiquidate),
-            param
-        );
+        bytes memory afterParam = abi.encode(address(flashLoanLiquidate), param);
         cheats.expectRevert("LIQUIDATION_PRICE_PROTECTION");
         // price 854.9999999885
         jusdBank.liquidate(alice, address(eth), bob, 10e18, afterParam, 854e6);
@@ -105,29 +92,12 @@ contract JUSDBankLiquidateCollateralTest is JUSDBankInitTest {
         vm.warp(3000);
 
         bytes memory data = swapContract.getSwapToUSDCData(1e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
-        FlashLoanLiquidate flashloanRepay = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
+        FlashLoanLiquidate flashloanRepay =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
         bytes memory afterParam = abi.encode(address(flashloanRepay), param);
         cheats.expectRevert("JOJO_SELF_LIQUIDATION_NOT_ALLOWED");
-        jusdBank.liquidate(
-            alice,
-            address(eth),
-            alice,
-            10e18,
-            afterParam,
-            10e18
-        );
+        jusdBank.liquidate(alice, address(eth), alice, 10e18, afterParam, 10e18);
     }
 
     function testLiquidatorIsNotInWhiteList() public {
@@ -145,19 +115,9 @@ contract JUSDBankLiquidateCollateralTest is JUSDBankInitTest {
         vm.startPrank(bob);
         vm.warp(3000);
         bytes memory data = swapContract.getSwapToUSDCData(1e18, address(eth));
-        bytes memory param = abi.encode(
-            swapContract,
-            swapContract,
-            address(bob),
-            data
-        );
-        FlashLoanLiquidate flashloanRepay = new FlashLoanLiquidate(
-            address(jusdBank),
-            address(jusdExchange),
-            address(usdc),
-            address(jusd),
-            insurance
-        );
+        bytes memory param = abi.encode(swapContract, swapContract, address(bob), data);
+        FlashLoanLiquidate flashloanRepay =
+            new FlashLoanLiquidate(address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance);
         bytes memory afterParam = abi.encode(address(flashloanRepay), param);
         cheats.expectRevert("LIQUIDATOR_NOT_IN_THE_WHITELIST");
         jusdBank.liquidate(alice, address(eth), bob, 1e18, afterParam, 0);

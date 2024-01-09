@@ -25,11 +25,7 @@ contract DegenSubaccountFactory {
 
     // ========== event ==========
 
-    event NewDegenSubaccount(
-        address indexed master,
-        uint256 degenSubaccountIndex,
-        address degenSubaccountAddress
-    );
+    event NewDegenSubaccount(address indexed master, uint256 degenSubaccountIndex, address degenSubaccountAddress);
 
     constructor(address _dealer, address _operator) {
         template = address(new DegenSubaccount());
@@ -45,29 +41,16 @@ contract DegenSubaccountFactory {
     /// also known as "clones".
     function newSubaccount() external returns (address degenSubaccount) {
         degenSubaccount = Clones.clone(template);
-        DegenSubaccount(degenSubaccount).init(
-            msg.sender,
-            dealer,
-            globalOperator
-        );
+        DegenSubaccount(degenSubaccount).init(msg.sender, dealer, globalOperator);
         degenSubaccountRegistry[msg.sender].push(degenSubaccount);
-        emit NewDegenSubaccount(
-            msg.sender,
-            degenSubaccountRegistry[msg.sender].length - 1,
-            degenSubaccount
-        );
+        emit NewDegenSubaccount(msg.sender, degenSubaccountRegistry[msg.sender].length - 1, degenSubaccount);
     }
 
-    function getDegenSubaccounts(
-        address master
-    ) external view returns (address[] memory) {
+    function getDegenSubaccounts(address master) external view returns (address[] memory) {
         return degenSubaccountRegistry[master];
     }
 
-    function getDegenSubaccount(
-        address master,
-        uint256 index
-    ) external view returns (address) {
+    function getDegenSubaccount(address master, uint256 index) external view returns (address) {
         return degenSubaccountRegistry[master][index];
     }
 }

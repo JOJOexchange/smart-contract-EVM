@@ -23,10 +23,9 @@ interface Cheats {
 
 contract TradingInit is Test {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
-    Cheats internal constant cheats =
-        Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+    Cheats internal constant cheats = Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
 
     TestERC20 public jusd;
     TestERC20 public usdc;
@@ -52,7 +51,7 @@ contract TradingInit is Test {
         tradersKey[1] = 0xB0B;
         tradersKey[2] = 0xC0C;
 
-        for (uint i; i < traders.length; i++) {
+        for (uint256 i; i < traders.length; i++) {
             traders[i] = vm.addr(tradersKey[i]);
         }
     }
@@ -99,11 +98,11 @@ contract TradingInit is Test {
         t[1] = address(perpList[1]);
         // jojoDealer.updateFundingRate(t, rateList);
         for (uint256 i = 0; i < traders.length; i++) {
-            usdc.mint(traders[i], 1000000e6);
-            jusd.mint(traders[i], 1000000e6);
+            usdc.mint(traders[i], 1_000_000e6);
+            jusd.mint(traders[i], 1_000_000e6);
             vm.startPrank(traders[i]);
-            usdc.approve(address(jojoDealer), 1000000e6);
-            jusd.approve(address(jojoDealer), 1000000e6);
+            usdc.approve(address(jojoDealer), 1_000_000e6);
+            jusd.approve(address(jojoDealer), 1_000_000e6);
             vm.stopPrank();
         }
     }
@@ -114,15 +113,15 @@ contract TradingInit is Test {
         int128 paper,
         int128 credit,
         address perpetual
-    ) public view returns (Types.Order memory order, bytes memory signature) {
+    )
+        public
+        view
+        returns (Types.Order memory order, bytes memory signature)
+    {
         int64 makerFeeRate = 1e14;
         int64 takerFeeRate = 5e14;
-        bytes memory infoBytes = abi.encodePacked(
-            makerFeeRate,
-            takerFeeRate,
-            uint64(block.timestamp),
-            uint64(block.timestamp)
-        );
+        bytes memory infoBytes =
+            abi.encodePacked(makerFeeRate, takerFeeRate, uint64(block.timestamp), uint64(block.timestamp));
         order = Types.Order({
             perp: perpetual,
             signer: signer,
@@ -130,18 +129,8 @@ contract TradingInit is Test {
             creditAmount: credit,
             info: bytes32(infoBytes)
         });
-        bytes32 domainSeparator = EIP712Test._buildDomainSeparator(
-            "JOJO",
-            "1",
-            address(jojoDealer)
-        );
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                domainSeparator,
-                EIP712Test._structHash(order)
-            )
-        );
+        bytes32 domainSeparator = EIP712Test._buildDomainSeparator("JOJO", "1", address(jojoDealer));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, EIP712Test._structHash(order)));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
         signature = abi.encodePacked(r, s, v);
     }
@@ -154,21 +143,15 @@ contract TradingInit is Test {
         uint256 matchPaperAmount1,
         uint256 matchPaperAmount2,
         address perpetual
-    ) internal view returns (bytes memory) {
-        (Types.Order memory order1, bytes memory signature1) = buildOrder(
-            traders[0],
-            tradersKey[0],
-            takerAmount,
-            takerCredit,
-            perpetual
-        );
-        (Types.Order memory order2, bytes memory signature2) = buildOrder(
-            traders[1],
-            tradersKey[1],
-            makerAmount,
-            makerCredit,
-            perpetual
-        );
+    )
+        internal
+        view
+        returns (bytes memory)
+    {
+        (Types.Order memory order1, bytes memory signature1) =
+            buildOrder(traders[0], tradersKey[0], takerAmount, takerCredit, perpetual);
+        (Types.Order memory order2, bytes memory signature2) =
+            buildOrder(traders[1], tradersKey[1], makerAmount, makerCredit, perpetual);
         Types.Order[] memory orderList = new Types.Order[](2);
         orderList[0] = order1;
         orderList[1] = order2;
@@ -189,15 +172,11 @@ contract TradingInit is Test {
         uint256 matchPaperAmount1,
         uint256 matchPaperAmount2,
         address perpetual
-    ) public {
+    )
+        public
+    {
         bytes memory tradeData = constructTradeData(
-            takerAmount,
-            takerCredit,
-            makerAmount,
-            makerCredit,
-            matchPaperAmount1,
-            matchPaperAmount2,
-            perpetual
+            takerAmount, takerCredit, makerAmount, makerCredit, matchPaperAmount1, matchPaperAmount2, perpetual
         );
         Perpetual(perpetual).trade(tradeData);
     }
@@ -208,7 +187,7 @@ contract TradingInit is Test {
         initUsers();
         jojoDealer = new JOJODealer(address(usdc));
         initJOJODealer();
-        priceSourceList[0].setMarkPrice(30000e6);
+        priceSourceList[0].setMarkPrice(30_000e6);
         priceSourceList[1].setMarkPrice(2000e6);
     }
 }

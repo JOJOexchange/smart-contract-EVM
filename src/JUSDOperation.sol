@@ -27,21 +27,11 @@ abstract contract JUSDOperation is JUSDBankStorage {
 
     event UpdateJOJODealer(address oldJOJODealer, address newJOJODealer);
 
-    event UpdateMaxReservesAmount(
-        uint256 maxReservesAmount,
-        uint256 newMaxReservesAmount
-    );
+    event UpdateMaxReservesAmount(uint256 maxReservesAmount, uint256 newMaxReservesAmount);
 
-    event UpdateMaxBorrowAmount(
-        uint256 maxPerAccountBorrowAmount,
-        uint256 maxTotalBorrowAmount
-    );
+    event UpdateMaxBorrowAmount(uint256 maxPerAccountBorrowAmount, uint256 maxTotalBorrowAmount);
 
-    event SetOperator(
-        address indexed client,
-        address indexed operator,
-        bool isOperator
-    );
+    event SetOperator(address indexed client, address indexed operator, bool isOperator);
 
     event UpdateReserveRiskParam(
         address indexed collateral,
@@ -69,23 +59,20 @@ abstract contract JUSDOperation is JUSDBankStorage {
         uint256 _liquidationPriceOff,
         uint256 _insuranceFeeRate,
         address _oracle
-    ) external onlyOwner {
+    )
+        external
+        onlyOwner
+    {
         require(
-            Types.ONE - _liquidationMortgageRate >
-                _liquidationPriceOff +
-                    (Types.ONE - _liquidationPriceOff).decimalMul(
-                        _insuranceFeeRate
-                    ),
+            Types.ONE - _liquidationMortgageRate
+                > _liquidationPriceOff + (Types.ONE - _liquidationPriceOff).decimalMul(_insuranceFeeRate),
             Errors.RESERVE_PARAM_ERROR
         );
         reserveInfo[_collateral].initialMortgageRate = _initialMortgageRate;
         reserveInfo[_collateral].maxTotalDepositAmount = _maxTotalDepositAmount;
-        reserveInfo[_collateral]
-            .maxDepositAmountPerAccount = _maxDepositAmountPerAccount;
-        reserveInfo[_collateral]
-            .maxColBorrowPerAccount = _maxColBorrowPerAccount;
-        reserveInfo[_collateral]
-            .liquidationMortgageRate = _liquidationMortgageRate;
+        reserveInfo[_collateral].maxDepositAmountPerAccount = _maxDepositAmountPerAccount;
+        reserveInfo[_collateral].maxColBorrowPerAccount = _maxColBorrowPerAccount;
+        reserveInfo[_collateral].liquidationMortgageRate = _liquidationMortgageRate;
         reserveInfo[_collateral].liquidationPriceOff = _liquidationPriceOff;
         reserveInfo[_collateral].insuranceFeeRate = _insuranceFeeRate;
         reserveInfo[_collateral].isDepositAllowed = true;
@@ -98,13 +85,13 @@ abstract contract JUSDOperation is JUSDBankStorage {
     function updateMaxBorrowAmount(
         uint256 _maxBorrowAmountPerAccount,
         uint256 _maxTotalBorrowAmount
-    ) external onlyOwner {
+    )
+        external
+        onlyOwner
+    {
         maxTotalBorrowAmount = _maxTotalBorrowAmount;
         maxPerAccountBorrowAmount = _maxBorrowAmountPerAccount;
-        emit UpdateMaxBorrowAmount(
-            maxPerAccountBorrowAmount,
-            maxTotalBorrowAmount
-        );
+        emit UpdateMaxBorrowAmount(maxPerAccountBorrowAmount, maxTotalBorrowAmount);
     }
 
     /// @notice update the insurance account
@@ -140,19 +127,14 @@ abstract contract JUSDOperation is JUSDBankStorage {
     }
 
     /// @notice update collateral oracle
-    function updateOracle(
-        address collateral,
-        address newOracle
-    ) external onlyOwner {
+    function updateOracle(address collateral, address newOracle) external onlyOwner {
         Types.ReserveInfo storage reserve = reserveInfo[collateral];
         reserve.oracle = newOracle;
         emit UpdateOracle(collateral, newOracle);
     }
 
     /// @notice update maxReservesNum
-    function updateMaxReservesAmount(
-        uint256 newMaxReservesAmount
-    ) external onlyOwner {
+    function updateMaxReservesAmount(uint256 newMaxReservesAmount) external onlyOwner {
         emit UpdateMaxReservesAmount(maxReservesNum, newMaxReservesAmount);
         maxReservesNum = newMaxReservesAmount;
     }
@@ -170,30 +152,21 @@ abstract contract JUSDOperation is JUSDBankStorage {
         uint256 _liquidationMortgageRate,
         uint256 _liquidationPriceOff,
         uint256 _insuranceFeeRate
-    ) external onlyOwner {
+    )
+        external
+        onlyOwner
+    {
         require(
-            Types.ONE - _liquidationMortgageRate >
-                _liquidationPriceOff +
-                    ((Types.ONE - _liquidationPriceOff) * _insuranceFeeRate) /
-                    Types.ONE,
+            Types.ONE - _liquidationMortgageRate
+                > _liquidationPriceOff + ((Types.ONE - _liquidationPriceOff) * _insuranceFeeRate) / Types.ONE,
             Errors.RESERVE_PARAM_ERROR
         );
 
-        require(
-            reserveInfo[collateral].initialMortgageRate <
-                _liquidationMortgageRate,
-            Errors.RESERVE_PARAM_WRONG
-        );
-        reserveInfo[collateral]
-            .liquidationMortgageRate = _liquidationMortgageRate;
+        require(reserveInfo[collateral].initialMortgageRate < _liquidationMortgageRate, Errors.RESERVE_PARAM_WRONG);
+        reserveInfo[collateral].liquidationMortgageRate = _liquidationMortgageRate;
         reserveInfo[collateral].liquidationPriceOff = _liquidationPriceOff;
         reserveInfo[collateral].insuranceFeeRate = _insuranceFeeRate;
-        emit UpdateReserveRiskParam(
-            collateral,
-            _liquidationMortgageRate,
-            _liquidationPriceOff,
-            _insuranceFeeRate
-        );
+        emit UpdateReserveRiskParam(collateral, _liquidationMortgageRate, _liquidationPriceOff, _insuranceFeeRate);
     }
 
     /// @notice update the reserve basic params
@@ -203,18 +176,15 @@ abstract contract JUSDOperation is JUSDBankStorage {
         uint256 _maxTotalDepositAmount,
         uint256 _maxDepositAmountPerAccount,
         uint256 _maxColBorrowPerAccount
-    ) external onlyOwner {
-        require(
-            _initialMortgageRate <
-                reserveInfo[collateral].liquidationMortgageRate,
-            Errors.RESERVE_PARAM_WRONG
-        );
+    )
+        external
+        onlyOwner
+    {
+        require(_initialMortgageRate < reserveInfo[collateral].liquidationMortgageRate, Errors.RESERVE_PARAM_WRONG);
         reserveInfo[collateral].initialMortgageRate = _initialMortgageRate;
         reserveInfo[collateral].maxTotalDepositAmount = _maxTotalDepositAmount;
-        reserveInfo[collateral]
-            .maxDepositAmountPerAccount = _maxDepositAmountPerAccount;
-        reserveInfo[collateral]
-            .maxColBorrowPerAccount = _maxColBorrowPerAccount;
+        reserveInfo[collateral].maxDepositAmountPerAccount = _maxDepositAmountPerAccount;
+        reserveInfo[collateral].maxColBorrowPerAccount = _maxColBorrowPerAccount;
         emit UpdateReserveParam(
             collateral,
             _initialMortgageRate,

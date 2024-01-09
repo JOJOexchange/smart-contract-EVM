@@ -25,5 +25,5 @@ import "./TestERC20.sol";
 
 // DO NOT REMOVE
 abstract contract ContractForCodeGeneration {
-    function order() external view returns (Types.Order memory order) {}
+    function order() external view returns (Types.Order memory order) { }
 }

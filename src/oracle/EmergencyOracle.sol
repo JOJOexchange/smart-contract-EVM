@@ -17,11 +17,7 @@ contract EmergencyOracle is Ownable {
     bool public turnOn;
 
     // Align with chainlink
-    event AnswerUpdated(
-        int256 indexed current,
-        uint256 indexed roundId,
-        uint256 updatedAt
-    );
+    event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
 
     constructor(string memory _description) Ownable() {
         description = _description;

@@ -12,7 +12,7 @@ import "../../src/token/JUSD.sol";
 contract JUSDOperationTest is JUSDBankInitTest {
     function testJUSDMint() public {
         jusd.mint(100e6);
-        assertEq(jusd.balanceOf(address(this)), 100000000);
+        assertEq(jusd.balanceOf(address(this)), 100_000_000);
     }
 
     function testJUSDDecimal() public {
@@ -32,7 +32,7 @@ contract JUSDOperationTest is JUSDBankInitTest {
             // maxDepositAmountPerAccount
             100e18,
             // maxBorrowValue
-            100000e18,
+            100_000e18,
             // liquidateMortgageRate
             9e17,
             // liquidationPriceOff
@@ -54,7 +54,7 @@ contract JUSDOperationTest is JUSDBankInitTest {
             // maxDepositAmountPerAccount
             100e18,
             // maxBorrowValue
-            100000e18,
+            100_000e18,
             // liquidateMortgageRate
             9e17,
             // liquidationPriceOff
@@ -79,7 +79,7 @@ contract JUSDOperationTest is JUSDBankInitTest {
             // maxDepositAmountPerAccount
             100e18,
             // maxBorrowValue
-            100000e18,
+            100_000e18,
             // liquidateMortgageRate
             9e17,
             // liquidationPriceOff
@@ -91,8 +91,8 @@ contract JUSDOperationTest is JUSDBankInitTest {
     }
 
     function testUpdateMaxBorrowAmount() public {
-        jusdBank.updateMaxBorrowAmount(1000e18, 10000e18);
-        assertEq(jusdBank.maxTotalBorrowAmount(), 10000e18);
+        jusdBank.updateMaxBorrowAmount(1000e18, 10_000e18);
+        assertEq(jusdBank.maxTotalBorrowAmount(), 10_000e18);
     }
 
     function testUpdateRiskParamWrong() public {
@@ -104,13 +104,7 @@ contract JUSDOperationTest is JUSDBankInitTest {
 
     function testUpdateReserveParam() public {
         cheats.expectRevert("RESERVE_PARAM_WRONG");
-        jusdBank.updateReserveParam(
-            address(eth),
-            9e17,
-            100e18,
-            100e18,
-            200000e18
-        );
+        jusdBank.updateReserveParam(address(eth), 9e17, 100e18, 100e18, 200_000e18);
         //        assertEq(jusdBank.getInitialRate(address(eth)), 1e18);
     }
 
@@ -146,7 +140,7 @@ contract JUSDOperationTest is JUSDBankInitTest {
 
     function testCollateraltMaxMintAmount() public {
         uint256 value = jusdBank.getCollateralMaxMintAmount(address(eth), 2e18);
-        assertEq(value, 1600000000);
+        assertEq(value, 1_600_000_000);
     }
 
     function testBurnJUSD() public {

@@ -22,17 +22,17 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
     function updateFundingRate(
         address[] calldata perpList,
         int256[] calldata rateList
-    ) external onlyFundingRateKeeper {
+    )
+        external
+        onlyFundingRateKeeper
+    {
         Operation.updateFundingRate(perpList, rateList);
     }
 
     /// @notice Set risk parameters for a perpetual market.
     /// @param param market will be ready to trade if param.isRegistered value is true.
     /// This market will not be opened if param.isRegistered value is false.
-    function setPerpRiskParams(
-        address perp,
-        Types.RiskParams calldata param
-    ) external onlyOwner {
+    function setPerpRiskParams(address perp, Types.RiskParams calldata param) external onlyOwner {
         Operation.setPerpRiskParams(state, perp, param);
     }
 
@@ -44,29 +44,19 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
         Operation.setInsurance(state, newInsurance);
     }
 
-    function setMaxPositionAmount(
-        uint256 newMaxPositionAmount
-    ) external onlyOwner {
+    function setMaxPositionAmount(uint256 newMaxPositionAmount) external onlyOwner {
         Operation.setMaxPositionAmount(state, newMaxPositionAmount);
     }
 
-    function setWithdrawTimeLock(
-        uint256 newWithdrawTimeLock
-    ) external onlyOwner {
+    function setWithdrawTimeLock(uint256 newWithdrawTimeLock) external onlyOwner {
         Operation.setWithdrawTimeLock(state, newWithdrawTimeLock);
     }
 
-    function setOrderSender(
-        address orderSender,
-        bool isValid
-    ) external onlyOwner {
+    function setOrderSender(address orderSender, bool isValid) external onlyOwner {
         Operation.setOrderSender(state, orderSender, isValid);
     }
 
-    function setFastWithdrawalWhitelist(
-        address target,
-        bool isValid
-    ) external onlyOwner {
+    function setFastWithdrawalWhitelist(address target, bool isValid) external onlyOwner {
         Operation.setFastWithdrawalWhitelist(state, target, isValid);
     }
 

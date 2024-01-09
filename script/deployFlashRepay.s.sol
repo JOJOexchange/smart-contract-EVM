@@ -7,7 +7,7 @@ import "../src/FlashLoanRepay.sol";
 
 contract FlashRepayScript is Script {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");

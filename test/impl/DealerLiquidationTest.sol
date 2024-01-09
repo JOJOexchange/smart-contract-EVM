@@ -57,44 +57,36 @@ contract LiquidationTest is Checkers {
     }
 
     function openPositionForExcuteTest() public {
-        trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
-        priceSourceList[0].setMarkPrice(20600e6);
+        trade(1e18, -30_000e6, -1e18, 30_000e6, 1e18, 1e18, address(perpList[0]));
+        priceSourceList[0].setMarkPrice(20_600e6);
     }
 
     function testSingleCheckPosition() public {
         deposit();
-        trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
-        priceSourceList[0].setMarkPrice(39000e6);
+        trade(1e18, -30_000e6, -1e18, 30_000e6, 1e18, 1e18, address(perpList[0]));
+        priceSourceList[0].setMarkPrice(39_000e6);
         assertEq(jojoDealer.isSafe(traders[0]), true);
         assertEq(jojoDealer.isSafe(traders[1]), false);
-        priceSourceList[0].setMarkPrice(20000e6);
+        priceSourceList[0].setMarkPrice(20_000e6);
         assertEq(jojoDealer.isSafe(traders[0]), false);
         assertEq(jojoDealer.isSafe(traders[1]), true);
     }
 
     function testMultiCheckPosition() public {
         deposit();
-        trade(1e18, -30000e6, -1e18, 30000e6, 1e18, 1e18, address(perpList[0]));
-        trade(
-            10e18,
-            -20000e6,
-            -10e18,
-            20000e6,
-            10e18,
-            10e18,
-            address(perpList[1])
-        );
-        priceSourceList[0].setMarkPrice(21676e6);
+        trade(1e18, -30_000e6, -1e18, 30_000e6, 1e18, 1e18, address(perpList[0]));
+        trade(10e18, -20_000e6, -10e18, 20_000e6, 10e18, 10e18, address(perpList[1]));
+        priceSourceList[0].setMarkPrice(21_676e6);
         assertEq(jojoDealer.isSafe(traders[0]), true);
-        priceSourceList[0].setMarkPrice(21675e6);
+        priceSourceList[0].setMarkPrice(21_675e6);
         assertEq(jojoDealer.isSafe(traders[0]), false);
 
-        priceSourceList[0].setMarkPrice(37859e6);
+        priceSourceList[0].setMarkPrice(37_859e6);
         assertEq(jojoDealer.isSafe(traders[1]), true);
-        priceSourceList[0].setMarkPrice(37860e6);
+        priceSourceList[0].setMarkPrice(37_860e6);
         assertEq(jojoDealer.isSafe(traders[1]), false);
 
-        priceSourceList[0].setMarkPrice(30000e6);
+        priceSourceList[0].setMarkPrice(30_000e6);
 
         priceSourceList[1].setMarkPrice(1150e6);
         assertEq(jojoDealer.isSafe(traders[0]), true);
@@ -109,15 +101,7 @@ contract LiquidationTest is Checkers {
 
     function testCasedByFundingRate() public {
         deposit();
-        trade(
-            10e18,
-            -300000e6,
-            -10e18,
-            300000e6,
-            10e18,
-            10e18,
-            address(perpList[0])
-        );
+        trade(10e18, -300_000e6, -10e18, 300_000e6, 10e18, 10e18, address(perpList[0]));
         address[] memory perps = new address[](1);
         perps[0] = address(perpList[0]);
         int256[] memory rates = new int256[](1);
@@ -156,15 +140,13 @@ contract LiquidationTest is Checkers {
         vm.stopPrank();
 
         vm.startPrank(traders[1]);
-        perpList[0].liquidate(traders[2], traders[0], 2e18, -50000e6);
-        checkCredit(insurance, 20394e4, 0);
-        checkCredit(traders[0], -482494e4, 5000e6);
-        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0]
-            .balanceOf(traders[2]);
-        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0]
-            .balanceOf(traders[0]);
+        perpList[0].liquidate(traders[2], traders[0], 2e18, -50_000e6);
+        checkCredit(insurance, 20_394e4, 0);
+        checkCredit(traders[0], -482_494e4, 5000e6);
+        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0].balanceOf(traders[2]);
+        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0].balanceOf(traders[0]);
         assertEq(paperLiquidator, 1e18);
-        assertEq(creditLiquidator, -20394e6);
+        assertEq(creditLiquidator, -20_394e6);
         assertEq(paperLiquidated, 0);
         assertEq(creditLiquidated, 0);
     }
@@ -172,20 +154,18 @@ contract LiquidationTest is Checkers {
     function testExecuteLiquidationBiggerTotalPosition() public {
         deposit();
         openPositionForExcuteTest();
-        (int256 liqtorPaperChange, int256 liqtorCreditChange) = jojoDealer
-            .getLiquidationCost(address(perpList[0]), traders[0], 2e18);
+        (int256 liqtorPaperChange, int256 liqtorCreditChange) =
+            jojoDealer.getLiquidationCost(address(perpList[0]), traders[0], 2e18);
         assertEq(liqtorPaperChange, 1e18);
-        assertEq(liqtorCreditChange, -20394e6);
+        assertEq(liqtorCreditChange, -20_394e6);
         vm.startPrank(traders[2]);
-        perpList[0].liquidate(traders[2], traders[0], 2e18, -50000e6);
-        checkCredit(insurance, 20394e4, 0);
-        checkCredit(traders[0], -482494e4, 5000e6);
-        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0]
-            .balanceOf(traders[2]);
-        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0]
-            .balanceOf(traders[0]);
+        perpList[0].liquidate(traders[2], traders[0], 2e18, -50_000e6);
+        checkCredit(insurance, 20_394e4, 0);
+        checkCredit(traders[0], -482_494e4, 5000e6);
+        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0].balanceOf(traders[2]);
+        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0].balanceOf(traders[0]);
         assertEq(paperLiquidator, 1e18);
-        assertEq(creditLiquidator, -20394e6);
+        assertEq(creditLiquidator, -20_394e6);
         assertEq(paperLiquidated, 0);
         assertEq(creditLiquidated, 0);
     }
@@ -193,20 +173,18 @@ contract LiquidationTest is Checkers {
     function testExecuteLiquidationEqualTotalPosition() public {
         deposit();
         openPositionForExcuteTest();
-        (int256 liqtorPaperChange, int256 liqtorCreditChange) = jojoDealer
-            .getLiquidationCost(address(perpList[0]), traders[0], 1e18);
+        (int256 liqtorPaperChange, int256 liqtorCreditChange) =
+            jojoDealer.getLiquidationCost(address(perpList[0]), traders[0], 1e18);
         assertEq(liqtorPaperChange, 1e18);
-        assertEq(liqtorCreditChange, -20394e6);
+        assertEq(liqtorCreditChange, -20_394e6);
         vm.startPrank(traders[2]);
-        perpList[0].liquidate(traders[2], traders[0], 1e18, -25000e6);
-        checkCredit(insurance, 20394e4, 0);
-        checkCredit(traders[0], -482494e4, 5000e6);
-        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0]
-            .balanceOf(traders[2]);
-        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0]
-            .balanceOf(traders[0]);
+        perpList[0].liquidate(traders[2], traders[0], 1e18, -25_000e6);
+        checkCredit(insurance, 20_394e4, 0);
+        checkCredit(traders[0], -482_494e4, 5000e6);
+        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0].balanceOf(traders[2]);
+        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0].balanceOf(traders[0]);
         assertEq(paperLiquidator, 1e18);
-        assertEq(creditLiquidator, -20394e6);
+        assertEq(creditLiquidator, -20_394e6);
         assertEq(paperLiquidated, 0);
         assertEq(creditLiquidated, 0);
     }
@@ -214,45 +192,41 @@ contract LiquidationTest is Checkers {
     function testExecuteLiquidationSmallerTotalPosition() public {
         deposit();
         openPositionForExcuteTest();
-        (int256 liqtorPaperChange, int256 liqtorCreditChange) = jojoDealer
-            .getLiquidationCost(address(perpList[0]), traders[0], 1e16);
+        (int256 liqtorPaperChange, int256 liqtorCreditChange) =
+            jojoDealer.getLiquidationCost(address(perpList[0]), traders[0], 1e16);
         assertEq(liqtorPaperChange, 1e16);
-        assertEq(liqtorCreditChange, -20394e4);
+        assertEq(liqtorCreditChange, -20_394e4);
         vm.startPrank(traders[2]);
         perpList[0].liquidate(traders[2], traders[0], 1e16, -250e6);
-        checkCredit(insurance, 20394e2, 0);
-        checkCredit(traders[0], 5000000000, 5000e6);
-        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0]
-            .balanceOf(traders[2]);
-        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0]
-            .balanceOf(traders[0]);
+        checkCredit(insurance, 20_394e2, 0);
+        checkCredit(traders[0], 5_000_000_000, 5000e6);
+        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0].balanceOf(traders[2]);
+        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0].balanceOf(traders[0]);
         assertEq(paperLiquidator, 1e16);
-        assertEq(creditLiquidator, -20394e4);
-        assertEq(paperLiquidated, 990000000000000000);
-        assertEq(creditLiquidated, -29813099400);
+        assertEq(creditLiquidator, -20_394e4);
+        assertEq(paperLiquidated, 990_000_000_000_000_000);
+        assertEq(creditLiquidated, -29_813_099_400);
 
         cheats.expectRevert("LIQUIDATION_PRICE_PROTECTION");
-        perpList[0].liquidate(traders[2], traders[0], 2e18, -40000e6);
+        perpList[0].liquidate(traders[2], traders[0], 2e18, -40_000e6);
     }
 
     function testExecuteLiquidationBiggerTotalPositionShort() public {
         deposit();
         openPositionForExcuteTest();
-        priceSourceList[0].setMarkPrice(39000e6);
-        (int256 liqtorPaperChange, int256 liqtorCreditChange) = jojoDealer
-            .getLiquidationCost(address(perpList[0]), traders[1], -2e18);
+        priceSourceList[0].setMarkPrice(39_000e6);
+        (int256 liqtorPaperChange, int256 liqtorCreditChange) =
+            jojoDealer.getLiquidationCost(address(perpList[0]), traders[1], -2e18);
         assertEq(liqtorPaperChange, -1e18);
-        assertEq(liqtorCreditChange, 39390e6);
+        assertEq(liqtorCreditChange, 39_390e6);
         vm.startPrank(traders[2]);
-        perpList[0].liquidate(traders[2], traders[1], -2e18, 50000e6);
+        perpList[0].liquidate(traders[2], traders[1], -2e18, 50_000e6);
         checkCredit(insurance, 3939e5, 0);
-        checkCredit(traders[1], -47869e5, 5000e6);
-        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0]
-            .balanceOf(traders[2]);
-        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0]
-            .balanceOf(traders[1]);
+        checkCredit(traders[1], -47_869e5, 5000e6);
+        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0].balanceOf(traders[2]);
+        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0].balanceOf(traders[1]);
         assertEq(paperLiquidator, -1e18);
-        assertEq(creditLiquidator, 39390e6);
+        assertEq(creditLiquidator, 39_390e6);
         assertEq(paperLiquidated, 0);
         assertEq(creditLiquidated, 0);
     }
@@ -260,38 +234,36 @@ contract LiquidationTest is Checkers {
     function testExecuteLiquidationSmallerTotalPositionShort() public {
         deposit();
         openPositionForExcuteTest();
-        priceSourceList[0].setMarkPrice(39000e6);
-        (int256 liqtorPaperChange, int256 liqtorCreditChange) = jojoDealer
-            .getLiquidationCost(address(perpList[0]), traders[1], -1e16);
+        priceSourceList[0].setMarkPrice(39_000e6);
+        (int256 liqtorPaperChange, int256 liqtorCreditChange) =
+            jojoDealer.getLiquidationCost(address(perpList[0]), traders[1], -1e16);
         assertEq(liqtorPaperChange, -1e16);
-        assertEq(liqtorCreditChange, 393900000);
+        assertEq(liqtorCreditChange, 393_900_000);
         vm.startPrank(traders[2]);
 
         cheats.expectRevert("LIQUIDATION_PRICE_PROTECTION");
         perpList[0].liquidate(traders[2], traders[1], -1e16, 400e6);
 
         perpList[0].liquidate(traders[2], traders[1], -1e16, 300e6);
-        checkCredit(insurance, 3939000, 0);
+        checkCredit(insurance, 3_939_000, 0);
         checkCredit(traders[1], 5000e6, 5000e6);
-        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0]
-            .balanceOf(traders[2]);
-        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0]
-            .balanceOf(traders[1]);
+        (int256 paperLiquidator, int256 creditLiquidator) = perpList[0].balanceOf(traders[2]);
+        (int256 paperLiquidated, int256 creditLiquidated) = perpList[0].balanceOf(traders[1]);
         assertEq(paperLiquidator, -1e16);
-        assertEq(creditLiquidator, 393900000);
+        assertEq(creditLiquidator, 393_900_000);
         assertEq(paperLiquidated, -99e16);
-        assertEq(creditLiquidated, 29599161e3);
+        assertEq(creditLiquidated, 29_599_161e3);
     }
 
     function testExecuteLiquidationBadDebt() public {
         deposit();
         openPositionForExcuteTest();
-        priceSourceList[0].setMarkPrice(19000e6);
+        priceSourceList[0].setMarkPrice(19_000e6);
         vm.startPrank(traders[2]);
-        perpList[0].liquidate(traders[2], traders[0], 1e18, -50000e6);
+        perpList[0].liquidate(traders[2], traders[0], 1e18, -50_000e6);
         checkCredit(traders[0], 0, 0);
         cheats.expectRevert("JOJO_ACCOUNT_IS_SAFE");
-        perpList[0].liquidate(traders[2], traders[0], 1e18, -50000e6);
+        perpList[0].liquidate(traders[2], traders[0], 1e18, -50_000e6);
         checkCredit(insurance, -6205e6, 5000e6);
     }
 
@@ -302,7 +274,7 @@ contract LiquidationTest is Checkers {
         // revert for wrong paper amount
         cheats.expectRevert("JOJO_LIQUIDATION_REQUEST_AMOUNT_WRONG");
         jojoDealer.getLiquidationCost(address(perpList[0]), traders[0], -99e6);
-        perpList[0].liquidate(traders[2], traders[0], 99e16, -50000e6);
+        perpList[0].liquidate(traders[2], traders[0], 99e16, -50_000e6);
         bool isSafe = jojoDealer.isSafe(traders[0]);
         assertEq(isSafe, true);
     }
@@ -310,7 +282,7 @@ contract LiquidationTest is Checkers {
     function testCannotLiquidate() public {
         deposit();
         openPositionForExcuteTest();
-        priceSourceList[0].setMarkPrice(22000e6);
+        priceSourceList[0].setMarkPrice(22_000e6);
         vm.startPrank(traders[2]);
         cheats.expectRevert("JOJO_ACCOUNT_IS_SAFE");
         perpList[0].liquidate(traders[2], traders[0], 1e16, -500e6);

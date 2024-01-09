@@ -11,11 +11,7 @@ import "./libraries/FlashLoanReentrancyGuard.sol";
 import "./libraries/SignedDecimalMath.sol";
 import "./libraries/Types.sol";
 
-abstract contract JUSDBankStorage is
-    Ownable,
-    ReentrancyGuard,
-    FlashLoanReentrancyGuard
-{
+abstract contract JUSDBankStorage is Ownable, ReentrancyGuard, FlashLoanReentrancyGuard {
     using SignedDecimalMath for uint256;
 
     // reserves amount
@@ -60,15 +56,12 @@ abstract contract JUSDBankStorage is
             return;
         }
         uint256 timeDifference = block.timestamp - uint256(lastUpdateTimestamp);
-        tRate = tRate.decimalMul(
-            (timeDifference * borrowFeeRate) / Types.SECONDS_PER_YEAR + 1e18
-        );
+        tRate = tRate.decimalMul((timeDifference * borrowFeeRate) / Types.SECONDS_PER_YEAR + 1e18);
         lastUpdateTimestamp = currentTimestamp;
     }
 
     function getTRate() public view returns (uint256) {
         uint256 timeDifference = block.timestamp - uint256(lastUpdateTimestamp);
-        return
-            tRate + (borrowFeeRate * timeDifference) / Types.SECONDS_PER_YEAR;
+        return tRate + (borrowFeeRate * timeDifference) / Types.SECONDS_PER_YEAR;
     }
 }

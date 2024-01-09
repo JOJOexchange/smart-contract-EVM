@@ -50,7 +50,10 @@ library Trading {
         bytes32[] memory orderHashList,
         Types.Order[] memory orderList,
         uint256[] memory matchPaperAmount
-    ) internal returns (Types.MatchResult memory result) {
+    )
+        internal
+        returns (Types.MatchResult memory result)
+    {
         // check basic match paper amount and filter unique traders
         {
             require(orderList.length >= 2, Errors.INVALID_TRADER_NUMBER);
@@ -58,25 +61,19 @@ library Trading {
             uint256 uniqueTraderNum = 2;
             uint256 totalMakerFilledPaper = matchPaperAmount[1];
             // start from the second maker, which is the third trader
-            for (uint256 i = 2; i < orderList.length; ) {
+            for (uint256 i = 2; i < orderList.length;) {
                 totalMakerFilledPaper += matchPaperAmount[i];
                 if (orderList[i].signer > orderList[i - 1].signer) {
                     uniqueTraderNum = uniqueTraderNum + 1;
                 } else {
-                    require(
-                        orderList[i].signer == orderList[i - 1].signer,
-                        Errors.ORDER_WRONG_SORTING
-                    );
+                    require(orderList[i].signer == orderList[i - 1].signer, Errors.ORDER_WRONG_SORTING);
                 }
                 unchecked {
                     ++i;
                 }
             }
             // taker match amount must equals summary of makers' match amount
-            require(
-                matchPaperAmount[0] == totalMakerFilledPaper,
-                Errors.TAKER_TRADE_AMOUNT_WRONG
-            );
+            require(matchPaperAmount[0] == totalMakerFilledPaper, Errors.TAKER_TRADE_AMOUNT_WRONG);
             // result.traderList[0] is taker
             // result.traderList[1:] are makers
             result.traderList = new address[](uniqueTraderNum);
@@ -91,7 +88,7 @@ library Trading {
             // the first maker's trader index is 1
             uint256 currentTraderIndex = 1;
             result.traderList[1] = orderList[1].signer;
-            for (uint256 i = 1; i < orderList.length; ) {
+            for (uint256 i = 1; i < orderList.length;) {
                 _priceMatchCheck(orderList[0], orderList[i]);
 
                 // new maker, currentTraderIndex +1
@@ -104,29 +101,16 @@ library Trading {
                 int256 paperChange = orderList[i].paperAmount > 0
                     ? SafeCast.toInt256(matchPaperAmount[i])
                     : -1 * SafeCast.toInt256(matchPaperAmount[i]);
-                int256 creditChange = (paperChange *
-                    orderList[i].creditAmount) / orderList[i].paperAmount;
-                int256 fee = SafeCast.toInt256(creditChange.abs()).decimalMul(
-                    _info2MakerFeeRate(orderList[i].info)
-                );
+                int256 creditChange = (paperChange * orderList[i].creditAmount) / orderList[i].paperAmount;
+                int256 fee = SafeCast.toInt256(creditChange.abs()).decimalMul(_info2MakerFeeRate(orderList[i].info));
                 // serialNum is used for frontend level PNL calculation
-                uint256 serialNum = state.positionSerialNum[
-                    orderList[i].signer
-                ][msg.sender];
+                uint256 serialNum = state.positionSerialNum[orderList[i].signer][msg.sender];
                 emit OrderFilled(
-                    orderHashList[i],
-                    orderList[i].signer,
-                    msg.sender,
-                    paperChange,
-                    creditChange - fee,
-                    serialNum,
-                    fee
+                    orderHashList[i], orderList[i].signer, msg.sender, paperChange, creditChange - fee, serialNum, fee
                 );
                 // store matching result, including fees
                 result.paperChangeList[currentTraderIndex] += paperChange;
-                result.creditChangeList[currentTraderIndex] +=
-                    creditChange -
-                    fee;
+                result.creditChangeList[currentTraderIndex] += creditChange - fee;
                 result.paperChangeList[0] -= paperChange;
                 result.creditChangeList[0] -= creditChange;
                 result.orderSenderFee += fee;
@@ -140,9 +124,8 @@ library Trading {
         //  fee calculation
         {
             // calculate takerFee based on taker's credit matching amount
-            int256 takerFee = SafeCast
-                .toInt256(result.creditChangeList[0].abs())
-                .decimalMul(_info2TakerFeeRate(orderList[0].info));
+            int256 takerFee =
+                SafeCast.toInt256(result.creditChangeList[0].abs()).decimalMul(_info2TakerFeeRate(orderList[0].info));
             result.creditChangeList[0] -= takerFee;
             result.orderSenderFee += takerFee;
             emit OrderFilled(
@@ -159,10 +142,7 @@ library Trading {
 
     // ========== order check ==========
 
-    function _priceMatchCheck(
-        Types.Order memory takerOrder,
-        Types.Order memory makerOrder
-    ) private pure {
+    function _priceMatchCheck(Types.Order memory takerOrder, Types.Order memory makerOrder) private pure {
         /*
             Requirements:
             takercredit * abs(makerpaper) / abs(takerpaper) + makercredit <= 0
@@ -175,10 +155,8 @@ library Trading {
 
         // let temp1 = makercredit * takerpaper
         // let temp2 = takercredit * makerpaper
-        int256 temp1 = int256(makerOrder.creditAmount) *
-            int256(takerOrder.paperAmount);
-        int256 temp2 = int256(takerOrder.creditAmount) *
-            int256(makerOrder.paperAmount);
+        int256 temp1 = int256(makerOrder.creditAmount) * int256(takerOrder.paperAmount);
+        int256 temp2 = int256(takerOrder.creditAmount) * int256(makerOrder.paperAmount);
 
         if (takerOrder.paperAmount > 0) {
             // maker order should be in the opposite direction of taker order
@@ -193,9 +171,7 @@ library Trading {
 
     // ========== EIP712 struct hash ==========
 
-    function _structHash(
-        Types.Order memory order
-    ) internal pure returns (bytes32 structHash) {
+    function _structHash(Types.Order memory order) internal pure returns (bytes32 structHash) {
         /*
             To save gas, we use assembly to implement the function:
 
@@ -240,9 +216,7 @@ library Trading {
         return int256(makerFee);
     }
 
-    function _info2TakerFeeRate(
-        bytes32 info
-    ) internal pure returns (int256 takerFeeRate) {
+    function _info2TakerFeeRate(bytes32 info) internal pure returns (int256 takerFeeRate) {
         bytes8 value = bytes8(info >> 128);
         int64 takerFee;
         assembly {

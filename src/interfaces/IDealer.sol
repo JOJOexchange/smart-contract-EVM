@@ -12,11 +12,7 @@ interface IDealer {
     /// @param primaryAmount is the amount of primary asset you want to deposit.
     /// @param secondaryAmount is the amount of secondary asset you want to deposit.
     /// @param to is the account you want to deposit to.
-    function deposit(
-        uint256 primaryAmount,
-        uint256 secondaryAmount,
-        address to
-    ) external;
+    function deposit(uint256 primaryAmount, uint256 secondaryAmount, address to) external;
 
     /// @notice Submit withdrawal request, which can be executed after
     /// the timelock. The main purpose of this function is to avoid the
@@ -24,11 +20,7 @@ interface IDealer {
     /// @param from The deducted account.
     /// @param primaryAmount is the amount of primary asset you want to withdraw.
     /// @param secondaryAmount is the amount of secondary asset you want to withdraw.
-    function requestWithdraw(
-        address from,
-        uint256 primaryAmount,
-        uint256 secondaryAmount
-    ) external;
+    function requestWithdraw(address from, uint256 primaryAmount, uint256 secondaryAmount) external;
 
     /// @notice Execute the withdrawal request.
     /// @param from The deducted account.
@@ -36,12 +28,7 @@ interface IDealer {
     /// @param isInternal Only internal credit transfers will be made,
     /// and ERC20 transfers will not happen.
     /// @param param call "to" with param if not null.
-    function executeWithdraw(
-        address from,
-        address to,
-        bool isInternal,
-        bytes memory param
-    ) external;
+    function executeWithdraw(address from, address to, bool isInternal, bytes memory param) external;
 
     /// @notice Withdraw without waiting.
     /// @param from The deducted account.
@@ -58,7 +45,8 @@ interface IDealer {
         uint256 secondaryAmount,
         bool isInternal,
         bytes memory param
-    ) external;
+    )
+        external;
 
     /// @notice Help perpetual contract parse tradeData and return
     /// the balance changes of each trader.
@@ -70,11 +58,7 @@ interface IDealer {
         bytes calldata tradeData
     )
         external
-        returns (
-            address[] memory traderList,
-            int256[] memory paperChangeList,
-            int256[] memory creditChangeList
-        );
+        returns (address[] memory traderList, int256[] memory paperChangeList, int256[] memory creditChangeList);
 
     /// @notice Check if the trader's margin is enough (>= maintenance margin).
     /// If so, the trader is "safe".
@@ -85,9 +69,7 @@ interface IDealer {
     /// @notice Check if a list of traders are safe.
     /// @dev This function is more gas effective than isSafe, by caching
     /// mark prices.
-    function isAllSafe(
-        address[] calldata traderList
-    ) external view returns (bool);
+    function isAllSafe(address[] calldata traderList) external view returns (bool);
 
     /// @notice Get funding rate of a perpetual market.
     /// Funding rate is a 1e18 based decimal.
@@ -95,10 +77,7 @@ interface IDealer {
 
     /// @notice Update multiple funding rate at once.
     /// Can only be called by funding rate keeper.
-    function updateFundingRate(
-        address[] calldata perpList,
-        int256[] calldata rateList
-    ) external;
+    function updateFundingRate(address[] calldata perpList, int256[] calldata rateList) external;
 
     /// @notice Calculate the paper and credit change of liquidator and
     /// liquidated trader.
@@ -116,12 +95,7 @@ interface IDealer {
         int256 requestPaperAmount
     )
         external
-        returns (
-            int256 liqtorPaperChange,
-            int256 liqtorCreditChange,
-            int256 liqedPaperChange,
-            int256 liqedCreditChange
-        );
+        returns (int256 liqtorPaperChange, int256 liqtorCreditChange, int256 liqedPaperChange, int256 liqedCreditChange);
 
     /// @notice Transfer all bad debt to insurance account,
     /// including primary and secondary balances.
@@ -142,9 +116,7 @@ interface IDealer {
     function setOperator(address operator, bool isValid) external;
 
     /// @param perp the address of perpetual contract market
-    function getRiskParams(
-        address perp
-    ) external view returns (Types.RiskParams memory params);
+    function getRiskParams(address perp) external view returns (Types.RiskParams memory params);
 
     /// @notice Return all registered perpetual contract market.
     function getAllRegisteredPerps() external view returns (address[] memory);
@@ -154,16 +126,12 @@ interface IDealer {
     function getMarkPrice(address perp) external view returns (uint256);
 
     /// @notice Get all open positions of the trader.
-    function getPositions(
-        address trader
-    ) external view returns (address[] memory);
+    function getPositions(address trader) external view returns (address[] memory);
 
     /// @notice Return the credit details of the trader.
     /// You cannot use credit as net value or net margin of a trader.
     /// The net value of positions would also be included.
-    function getCreditOf(
-        address trader
-    )
+    function getCreditOf(address trader)
         external
         view
         returns (
@@ -179,26 +147,16 @@ interface IDealer {
     /// @return exposure open position value of the trader across all markets
     /// @return initialMargin Funds required to open a position.
     /// @return maintenanceMargin Funds needed to keep a position open.
-    function getTraderRisk(
-        address trader
-    )
+    function getTraderRisk(address trader)
         external
         view
-        returns (
-            int256 netValue,
-            uint256 exposure,
-            uint256 initialMargin,
-            uint256 maintenanceMargin
-        );
+        returns (int256 netValue, uint256 exposure, uint256 initialMargin, uint256 maintenanceMargin);
 
     /// @notice Get liquidation price of a position
     /// @dev This function is for directional use. The margin of error is typically
     /// within 10 wei.
     /// @return liquidationPrice equals 0 if there is no liquidation price.
-    function getLiquidationPrice(
-        address trader,
-        address perp
-    ) external view returns (uint256 liquidationPrice);
+    function getLiquidationPrice(address trader, address perp) external view returns (uint256 liquidationPrice);
 
     /// @notice a view version of requestLiquidation, liquidators can use
     /// this function to check how much you have to pay in advance.
@@ -213,25 +171,16 @@ interface IDealer {
 
     /// @notice Get filled paper amount of an order to avoid double matching.
     /// @return filledAmount includes paper amount
-    function getOrderFilledAmount(
-        bytes32 orderHash
-    ) external view returns (uint256 filledAmount);
+    function getOrderFilledAmount(bytes32 orderHash) external view returns (uint256 filledAmount);
 
     /// @notice check if order sender is valid
-    function isOrderSenderValid(
-        address orderSender
-    ) external view returns (bool);
+    function isOrderSenderValid(address orderSender) external view returns (bool);
 
     /// @notice check if fastWithdrawl is valid
-    function isFastWithdrawalValid(
-        address fastWithdrawOperator
-    ) external view returns (bool);
+    function isFastWithdrawalValid(address fastWithdrawOperator) external view returns (bool);
 
     /// @notice check if operator is valid
-    function isOperatorValid(
-        address client,
-        address operator
-    ) external view returns (bool);
+    function isOperatorValid(address client, address operator) external view returns (bool);
 
     /// @notice check if spender can operate from
     function isCreditAllowed(

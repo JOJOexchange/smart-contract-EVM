@@ -7,7 +7,7 @@ import "../src/JUSDBank.sol";
 
 contract JUSDBankScript is Script {
     // add this to be excluded from coverage report
-    function test() public {}
+    function test() public { }
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
@@ -22,9 +22,9 @@ contract JUSDBankScript is Script {
             // JOJODealer
             0xFfD3B82971dAbccb3219d16b6EB2DB134bf55300,
             // maxBorrowAmountPerAccount_
-            100000000000,
+            100_000_000_000,
             // maxBorrowAmount_
-            1000000000000,
+            1_000_000_000_000,
             // borrowFeeRate_
             0,
             // usdc

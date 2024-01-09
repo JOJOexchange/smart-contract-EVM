@@ -27,8 +27,7 @@ interface Cheats {
 
 // Check fundingRateArbitrage
 contract FundingRateArbitrageTest is Test {
-    Cheats internal constant cheats =
-        Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+    Cheats internal constant cheats = Cheats(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
     FundingRateArbitrage public fundingRateArbitrage;
     Utils internal utils;
     TestERC20 public eth;
@@ -94,9 +93,9 @@ contract FundingRateArbitrageTest is Test {
             address(jusd),
             address(jojoDealer),
             // maxBorrowAmountPerAccount_
-            100000000000,
+            100_000_000_000,
             // maxBorrowAmount_
-            100000000001,
+            100_000_000_001,
             // borrowFeeRate_
             0,
             address(USDC)
@@ -112,7 +111,7 @@ contract FundingRateArbitrageTest is Test {
             // maxDepositAmountPerAccount
             2030e18,
             // maxBorrowValue
-            100000e6,
+            100_000e6,
             // liquidateMortgageRate
             825e15,
             // liquidationPriceOff
@@ -122,7 +121,7 @@ contract FundingRateArbitrageTest is Test {
             address(ETHOracle)
         );
 
-        jusd.mint(address(jusdBank), 100000e6);
+        jusd.mint(address(jusdBank), 100_000e6);
     }
 
     function initFundingRateSetting() public {
@@ -141,10 +140,10 @@ contract FundingRateArbitrageTest is Test {
 
         fundingRateArbitrage.transferOwnership(Owner);
         vm.startPrank(Owner);
-        jusd.mint(address(fundingRateArbitrage), 10010e6);
+        jusd.mint(address(fundingRateArbitrage), 10_010e6);
         fundingRateArbitrage.setOperator(sender1, true);
-        fundingRateArbitrage.setMaxNetValue(10000e6);
-        fundingRateArbitrage.setDefaultQuota(10000e6);
+        fundingRateArbitrage.setMaxNetValue(10_000e6);
+        fundingRateArbitrage.setDefaultQuota(10_000e6);
         vm.stopPrank();
     }
 
@@ -167,13 +166,9 @@ contract FundingRateArbitrageTest is Test {
     }
 
     function initSupportSWAP() public {
-        swapContract = new MockSwap(
-            address(USDC),
-            address(eth),
-            address(ETHOracle)
-        );
-        USDC.mint(address(swapContract), 100000e6);
-        eth.mint(address(swapContract), 10000e18);
+        swapContract = new MockSwap(address(USDC), address(eth), address(ETHOracle));
+        USDC.mint(address(swapContract), 100_000e6);
+        eth.mint(address(swapContract), 10_000e18);
     }
 
     function setUp() public {
@@ -214,7 +209,7 @@ contract FundingRateArbitrageTest is Test {
         vm.stopPrank();
 
         vm.startPrank(Owner);
-        fundingRateArbitrage.setMaxNetValue(10000e6);
+        fundingRateArbitrage.setMaxNetValue(10_000e6);
         vm.stopPrank();
 
         vm.startPrank(alice);
@@ -248,11 +243,8 @@ contract FundingRateArbitrageTest is Test {
     }
 
     function testView() public {
-        HelperContract helper = new HelperContract(
-            address(jojoDealer),
-            address(jusdBank),
-            address(fundingRateArbitrage)
-        );
+        HelperContract helper =
+            new HelperContract(address(jojoDealer), address(jusdBank), address(fundingRateArbitrage));
 
         helper.getHedgingState(address(perpetual));
     }
@@ -281,7 +273,7 @@ contract FundingRateArbitrageTest is Test {
         uint256[] memory indexs = new uint256[](1);
         indexs[0] = index;
         fundingRateArbitrage.permitWithdrawRequests(indexs);
-        assertEq(USDC.balanceOf(alice), 98000000);
+        assertEq(USDC.balanceOf(alice), 98_000_000);
     }
 
     function testWithdrawFromLPWithRate() public {
@@ -314,16 +306,16 @@ contract FundingRateArbitrageTest is Test {
         uint256 privateKey,
         int128 paper,
         int128 credit
-    ) public view returns (Types.Order memory order, bytes memory signature) {
+    )
+        public
+        view
+        returns (Types.Order memory order, bytes memory signature)
+    {
         int64 makerFeeRate = 2e14;
         int64 takerFeeRate = 7e14;
 
-        bytes memory infoBytes = abi.encodePacked(
-            makerFeeRate,
-            takerFeeRate,
-            uint64(block.timestamp),
-            uint64(block.timestamp)
-        );
+        bytes memory infoBytes =
+            abi.encodePacked(makerFeeRate, takerFeeRate, uint64(block.timestamp), uint64(block.timestamp));
 
         order = Types.Order({
             perp: address(perpetual),
@@ -333,41 +325,20 @@ contract FundingRateArbitrageTest is Test {
             info: bytes32(infoBytes)
         });
 
-        bytes32 domainSeparator = EIP712Test._buildDomainSeparator(
-            "JOJO",
-            "1",
-            address(jojoDealer)
-        );
+        bytes32 domainSeparator = EIP712Test._buildDomainSeparator("JOJO", "1", address(jojoDealer));
         bytes32 structHash = EIP712Test._structHash(order);
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
         signature = abi.encodePacked(r, s, v);
     }
 
     function constructTradeData() internal view returns (bytes memory) {
-        (Types.Order memory order1, bytes memory signature1) = buildOrder(
-            sender1,
-            sender1PrivateKey,
-            -2e18,
-            990e6
-        );
+        (Types.Order memory order1, bytes memory signature1) = buildOrder(sender1, sender1PrivateKey, -2e18, 990e6);
 
-        (Types.Order memory order2, bytes memory signature2) = buildOrder(
-            sender2,
-            sender2PrivateKey,
-            1e18,
-            -1010e6
-        );
+        (Types.Order memory order2, bytes memory signature2) = buildOrder(sender2, sender2PrivateKey, 1e18, -1010e6);
 
-        (Types.Order memory order3, bytes memory signature3) = buildOrder(
-            sender3,
-            sender3PrivateKey,
-            1e18,
-            -1000e6
-        );
+        (Types.Order memory order3, bytes memory signature3) = buildOrder(sender3, sender3PrivateKey, 1e18, -1000e6);
 
         Types.Order[] memory orderList = new Types.Order[](3);
         orderList[0] = order1;
@@ -386,8 +357,8 @@ contract FundingRateArbitrageTest is Test {
 
     function testOpenNormalPositionTrade() public {
         vm.startPrank(sender1);
-        USDC.mint(sender1, 15000e6);
-        USDC.approve(address(jojoDealer), 15000e6);
+        USDC.mint(sender1, 15_000e6);
+        USDC.approve(address(jojoDealer), 15_000e6);
         jojoDealer.deposit(5000e6, 0, sender1);
         jojoDealer.deposit(5000e6, 0, sender2);
         jojoDealer.deposit(5000e6, 0, sender3);
@@ -403,20 +374,16 @@ contract FundingRateArbitrageTest is Test {
         int128 order1Credit,
         int128 order2Amount,
         int128 order2Credit
-    ) internal view returns (bytes memory) {
-        (Types.Order memory order1, bytes memory signature1) = buildOrder(
-            address(fundingRateArbitrage),
-            sender1PrivateKey,
-            order1Amount,
-            order1Credit
-        );
+    )
+        internal
+        view
+        returns (bytes memory)
+    {
+        (Types.Order memory order1, bytes memory signature1) =
+            buildOrder(address(fundingRateArbitrage), sender1PrivateKey, order1Amount, order1Credit);
 
-        (Types.Order memory order2, bytes memory signature2) = buildOrder(
-            sender2,
-            sender2PrivateKey,
-            order2Amount,
-            order2Credit
-        );
+        (Types.Order memory order2, bytes memory signature2) =
+            buildOrder(sender2, sender2PrivateKey, order2Amount, order2Credit);
 
         Types.Order[] memory orderList = new Types.Order[](2);
         orderList[0] = order1;
@@ -449,23 +416,10 @@ contract FundingRateArbitrageTest is Test {
         uint256 minReceivedCollateral = 2e18;
         uint256 JUSDRebalanceAmount = 1500e6;
 
-        bytes memory swapData = swapContract.getSwapToEthData(
-            2400e6,
-            address(eth)
-        );
-        bytes memory spotTradeParam = abi.encode(
-            address(swapContract),
-            address(swapContract),
-            2400e6,
-            swapData
-        );
+        bytes memory swapData = swapContract.getSwapToEthData(2400e6, address(eth));
+        bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2400e6, swapData);
 
-        bytes memory tradeData = constructTradeDataForPool(
-            -1e18,
-            990e6,
-            1e18,
-            -1010e6
-        );
+        bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
 
         fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
         fundingRateArbitrage.borrow(JUSDRebalanceAmount);
@@ -474,9 +428,7 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(orderSender);
         perpetual.trade(tradeData);
 
-        (int256 paper, int256 credit) = perpetual.balanceOf(
-            address(fundingRateArbitrage)
-        );
+        (int256 paper, int256 credit) = perpetual.balanceOf(address(fundingRateArbitrage));
         console.logInt(paper);
         console.logInt(credit);
     }
@@ -497,23 +449,10 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(Owner);
         uint256 minReceivedCollateral = 3e18;
         uint256 JUSDRebalanceAmount = 1500e6;
-        bytes memory swapData = swapContract.getSwapToEthData(
-            2000e6,
-            address(eth)
-        );
-        bytes memory spotTradeParam = abi.encode(
-            address(swapContract),
-            address(swapContract),
-            2000e6,
-            swapData
-        );
+        bytes memory swapData = swapContract.getSwapToEthData(2000e6, address(eth));
+        bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2000e6, swapData);
 
-        bytes memory tradeData = constructTradeDataForPool(
-            -1e18,
-            990e6,
-            1e18,
-            -1010e6
-        );
+        bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
 
         cheats.expectRevert("SWAP SLIPPAGE");
         fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
@@ -526,9 +465,7 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(orderSender);
         perpetual.trade(tradeData);
 
-        (int256 paper, int256 credit) = perpetual.balanceOf(
-            address(fundingRateArbitrage)
-        );
+        (int256 paper, int256 credit) = perpetual.balanceOf(address(fundingRateArbitrage));
         console.logInt(paper);
         console.logInt(credit);
 
@@ -536,23 +473,10 @@ contract FundingRateArbitrageTest is Test {
         uint256 minReceivedUSDC = 2900e6;
         uint256 JUSDRebalanceAmount2 = 1500e6;
         uint256 collateralAmount = 2e18;
-        bytes memory swapData2 = swapContract.getSwapToUSDCData(
-            2e18,
-            address(eth)
-        );
-        bytes memory spotTradeParam2 = abi.encode(
-            address(swapContract),
-            address(swapContract),
-            2e18,
-            swapData2
-        );
+        bytes memory swapData2 = swapContract.getSwapToUSDCData(2e18, address(eth));
+        bytes memory spotTradeParam2 = abi.encode(address(swapContract), address(swapContract), 2e18, swapData2);
 
-        bytes memory tradeData2 = constructTradeDataForPool(
-            1e18,
-            -1000e6,
-            -1e18,
-            990e6
-        );
+        bytes memory tradeData2 = constructTradeDataForPool(1e18, -1000e6, -1e18, 990e6);
 
         perpetual.trade(tradeData2);
         vm.stopPrank();
@@ -562,52 +486,27 @@ contract FundingRateArbitrageTest is Test {
         fundingRateArbitrage.repay(JUSDRebalanceAmount2);
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapSellEth(
-            minReceivedUSDC,
-            collateralAmount,
-            spotTradeParam2
-        );
+        fundingRateArbitrage.swapSellEth(minReceivedUSDC, collateralAmount, spotTradeParam2);
 
-        bytes memory spotTradeParam3 = abi.encode(
-            address(swapContract),
-            address(swapContract),
-            2e18,
-            "swap()"
-        );
+        bytes memory spotTradeParam3 = abi.encode(address(swapContract), address(swapContract), 2e18, "swap()");
         cheats.expectRevert();
-        fundingRateArbitrage.swapSellEth(
-            minReceivedUSDC,
-            collateralAmount,
-            spotTradeParam3
-        );
+        fundingRateArbitrage.swapSellEth(minReceivedUSDC, collateralAmount, spotTradeParam3);
 
         minReceivedUSDC = 2000e6;
-        fundingRateArbitrage.swapSellEth(
-            minReceivedUSDC,
-            collateralAmount,
-            spotTradeParam2
-        );
+        fundingRateArbitrage.swapSellEth(minReceivedUSDC, collateralAmount, spotTradeParam2);
 
         vm.stopPrank();
     }
 
     function testBurnJUSD() public {
         vm.startPrank(Owner);
-        fundingRateArbitrage.refundJUSD(10000e6);
-        assertEq(IERC20(jusd).balanceOf(Owner), 10000e6);
+        fundingRateArbitrage.refundJUSD(10_000e6);
+        assertEq(IERC20(jusd).balanceOf(Owner), 10_000e6);
     }
 
     function testBuildOrderParam() public view {
-        bytes memory swapData2 = swapContract.getSwapToUSDCData(
-            2e18,
-            address(eth)
-        );
-        fundingRateArbitrage.buildSpotSwapData(
-            address(swapContract),
-            address(swapContract),
-            2400e6,
-            swapData2
-        );
+        bytes memory swapData2 = swapContract.getSwapToUSDCData(2e18, address(eth));
+        fundingRateArbitrage.buildSpotSwapData(address(swapContract), address(swapContract), 2400e6, swapData2);
     }
 
     function testSetDepositFee() public {
@@ -623,20 +522,20 @@ contract FundingRateArbitrageTest is Test {
     }
 
     function testDepositTooMuch() public {
-        USDC.mint(alice, 10000e6);
+        USDC.mint(alice, 10_000e6);
         vm.startPrank(Owner);
-        fundingRateArbitrage.setMaxNetValue(10010e6);
+        fundingRateArbitrage.setMaxNetValue(10_010e6);
         vm.stopPrank();
         initAlice();
-        USDC.approve(address(fundingRateArbitrage), 10001e6);
+        USDC.approve(address(fundingRateArbitrage), 10_001e6);
         cheats.expectRevert("usdc amount bigger than quota");
-        fundingRateArbitrage.deposit(10001e6);
+        fundingRateArbitrage.deposit(10_001e6);
         vm.stopPrank();
 
         vm.startPrank(Owner);
-        fundingRateArbitrage.setPersonalQuota(alice, 10010e6);
+        fundingRateArbitrage.setPersonalQuota(alice, 10_010e6);
         vm.stopPrank();
         vm.startPrank(alice);
-        fundingRateArbitrage.deposit(10001e6);
+        fundingRateArbitrage.deposit(10_001e6);
     }
 }

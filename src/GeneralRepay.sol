@@ -19,51 +19,28 @@ contract GeneralRepay is Ownable {
     address public jusdExchange;
     mapping(address => bool) public whiteListContract;
 
-    constructor(
-        address _jusdBank,
-        address _jusdExchange,
-        address _USDC,
-        address _JUSD
-    ) {
+    constructor(address _jusdBank, address _jusdExchange, address _USDC, address _JUSD) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
         JUSD = _JUSD;
     }
 
-    function setWhiteListContract(
-        address targetContract,
-        bool isValid
-    ) public onlyOwner {
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
         whiteListContract[targetContract] = isValid;
     }
 
-    function repayJUSD(
-        address asset,
-        uint256 amount,
-        address to,
-        bytes memory param
-    ) external {
+    function repayJUSD(address asset, uint256 amount, address to, bytes memory param) external {
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
         uint256 minReceive;
         if (asset != USDC) {
-            (
-                address approveTarget,
-                address swapTarget,
-                uint256 minAmount,
-                bytes memory data
-            ) = abi.decode(param, (address, address, uint256, bytes));
-            require(
-                whiteListContract[approveTarget],
-                "approve target is not in the whitelist"
-            );
-            require(
-                whiteListContract[swapTarget],
-                "swap target is not in the whitelist"
-            );
+            (address approveTarget, address swapTarget, uint256 minAmount, bytes memory data) =
+                abi.decode(param, (address, address, uint256, bytes));
+            require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+            require(whiteListContract[swapTarget], "swap target is not in the whitelist");
             IERC20(asset).safeApprove(approveTarget, 0);
             IERC20(asset).safeApprove(approveTarget, amount);
-            (bool success, ) = swapTarget.call(data);
+            (bool success,) = swapTarget.call(data);
             if (success == false) {
                 assembly {
                     let ptr := mload(0x40)

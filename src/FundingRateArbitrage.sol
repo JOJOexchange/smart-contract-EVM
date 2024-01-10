@@ -258,12 +258,12 @@ contract FundingRateArbitrage is Ownable {
     function deposit(uint256 amount) external {
         require(amount != 0, "deposit amount is zero");
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
-        uint256 earnUSDCAmount = amount.decimalDiv(getIndex());
-        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
         if (feeAmount > 0) {
             amount -= feeAmount;
-            IERC20(usdc).transfer(owner(), feeAmount);
+            IERC20(usdc).transferFrom(msg.sender, owner(), feeAmount);
         }
+        uint256 earnUSDCAmount = amount.decimalDiv(getIndex());
+        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
         JOJODealer(jojoDealer).deposit(0, amount, msg.sender);
         earnUSDCBalance[msg.sender] += earnUSDCAmount;
         jusdOutside[msg.sender] += amount;
@@ -307,6 +307,7 @@ contract FundingRateArbitrage is Ownable {
             WithdrawalRequest storage request = withdrawalRequests[requestIDList[i]];
             require(!request.isExecuted, "request has been executed");
             uint256 USDCAmount = request.earnUSDCAmount.decimalMul(index);
+            require(USDCAmount >= withdrawSettleFee, "USDCAmount need to bigger than withdrawSettleFee");
             uint256 feeAmount = (USDCAmount - withdrawSettleFee).decimalMul(withdrawFeeRate) + withdrawSettleFee;
             if (feeAmount > 0) {
                 IERC20(usdc).transfer(owner(), feeAmount);

@@ -25,7 +25,7 @@
   "PrimaryAssetDecimal": 6,
   "SecondaryAsset": "0xDd29a69462a08006Fda068D090b44B045958C5B7",
   "FundingRateUpdateLimiter": "0x5f8e53f1306426ebd665fb800742d740e3d0acd1",
-  "DepositStableCoin": "0xe804cd55893a6066c21d1fa0f58a06309fb3d2ea",
+  "DepositStableCoinToDealer": "0xe804cd55893a6066c21d1fa0f58a06309fb3d2ea",
   "JUSDBank": "0xb0D9Ce393f3483449be357EF715a3492858f8a5E",
   "JUSDRepayHelper": "0x3755d362774fc08c30cdd1a305e1c8107e2046d2",
   "JUSDExchange": "0x33a317a875Bc23af2E083555E5E46e3ac559C40A",

@@ -12,6 +12,7 @@ import "../FundingRateArbitrage.sol";
 import "../JOJODealer.sol";
 import "../JUSDBank.sol";
 import "../Perpetual.sol";
+import "../MerkleDistributorWithDeadline.sol";
 import "../oracle/EmergencyOracle.sol";
 import "../oracle/OracleAdaptor.sol";
 import "../subaccount/SubaccountFactory.sol";

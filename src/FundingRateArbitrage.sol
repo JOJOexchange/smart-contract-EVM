@@ -266,7 +266,7 @@ contract FundingRateArbitrage is Ownable {
             amount.decimalMul(Types.ONE - depositFeeRate) > withdrawSettleFee,
             "The deposit amount is less than the minimum withdrawal amount"
         );
-        
+
         require(amount != 0, "deposit amount is zero");
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
         if (feeAmount > 0) {
@@ -290,7 +290,7 @@ contract FundingRateArbitrage is Ownable {
     /// @dev users need to withdraw jusd from trading system firstly or by jusd, then transfer jusd to
     /// the pool and get usdc back
     /// @param repayJUSDAmount is the repat jusd amount
-    function requestWithdraw(uint256 repayJUSDAmount) external returns (uint256 withdrawEarnUSDCAmount) {
+    function requestWithdraw(uint256 repayJUSDAmount) external returns (uint256) {
         IERC20(jusd).safeTransferFrom(msg.sender, address(this), repayJUSDAmount);
         require(repayJUSDAmount <= jusdOutside[msg.sender], "Request Withdraw too big");
         jusdOutside[msg.sender] -= repayJUSDAmount;
@@ -299,7 +299,7 @@ contract FundingRateArbitrage is Ownable {
         require(
             earnUSDCBalance[msg.sender] >= lockedEarnUSDCAmount, "lockedEarnUSDCAmount is bigger than earnUSDCBalance"
         );
-        withdrawEarnUSDCAmount = earnUSDCBalance[msg.sender] - lockedEarnUSDCAmount;
+        uint256 withdrawEarnUSDCAmount = earnUSDCBalance[msg.sender] - lockedEarnUSDCAmount;
         withdrawalRequests.push(WithdrawalRequest(withdrawEarnUSDCAmount, msg.sender, false));
         require(
             withdrawEarnUSDCAmount.decimalMul(index) >= withdrawSettleFee, "Withdraw amount is smaller than settleFee"

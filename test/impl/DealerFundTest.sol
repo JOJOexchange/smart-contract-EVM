@@ -31,6 +31,27 @@ contract FundTest is Checkers {
         assertEq(jusd.balanceOf(traders[0]), 900_000e6);
     }
 
+    function testWithdrawByOthers() public {
+        vm.startPrank(traders[0]);
+        jojoDealer.deposit(0, 1_000_000e6, traders[0]);
+        vm.stopPrank();
+
+        vm.startPrank(traders[1]);
+        cheats.expectRevert("JOJO_WITHDRAW_INVALID");
+        jojoDealer.requestWithdraw(traders[0], 1000e6, 0);
+        vm.stopPrank();
+
+        vm.startPrank(traders[0]);
+        jojoDealer.approveFundOperator(traders[1], 0, 100e6);
+        vm.stopPrank();
+
+        vm.startPrank(traders[1]);
+        jojoDealer.requestWithdraw(traders[0], 0, 100e6);
+        vm.warp(5);
+        jojoDealer.executeWithdraw(traders[0], traders[1], true, "");
+        vm.stopPrank();
+    }
+
     function testWithdrawToNegative() public {
         vm.startPrank(traders[0]);
         jojoDealer.deposit(0, 1_000_000e6, traders[0]);

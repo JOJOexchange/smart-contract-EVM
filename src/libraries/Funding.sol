@@ -75,10 +75,10 @@ library Funding {
         external
     {
         require(isWithdrawValid(state, msg.sender, from, primaryAmount, secondaryAmount), Errors.WITHDRAW_INVALID);
-        state.pendingPrimaryWithdraw[msg.sender] = primaryAmount;
-        state.pendingSecondaryWithdraw[msg.sender] = secondaryAmount;
-        state.withdrawExecutionTimestamp[msg.sender] = block.timestamp + state.withdrawTimeLock;
-        emit RequestWithdraw(msg.sender, primaryAmount, secondaryAmount, state.withdrawExecutionTimestamp[msg.sender]);
+        state.pendingPrimaryWithdraw[from] = primaryAmount;
+        state.pendingSecondaryWithdraw[from] = secondaryAmount;
+        state.withdrawExecutionTimestamp[from] = block.timestamp + state.withdrawTimeLock;
+        emit RequestWithdraw(from, primaryAmount, secondaryAmount, state.withdrawExecutionTimestamp[from]);
     }
 
     function executeWithdraw(

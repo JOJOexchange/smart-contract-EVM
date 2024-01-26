@@ -172,6 +172,7 @@ library Funding {
 
         if (param.length != 0) {
             require(Address.isContract(to), "target is not a contract");
+            require(state.isWithdrawalWhitelist[to], "target is not in whiteList");
             (bool success,) = to.call(param);
             if (success == false) {
                 assembly {

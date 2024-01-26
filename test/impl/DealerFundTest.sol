@@ -130,7 +130,7 @@ contract FundTest is Checkers {
         vm.startPrank(traders[1]);
         jojoDealer.fastWithdraw(traders[0], traders[0], 100e6, 0, false, "");
         jojoDealer.fastWithdraw(traders[0], traders[0], 0, 100e6, false, "");
-        cheats.expectRevert("Ownable: caller is not the owner");
+        cheats.expectRevert("target is not in whiteList");
         jojoDealer.fastWithdraw(
             traders[1],
             address(jojoDealer),

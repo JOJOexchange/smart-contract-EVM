@@ -55,6 +55,7 @@ library Types {
         // funding rate keeper, normally an EOA account
         address fundingRateKeeper;
         uint256 maxPositionAmount;
+        mapping(address => bool) isWithdrawalWhitelist;
     }
 
     struct Order {

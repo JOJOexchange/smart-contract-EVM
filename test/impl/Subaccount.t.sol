@@ -93,6 +93,7 @@ contract SubaccountTest is JUSDBankInitTest {
         usdc.mint(alice, 1000e6);
         jusd.mint(1000e6);
         jusd.transfer(alice, 1000e6);
+        jojoDealer.setWithdrawlWhitelist(address(jusdRepayHelper), true);
         vm.startPrank(alice);
         eth.approve(address(jusdBank), 10e18);
         address aliceSub = subaccountFactory.newSubaccount();

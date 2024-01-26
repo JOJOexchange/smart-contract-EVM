@@ -60,6 +60,10 @@ abstract contract JOJOOperation is JOJOStorage, IDealer {
         Operation.setFastWithdrawalWhitelist(state, target, isValid);
     }
 
+    function setWithdrawlWhitelist(address target, bool isValid) external onlyOwner {
+        Operation.setWithdrawalWhitelist(state, target, isValid);
+    }
+
     function disableFastWithdraw(bool disabled) external onlyOwner {
         Operation.disableFastWithdraw(state, disabled);
     }

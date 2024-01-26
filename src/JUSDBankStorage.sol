@@ -62,6 +62,6 @@ abstract contract JUSDBankStorage is Ownable, ReentrancyGuard, FlashLoanReentran
 
     function getTRate() public view returns (uint256) {
         uint256 timeDifference = block.timestamp - uint256(lastUpdateTimestamp);
-        return tRate + (borrowFeeRate * timeDifference) / Types.SECONDS_PER_YEAR;
+        return tRate.decimalMul((timeDifference * borrowFeeRate) / Types.SECONDS_PER_YEAR + 1e18);
     }
 }

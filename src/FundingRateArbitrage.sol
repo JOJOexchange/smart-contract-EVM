@@ -25,6 +25,7 @@ contract FundingRateArbitrage is Ownable {
 
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
+    using SignedDecimalMath for int256;
 
     address public immutable collateral;
     address public immutable jusdBank;
@@ -90,8 +91,13 @@ contract FundingRateArbitrage is Ownable {
         uint256 usdcBuffer = IERC20(usdc).balanceOf(address(this));
         uint256 collateralPrice = IJUSDBank(jusdBank).getCollateralPrice(collateral);
         (int256 perpNetValue,,,) = JOJODealer(jojoDealer).getTraderRisk(address(this));
-        return
-            SafeCast.toUint256(perpNetValue) + collateralAmount.decimalMul(collateralPrice) + usdcBuffer - jusdBorrowed;
+        if (perpNetValue >= 0) {
+            return SafeCast.toUint256(perpNetValue) + collateralAmount.decimalMul(collateralPrice) + usdcBuffer
+                - jusdBorrowed;
+        } else { 
+            return collateralAmount.decimalMul(collateralPrice) + usdcBuffer
+                - jusdBorrowed - perpNetValue.abs();
+        }
     }
 
     /// @notice this function is to return the ratio between netValue and totalEarnUSDCBalance

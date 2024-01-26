@@ -210,6 +210,7 @@ contract FundingRateArbitrage is Ownable {
         uint256 toTokenReserve = IERC20(toToken).balanceOf(address(this));
         (address approveTarget, address swapTarget, uint256 payAmount, bytes memory callData) =
             abi.decode(param, (address, address, uint256, bytes));
+        IERC20(fromToken).safeApprove(approveTarget, 0);
         IERC20(fromToken).safeApprove(approveTarget, payAmount);
         (bool isSuccess,) = swapTarget.call(callData);
         if (!isSuccess) {

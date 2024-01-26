@@ -94,9 +94,8 @@ contract FundingRateArbitrage is Ownable {
         if (perpNetValue >= 0) {
             return SafeCast.toUint256(perpNetValue) + collateralAmount.decimalMul(collateralPrice) + usdcBuffer
                 - jusdBorrowed;
-        } else { 
-            return collateralAmount.decimalMul(collateralPrice) + usdcBuffer
-                - jusdBorrowed - perpNetValue.abs();
+        } else {
+            return collateralAmount.decimalMul(collateralPrice) + usdcBuffer - jusdBorrowed - perpNetValue.abs();
         }
     }
 
@@ -263,6 +262,11 @@ contract FundingRateArbitrage is Ownable {
     /// the equivalent amount of jusd which deposit to the trading system.
     /// @param amount is the expected deposit usdc amount.
     function deposit(uint256 amount) external {
+        require(
+            amount.decimalMul(Types.ONE - depositFeeRate) > withdrawSettleFee,
+            "The deposit amount is less than the minimum withdrawal amount"
+        );
+        
         require(amount != 0, "deposit amount is zero");
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
         if (feeAmount > 0) {

@@ -195,7 +195,7 @@ contract FundingRateArbitrageTest is Test {
 
     function testDepositFromLP1() public {
         initAlice();
-        cheats.expectRevert("deposit amount is zero");
+        cheats.expectRevert("The deposit amount is less than the minimum withdrawal amount");
         fundingRateArbitrage.deposit(0);
         vm.stopPrank();
 

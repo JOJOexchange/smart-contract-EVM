@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 interface IPriceSource {
     /// @notice Return mark price. Revert if data not available.

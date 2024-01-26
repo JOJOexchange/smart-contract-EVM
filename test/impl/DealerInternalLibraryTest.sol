@@ -7,7 +7,7 @@ import "../../src/libraries/SignedDecimalMath.sol";
 import "../../src/libraries/EIP712.sol";
 import "forge-std/Test.sol";
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 // Check dealer's internal library
 contract InternalLibraryTest {

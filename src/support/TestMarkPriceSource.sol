@@ -8,7 +8,7 @@
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 contract TestMarkPriceSource is Ownable {
     // add this to be excluded from coverage report

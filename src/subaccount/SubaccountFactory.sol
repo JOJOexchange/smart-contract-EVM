@@ -6,7 +6,7 @@
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Subaccount.sol";
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 contract SubaccountFactory {
     // ========== storage ==========

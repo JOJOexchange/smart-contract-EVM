@@ -3,7 +3,7 @@
     SPDX-License-Identifier: BUSL-1.1
 */
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 contract MultiSigWallet {
     uint256 public constant MAX_OWNER_COUNT = 50;

@@ -5,7 +5,7 @@
     DO NOT DEPLOY IN PRODUCTION ENV
 */
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 

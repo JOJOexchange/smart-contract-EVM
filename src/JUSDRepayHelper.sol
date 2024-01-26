@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/IJUSDExchange.sol";
 import "./JUSDBank.sol";
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 contract JUSDRepayHelper is Ownable {
     using SafeERC20 for IERC20;

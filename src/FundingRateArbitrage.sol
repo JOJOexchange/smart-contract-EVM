@@ -11,7 +11,7 @@ import "./interfaces/IPerpetual.sol";
 import "./interfaces/IJUSDBank.sol";
 import "./libraries/SignedDecimalMath.sol";
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.19;
 
 /// @notice This contract involves offsetting trades in both the spot and perpetual contract markets
 /// to capture the funding rate income in perpetual contract trading. Liquidy provider can deposit usdc

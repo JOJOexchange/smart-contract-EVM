@@ -271,10 +271,10 @@ contract FundingRateArbitrage is Ownable {
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
         if (feeAmount > 0) {
             amount -= feeAmount;
-            IERC20(usdc).transferFrom(msg.sender, owner(), feeAmount);
+            IERC20(usdc).safeTransferFrom(msg.sender, owner(), feeAmount);
         }
         uint256 earnUSDCAmount = amount.decimalDiv(getIndex());
-        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
+        IERC20(usdc).safeTransferFrom(msg.sender, address(this), amount);
         JOJODealer(jojoDealer).deposit(0, amount, msg.sender);
         earnUSDCBalance[msg.sender] += earnUSDCAmount;
         jusdOutside[msg.sender] += amount;
@@ -321,9 +321,9 @@ contract FundingRateArbitrage is Ownable {
             require(USDCAmount >= withdrawSettleFee, "USDCAmount need to bigger than withdrawSettleFee");
             uint256 feeAmount = (USDCAmount - withdrawSettleFee).decimalMul(withdrawFeeRate) + withdrawSettleFee;
             if (feeAmount > 0) {
-                IERC20(usdc).transfer(owner(), feeAmount);
+                IERC20(usdc).safeTransfer(owner(), feeAmount);
             }
-            IERC20(usdc).transfer(request.user, USDCAmount - feeAmount);
+            IERC20(usdc).safeTransfer(request.user, USDCAmount - feeAmount);
             request.isExecuted = true;
             totalEarnUSDCBalance -= request.earnUSDCAmount;
             emit PermitWithdraw(request.user, USDCAmount, feeAmount, request.earnUSDCAmount, requestIDList[i]);

@@ -39,6 +39,7 @@ contract FundingRateArbitrage is Ownable {
     uint256 public withdrawFeeRate;
     uint256 public withdrawSettleFee;
     uint256 public defaultUsdcQuota;
+    uint256 public minimumWithdraw;
 
     mapping(address => uint256) public earnUSDCBalance;
     mapping(address => uint256) public jusdOutside;
@@ -90,7 +91,8 @@ contract FundingRateArbitrage is Ownable {
         uint256 usdcBuffer = IERC20(usdc).balanceOf(address(this));
         uint256 collateralPrice = IJUSDBank(jusdBank).getCollateralPrice(collateral);
         (int256 perpNetValue,,,) = JOJODealer(jojoDealer).getTraderRisk(address(this));
-        return SafeCast.toUint256(perpNetValue) + collateralAmount.decimalMul(collateralPrice) + usdcBuffer - jusdBorrowed;
+        return
+            SafeCast.toUint256(perpNetValue) + collateralAmount.decimalMul(collateralPrice) + usdcBuffer - jusdBorrowed;
     }
 
     /// @notice this function is to return the ratio between netValue and totalEarnUSDCBalance
@@ -141,6 +143,10 @@ contract FundingRateArbitrage is Ownable {
 
     function setWithdrawSettleFee(uint256 newWithdrawSettleFee) public onlyOwner {
         withdrawSettleFee = newWithdrawSettleFee;
+    }
+
+    function setMinimumWithdraw(uint256 _minimumWithdraw) public onlyOwner {
+        minimumWithdraw = _minimumWithdraw;
     }
 
     function refundJUSD(uint256 amount) public onlyOwner {
@@ -291,6 +297,10 @@ contract FundingRateArbitrage is Ownable {
         );
         uint256 withdrawEarnUSDCAmount = earnUSDCBalance[msg.sender] - lockedEarnUSDCAmount;
         withdrawalRequests.push(WithdrawalRequest(withdrawEarnUSDCAmount, msg.sender, false));
+        require(
+            withdrawEarnUSDCAmount.decimalMul(index) >= minimumWithdraw,
+            "Withdraw amount is smaller than minimumWithdraw"
+        );
         require(
             withdrawEarnUSDCAmount.decimalMul(index) >= withdrawSettleFee, "Withdraw amount is smaller than settleFee"
         );

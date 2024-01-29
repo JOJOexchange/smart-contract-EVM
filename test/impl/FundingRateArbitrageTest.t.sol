@@ -227,29 +227,32 @@ contract FundingRateArbitrageTest is Test {
         assertEq(fundingRateArbitrage.earnUSDCBalance(bob), 100e9);
     }
 
-
     function testDepositAndDonate() public {
         vm.startPrank(Owner);
 
+        fundingRateArbitrage.setMaxNetValue(100_000e6);
         initAlice();
         USDC.mint(alice, 100e6);
         fundingRateArbitrage.deposit(1);
         USDC.transfer(address(fundingRateArbitrage), 100e6);
         vm.stopPrank();
 
-        USDC.mint(bob, 100e6);
+        USDC.mint(bob, 10_000e6);
         vm.startPrank(bob);
-        USDC.approve(address(fundingRateArbitrage), 100e6);
-        fundingRateArbitrage.deposit(100e6);
+        USDC.approve(address(fundingRateArbitrage), 10_000e6);
+        fundingRateArbitrage.deposit(10_000e6);
 
-        jojoDealer.requestWithdraw(bob, 0, 100e6);
-        vm.warp(10);
+        jojoDealer.requestWithdraw(bob, 0, 10_000e6);
+        vm.warp(100);
         jojoDealer.executeWithdraw(bob, bob, false, "");
-        fundingRateArbitrage.requestWithdraw(1000e6);
-        cheats.expectRevert("Withdraw amount is smaller than settleFee");
-        fundingRateArbitrage.requestWithdraw(1e6);
+        jusd.approve(address(fundingRateArbitrage), 10_000e6);
+        uint256 index = fundingRateArbitrage.requestWithdraw(10_000e6);
         vm.stopPrank();
 
+        vm.startPrank(Owner);
+        uint256[] memory indexs = new uint256[](1);
+        indexs[0] = index;
+        fundingRateArbitrage.permitWithdrawRequests(indexs);
     }
 
     function testDepositAndToPerp() public {

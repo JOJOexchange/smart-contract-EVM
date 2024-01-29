@@ -215,16 +215,41 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(alice);
         fundingRateArbitrage.deposit(100e6);
         vm.stopPrank();
-        assertEq(fundingRateArbitrage.getIndex(), 1e18);
-        assertEq(fundingRateArbitrage.earnUSDCBalance(alice), 100e6);
+        assertEq(fundingRateArbitrage.getIndex(), 1e15);
+        assertEq(fundingRateArbitrage.earnUSDCBalance(alice), 100e9);
 
         USDC.mint(bob, 100e6);
         vm.startPrank(bob);
         USDC.approve(address(fundingRateArbitrage), 100e6);
         fundingRateArbitrage.deposit(100e6);
         vm.stopPrank();
-        assertEq(fundingRateArbitrage.getIndex(), 1e18);
-        assertEq(fundingRateArbitrage.earnUSDCBalance(bob), 100e6);
+        assertEq(fundingRateArbitrage.getIndex(), 1e15);
+        assertEq(fundingRateArbitrage.earnUSDCBalance(bob), 100e9);
+    }
+
+
+    function testDepositAndDonate() public {
+        vm.startPrank(Owner);
+
+        initAlice();
+        USDC.mint(alice, 100e6);
+        fundingRateArbitrage.deposit(1);
+        USDC.transfer(address(fundingRateArbitrage), 100e6);
+        vm.stopPrank();
+
+        USDC.mint(bob, 100e6);
+        vm.startPrank(bob);
+        USDC.approve(address(fundingRateArbitrage), 100e6);
+        fundingRateArbitrage.deposit(100e6);
+
+        jojoDealer.requestWithdraw(bob, 0, 100e6);
+        vm.warp(10);
+        jojoDealer.executeWithdraw(bob, bob, false, "");
+        fundingRateArbitrage.requestWithdraw(1000e6);
+        cheats.expectRevert("Withdraw amount is smaller than settleFee");
+        fundingRateArbitrage.requestWithdraw(1e6);
+        vm.stopPrank();
+
     }
 
     function testDepositAndToPerp() public {

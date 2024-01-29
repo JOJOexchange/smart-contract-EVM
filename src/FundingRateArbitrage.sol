@@ -95,11 +95,7 @@ contract FundingRateArbitrage is Ownable {
 
     /// @notice this function is to return the ratio between netValue and totalEarnUSDCBalance
     function getIndex() public view returns (uint256) {
-        if (totalEarnUSDCBalance == 0) {
-            return 1e18;
-        } else {
-            return SignedDecimalMath.decimalDiv(getNetValue(), totalEarnUSDCBalance);
-        }
+        return SignedDecimalMath.decimalDiv(getNetValue() + 1, totalEarnUSDCBalance + 1e3);
     }
 
     function buildSpotSwapData(

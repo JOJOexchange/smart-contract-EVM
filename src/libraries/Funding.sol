@@ -59,11 +59,13 @@ library Funding {
         view
         returns (bool)
     {
-        return spender == from
-            || (
+        if (spender != from) {
+            return (
                 state.primaryCreditAllowed[from][spender] >= primaryAmount
                     && state.secondaryCreditAllowed[from][spender] >= secondaryAmount
-            );
+            ) && (state.primaryCreditAllowed[from][spender] != 0 || state.secondaryCreditAllowed[from][spender] != 0);
+        }
+        return true;
     }
 
     function requestWithdraw(

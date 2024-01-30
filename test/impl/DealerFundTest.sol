@@ -146,6 +146,8 @@ contract FundTest is Checkers {
         jojoDealer.deposit(100_000e6, 100_000e6, traders[0]);
         cheats.expectRevert("JOJO_WITHDRAW_INVALID");
         jojoDealer.fastWithdraw(traders[1], traders[1], 100e6, 100e6, false, "");
+        cheats.expectRevert("JOJO_WITHDRAW_INVALID");
+        jojoDealer.fastWithdraw(traders[1], traders[1], 0, 0, false, "");
         jojoDealer.approveFundOperator(traders[1], 100e6, 100e6);
         vm.stopPrank();
         vm.startPrank(traders[1]);

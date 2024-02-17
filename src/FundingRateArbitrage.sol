@@ -97,7 +97,7 @@ contract FundingRateArbitrage is Ownable {
 
     /// @notice this function is to return the ratio between netValue and totalEarnUSDCBalance
     function getIndex() public view returns (uint256) {
-        return SignedDecimalMath.decimalDiv(getNetValue() + 1, totalEarnUSDCBalance + 1e3);
+        return SignedDecimalMath.decimalDiv(getNetValue() + 1, totalEarnUSDCBalance + 1e9);
     }
 
     function buildSpotSwapData(
@@ -291,7 +291,11 @@ contract FundingRateArbitrage is Ownable {
         require(repayJUSDAmount <= jusdOutside[msg.sender], "Request Withdraw too big");
         jusdOutside[msg.sender] -= repayJUSDAmount;
         uint256 index = getIndex();
-        uint256 lockedEarnUSDCAmount = jusdOutside[msg.sender].decimalDiv(index);
+
+        uint256 lockedEarnUSDCAmount = jusdOutside[msg.sender].decimalRemainder(index)
+            ? jusdOutside[msg.sender].decimalDiv(index)
+            : jusdOutside[msg.sender].decimalDiv(index) + 1;
+            
         require(
             earnUSDCBalance[msg.sender] >= lockedEarnUSDCAmount, "lockedEarnUSDCAmount is bigger than earnUSDCBalance"
         );

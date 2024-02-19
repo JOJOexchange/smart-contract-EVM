@@ -215,16 +215,16 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(alice);
         fundingRateArbitrage.deposit(100e6);
         vm.stopPrank();
-        assertEq(fundingRateArbitrage.getIndex(), 1e15);
-        assertEq(fundingRateArbitrage.earnUSDCBalance(alice), 100e9);
+        assertEq(fundingRateArbitrage.getIndex(), 1e9);
+        assertEq(fundingRateArbitrage.earnUSDCBalance(alice), 100e15);
 
         USDC.mint(bob, 100e6);
         vm.startPrank(bob);
         USDC.approve(address(fundingRateArbitrage), 100e6);
         fundingRateArbitrage.deposit(100e6);
         vm.stopPrank();
-        assertEq(fundingRateArbitrage.getIndex(), 1e15);
-        assertEq(fundingRateArbitrage.earnUSDCBalance(bob), 100e9);
+        assertEq(fundingRateArbitrage.getIndex(), 1e9);
+        assertEq(fundingRateArbitrage.earnUSDCBalance(bob), 100e15);
     }
 
     function testDepositAndDonate() public {

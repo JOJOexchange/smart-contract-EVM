@@ -131,11 +131,7 @@ contract SubaccountTest is JUSDBankInitTest {
         Subaccount(aliceSub).execute(address(jusdBank), dataBorrow, 0);
 
         // withdraw USDC or JUSD from trading account, and repay it to JUSDBank
-        bytes memory repayParam = abi.encodeWithSignature(
-            "repayToBank(address,address)",
-            0x518638a658aCd9A3A06cd4c9f44829305a6a8df4,
-            0x518638a658aCd9A3A06cd4c9f44829305a6a8df4
-        );
+        bytes memory repayParam = abi.encodeWithSignature("repayToBank(address,address)", aliceSub, aliceSub);
         emit log_bytes(repayParam);
         bytes memory fastWithdraw = abi.encodeWithSignature(
             "fastWithdraw(address,address,uint256,uint256,bool,bytes)",
@@ -154,6 +150,8 @@ contract SubaccountTest is JUSDBankInitTest {
         vm.stopPrank();
         jojoDealer.disableFastWithdraw(false);
 
+        emit log_uint(jusdBank.getBorrowBalance(aliceSub));
+
         vm.startPrank(alice);
         Subaccount(aliceSub).execute(address(jojoDealer), fastWithdraw, 0);
         bytes memory fastWithdraw2 = abi.encodeWithSignature(
@@ -165,6 +163,7 @@ contract SubaccountTest is JUSDBankInitTest {
             false,
             repayParam
         );
+        cheats.expectRevert("repayed jusd too much");
         Subaccount(aliceSub).execute(address(jojoDealer), fastWithdraw2, 0);
 
         console.log("aliceSub borrow", jusdBank.getBorrowBalance(aliceSub));

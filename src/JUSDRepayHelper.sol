@@ -13,10 +13,11 @@ contract JUSDRepayHelper is Ownable {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
-    address public immutable JusdBank;
+    JUSDBank public immutable JusdBank;
     address public immutable JUSD;
     address public immutable USDC;
     address public immutable JUSDExchange;
+    uint256 public buffer;
 
     mapping(address => bool) public adminWhiteList;
 
@@ -25,11 +26,11 @@ contract JUSDRepayHelper is Ownable {
 
     constructor(address _jusdBank, address _JUSD, address _USDC, address _JUSDExchange) Ownable() {
         // set params
-        JusdBank = _jusdBank;
+        JusdBank = JUSDBank(_jusdBank);
         JUSD = _JUSD;
         USDC = _USDC;
         JUSDExchange = _JUSDExchange;
-        IERC20(JUSD).approve(JusdBank, type(uint256).max);
+        IERC20(JUSD).approve(address(JusdBank), type(uint256).max);
     }
 
     modifier onlyAdminWhiteList() {
@@ -40,6 +41,10 @@ contract JUSDRepayHelper is Ownable {
     function setWhiteList(address admin, bool isValid) public onlyOwner {
         adminWhiteList[admin] = isValid;
         emit UpdateAdmin(admin, isValid);
+    }
+
+    function setBuffer(uint256 newBuffer) public onlyOwner {
+        buffer = newBuffer;
     }
 
     /// @notice This is to facilitate the withdrawal of USDC/JUSD from the trading account,
@@ -55,8 +60,10 @@ contract JUSDRepayHelper is Ownable {
         }
         uint256 balance = IERC20(JUSD).balanceOf(address(this));
         uint256 borrowed = IJUSDBank(JusdBank).getBorrowBalance(to);
-        require(balance <= borrowed, "repayed jusd too much");
+        // add buffer JUSD
+        require(balance <= borrowed + buffer, "repayed jusd too much");
         IJUSDBank(JusdBank).repay(balance, to);
+        IERC20(JUSD).safeTransfer(JusdBank.insurance(), balance - borrowed);
         emit HelpToTransfer(from, to, balance);
     }
 }

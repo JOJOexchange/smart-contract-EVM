@@ -10,6 +10,7 @@ import "../FlashLoanRepay.sol";
 import "../FundingRateUpdateLimiter.sol";
 import "../FundingRateArbitrage.sol";
 import "../JOJODealer.sol";
+import "../DegenDealer.sol";
 import "../JUSDBank.sol";
 import "../Perpetual.sol";
 import "../MerkleDistributorWithDeadline.sol";
@@ -26,5 +27,5 @@ import "./TestERC20.sol";
 
 // DO NOT REMOVE
 abstract contract ContractForCodeGeneration {
-    function order() external view returns (Types.Order memory order) { }
+    function order() external view returns (Types.Order memory order) {}
 }

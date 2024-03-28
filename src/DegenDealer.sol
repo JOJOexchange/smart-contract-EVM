@@ -25,7 +25,7 @@ contract DegenDealer is Ownable {
     using SafeERC20 for IERC20;
 
     event DegenDeposit(address account, uint256 amount);
-    event DegenTransferOut(address account, uint256 amount);
+    event DegenTransferOut(address account, uint256 amount, uint256 id);
     event DegenWithdraw(address account, uint256 amount, uint256 id);
     event PositionFinalizeLog(
         address indexed trader, int256 paperAmount, int256 creditAmount, int256 fee, int256 pnl, string perp
@@ -45,7 +45,7 @@ contract DegenDealer is Ownable {
         if (isInternal) {
             IERC20(primaryAsset).approve(jojoDealer, amount);
             IDealer(jojoDealer).deposit(amount, 0, to);
-            emit DegenTransferOut(to, amount);
+            emit DegenTransferOut(to, amount, id);
         } else {
             IERC20(primaryAsset).safeTransfer(to, amount);
             emit DegenWithdraw(to, amount, id);

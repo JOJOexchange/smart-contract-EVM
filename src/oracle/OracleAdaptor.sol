@@ -7,6 +7,8 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "../interfaces/internal/IChainlink.sol";
 
 contract OracleAdaptor is Ownable {
@@ -15,44 +17,31 @@ contract OracleAdaptor is Ownable {
     uint256 public immutable usdcHeartbeat;
     address public immutable usdcSource;
     address public immutable chainlink;
-    uint256 public roundId;
+    bytes32 public immutable priceId;
     uint256 public price;
     uint256 public priceThreshold;
-    bool public isSelfOracle;
-
-    // Align with chainlink
-    event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
+    IPyth public pyth;
 
     event UpdateThreshold(uint256 oldThreshold, uint256 newThreshold);
 
     constructor(
         address _chainlink,
+        address _pythContract,
         uint256 _decimalsCorrection,
         uint256 _heartbeatInterval,
         uint256 _usdcHeartbeat,
         address _usdcSource,
-        uint256 _priceThreshold
+        uint256 _priceThreshold,
+        bytes32 _priceId
     ) {
         chainlink = _chainlink;
+        pyth = IPyth(_pythContract);
         decimalsCorrection = 10 ** _decimalsCorrection;
         heartbeatInterval = _heartbeatInterval;
         usdcHeartbeat = _usdcHeartbeat;
         usdcSource = _usdcSource;
         priceThreshold = _priceThreshold;
-    }
-
-    function setMarkPrice(uint256 newPrice) external onlyOwner {
-        price = newPrice;
-        emit AnswerUpdated(SafeCast.toInt256(price), roundId, block.timestamp);
-        roundId += 1;
-    }
-
-    function turnOnJOJOOracle() external onlyOwner {
-        isSelfOracle = true;
-    }
-
-    function turnOffJOJOOracle() external onlyOwner {
-        isSelfOracle = false;
+        priceId = _priceId;
     }
 
     function updateThreshold(uint256 newPriceThreshold) external onlyOwner {
@@ -68,26 +57,29 @@ contract OracleAdaptor is Ownable {
         require(block.timestamp - updatedAt <= heartbeatInterval, "ORACLE_HEARTBEAT_FAILED");
         require(block.timestamp - usdcUpdatedAt <= usdcHeartbeat, "USDC_ORACLE_HEARTBEAT_FAILED");
         uint256 tokenPrice = (SafeCast.toUint256(rawPrice) * 1e8) / SafeCast.toUint256(usdcPrice);
-        return (tokenPrice * 1e18) / decimalsCorrection;
+        return tokenPrice;
     }
 
     function getPrice() internal view returns (uint256) {
         uint256 chainLinkPrice = getChainLinkPrice();
-        if (isSelfOracle) {
-            uint256 JOJOPrice = price;
-            uint256 diff = JOJOPrice >= chainLinkPrice ? JOJOPrice - chainLinkPrice : chainLinkPrice - JOJOPrice;
-            require((diff * 1e18) / chainLinkPrice <= priceThreshold, "deviation is too big");
-            return price;
-        } else {
+        try pyth.getPrice(priceId) returns (PythStructs.Price memory pythPriceStruct) {
+            uint256 pythPrice = SafeCast.toUint256(pythPriceStruct.price);
+            uint256 diff = pythPrice >= chainLinkPrice ? pythPrice - chainLinkPrice : chainLinkPrice - pythPrice;
+            if ((diff * 1e18) / chainLinkPrice <= priceThreshold) {
+                return chainLinkPrice;
+            } else {
+                return pythPrice;
+            }
+        } catch {
             return chainLinkPrice;
         }
     }
 
     function getMarkPrice() external view returns (uint256) {
-        return getPrice();
+        return (getPrice() * 1e18) / decimalsCorrection;
     }
 
     function getAssetPrice() external view returns (uint256) {
-        return getPrice();
+        return (getPrice() * 1e18) / decimalsCorrection;
     }
 }

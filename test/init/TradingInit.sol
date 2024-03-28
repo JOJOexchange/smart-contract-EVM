@@ -8,6 +8,7 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "forge-std/Test.sol";
 import "../../src/JOJODealer.sol";
+import "../../src/DegenDealer.sol";
 import "../../src/libraries/Types.sol";
 import "../../src/Perpetual.sol";
 import "../../src/support/TestERC20.sol";
@@ -33,11 +34,19 @@ contract TradingInit is Test {
     Utils internal utils;
     Perpetual[] internal perpList;
     TestMarkPriceSource[] internal priceSourceList;
+    DegenDealer public degenDealer;
 
     address[] internal traders;
     address public insurance;
     address payable[] internal users;
     uint256[] internal tradersKey;
+
+    function initDegenDealer() public {
+        degenDealer = new DegenDealer(
+            address(usdc),
+            address(jojoDealer)
+        );
+    }
 
     function initUsers() public {
         utils = new Utils();
@@ -189,5 +198,6 @@ contract TradingInit is Test {
         initJOJODealer();
         priceSourceList[0].setMarkPrice(30_000e6);
         priceSourceList[1].setMarkPrice(2000e6);
+        initDegenDealer();
     }
 }

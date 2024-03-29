@@ -1,0 +1,21 @@
+{
+  "name": "smart-contract-evm",
+  "version": "1.0.0",
+  "description": "JOJO is a decentralized perpetual contract exchange based on an off-chain matching system that can be divided into three key components: trading, collateral lending, and funding rate arbitrage.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "dependencies": {
+    "@pythnetwork/pyth-sdk-solidity": "^2.4.1",
+    "dotenv": "^16.4.1",
+    "minimist": "^1.2.8"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

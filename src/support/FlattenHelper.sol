@@ -5,6 +5,7 @@
 
 pragma solidity ^0.8.19;
 
+import "../DegenDepositHelper.sol";
 import "../FlashLoanLiquidate.sol";
 import "../FlashLoanRepay.sol";
 import "../FundingRateUpdateLimiter.sol";

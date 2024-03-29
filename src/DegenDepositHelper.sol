@@ -34,11 +34,10 @@ contract DegenDepositHelper is Ownable {
         emit UpdateAdmin(admin, isValid);
     }
 
-    function depositToDegenDealer(address from, address to) external onlyAdminWhiteList {
+    function depositToDegenDealer(address to) external onlyAdminWhiteList {
         uint256 usdcBalance = IERC20(usdc).balanceOf(address(this));
         require(usdcBalance > 0, "need to transfer usdc first");
         IERC20(usdc).approve(degenDealer, usdcBalance);
-        DegenDealer(degenDealer).deposit(to, usdcBalance);
-        emit PerpDepositToDegen(from, to, usdcBalance);
+        DegenDealer(degenDealer).deposit(msg.sender, to, usdcBalance);
     }
 }

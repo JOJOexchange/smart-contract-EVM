@@ -24,7 +24,7 @@ contract DegenDealer is Ownable {
 
     using SafeERC20 for IERC20;
 
-    event DegenDeposit(address account, uint256 amount);
+    event DegenDeposit(address from, address to, uint256 amount);
     event DegenTransferOut(address account, uint256 amount, uint256 id);
     event DegenWithdraw(address account, uint256 amount, uint256 id);
     event PositionFinalizeLog(
@@ -36,9 +36,9 @@ contract DegenDealer is Ownable {
         jojoDealer = _jojoDealer;
     }
 
-    function deposit(address account, uint256 amount) external {
+    function deposit(address from, address to, uint256 amount) external {
         IERC20(primaryAsset).safeTransferFrom(msg.sender, address(this), amount);
-        emit DegenDeposit(account, amount);
+        emit DegenDeposit(from, to, amount);
     }
 
     function withdraw(address to, uint256 amount, uint256 id, bool isInternal) external onlyOwner {

@@ -6,8 +6,7 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "../interfaces/internal/IPyth.sol";
 
 contract PythOracleAdaptor is Ownable {
     IPyth public pyth;

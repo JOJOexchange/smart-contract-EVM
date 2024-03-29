@@ -7,8 +7,7 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
-import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
+import "../interfaces/internal/IPyth.sol";
 import "../interfaces/internal/IChainlink.sol";
 
 contract OracleAdaptor is Ownable {

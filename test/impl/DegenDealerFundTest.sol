@@ -13,14 +13,14 @@ contract DegenFundTest is Checkers {
     function testDegenDeposit() public {
         vm.startPrank(traders[0]);
         usdc.approve(address(degenDealer), 1000e6);
-        degenDealer.deposit(traders[0], 1000e6);
+        degenDealer.deposit(traders[0], traders[0], 1000e6);
         assertEq(usdc.balanceOf(address(degenDealer)), 1000e6);
     }
 
     function testDegenWithdraw() public {
         vm.startPrank(traders[0]);
         usdc.approve(address(degenDealer), 1000e6);
-        degenDealer.deposit(traders[0], 1000e6);
+        degenDealer.deposit(traders[0], traders[0], 1000e6);
         vm.stopPrank();
 
         degenDealer.withdraw(traders[0], 500e6, 1, false);
@@ -40,7 +40,7 @@ contract DegenFundTest is Checkers {
             1000e6,
             0,
             false,
-            abi.encodeWithSignature("depositToDegenDealer(address,address)", traders[0], traders[0])
+            abi.encodeWithSignature("depositToDegenDealer(address,address)", traders[0])
         );
         vm.stopPrank();
     }

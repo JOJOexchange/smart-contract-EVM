@@ -18,8 +18,8 @@ abstract contract JUSDBankStorage is Ownable, ReentrancyGuard, FlashLoanReentran
     uint256 public reservesNum;
     // max reserves amount
     uint256 public maxReservesNum;
-    // max borrow JUSD amount per account
-    uint256 public maxPerAccountBorrowAmount;
+    // max total borrow JUSD amount
+    uint256 public defualtAccountMaxBorrowAmount;
     // max total borrow JUSD amount
     uint256 public maxTotalBorrowAmount;
     // t0 total borrow JUSD amount
@@ -49,6 +49,8 @@ abstract contract JUSDBankStorage is Ownable, ReentrancyGuard, FlashLoanReentran
     mapping(address => Types.UserInfo) public userInfo;
     // client -> operator -> bool
     mapping(address => mapping(address => bool)) public operatorRegistry;
+    // max borrow JUSD amount
+    mapping(address => uint256) public customMaxLoanPerAccount;
 
     function accrueRate() public {
         uint256 currentTimestamp = block.timestamp;

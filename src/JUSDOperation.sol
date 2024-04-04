@@ -29,7 +29,7 @@ abstract contract JUSDOperation is JUSDBankStorage {
 
     event UpdateMaxReservesAmount(uint256 maxReservesAmount, uint256 newMaxReservesAmount);
 
-    event UpdateMaxBorrowAmount(uint256 maxPerAccountBorrowAmount, uint256 maxTotalBorrowAmount);
+    event UpdateMaxBorrowAmount(uint256 defualtAccountMaxBorrowAmount, uint256 maxTotalBorrowAmount);
 
     event SetOperator(address indexed client, address indexed operator, bool isOperator);
 
@@ -83,15 +83,19 @@ abstract contract JUSDOperation is JUSDBankStorage {
 
     /// @notice update the max borrow amount of total and per account
     function updateMaxBorrowAmount(
-        uint256 _maxBorrowAmountPerAccount,
+        uint256 _defualtAccountMaxBorrowAmount,
         uint256 _maxTotalBorrowAmount
     )
         external
         onlyOwner
     {
         maxTotalBorrowAmount = _maxTotalBorrowAmount;
-        maxPerAccountBorrowAmount = _maxBorrowAmountPerAccount;
-        emit UpdateMaxBorrowAmount(maxPerAccountBorrowAmount, maxTotalBorrowAmount);
+        defualtAccountMaxBorrowAmount = _defualtAccountMaxBorrowAmount;
+        emit UpdateMaxBorrowAmount(defualtAccountMaxBorrowAmount, maxTotalBorrowAmount);
+    }
+
+    function updateCustomMaxLoanPerAccount(address user, uint256 amount) external onlyOwner {
+        customMaxLoanPerAccount[user] = amount;
     }
 
     /// @notice update the insurance account

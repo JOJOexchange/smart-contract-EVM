@@ -40,7 +40,7 @@ contract DegenFundTest is Checkers {
             1000e6,
             0,
             false,
-            abi.encodeWithSignature("depositToDegenDealer(address,address)", traders[0])
+            abi.encodeWithSignature("depositToDegenDealer(address)", traders[0])
         );
         vm.stopPrank();
     }

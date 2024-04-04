@@ -24,7 +24,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         address _insurance,
         address _JUSD,
         address _JOJODealer,
-        uint256 _maxPerAccountBorrowAmount,
+        uint256 _defualtAccountMaxBorrowAmount,
         uint256 _maxTotalBorrowAmount,
         uint256 _borrowFeeRate,
         address _primaryAsset
@@ -33,7 +33,7 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         JUSD = _JUSD;
         JOJODealer = _JOJODealer;
         insurance = _insurance;
-        maxPerAccountBorrowAmount = _maxPerAccountBorrowAmount;
+        defualtAccountMaxBorrowAmount = _defualtAccountMaxBorrowAmount;
         maxTotalBorrowAmount = _maxTotalBorrowAmount;
         borrowFeeRate = _borrowFeeRate;
         tRate = Types.ONE;
@@ -281,6 +281,8 @@ contract JUSDBank is IJUSDBank, JUSDOperation, JUSDView, JUSDMulticall {
         } else {
             IERC20(JUSD).safeTransfer(to, tAmount);
         }
+        uint256 maxPerAccountBorrowAmount =
+            customMaxLoanPerAccount[from] > 0 ? customMaxLoanPerAccount[from] : defualtAccountMaxBorrowAmount;
         require(
             user.t0BorrowBalance.decimalMul(tRate) <= maxPerAccountBorrowAmount,
             Errors.EXCEED_THE_MAX_BORROW_AMOUNT_PER_ACCOUNT

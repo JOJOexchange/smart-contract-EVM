@@ -25,6 +25,9 @@ import "../support/TestMarkPriceSource.sol";
 import "../support/MockSwap.sol";
 import "../support/TestVolatilePriceSource.sol";
 import "./TestERC20.sol";
+import "./help/IMessageHandler.sol";
+import "./help/IMessageTransmitter.sol";
+import "./help/ITokenMinter.sol";
 
 // DO NOT REMOVE
 abstract contract ContractForCodeGeneration {

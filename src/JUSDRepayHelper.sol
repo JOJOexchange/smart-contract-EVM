@@ -63,7 +63,9 @@ contract JUSDRepayHelper is Ownable {
         // add buffer JUSD
         require(balance <= borrowed + buffer, "repayed jusd too much");
         IJUSDBank(JusdBank).repay(balance, to);
-        IERC20(JUSD).safeTransfer(JusdBank.insurance(), balance - borrowed);
+        if (balance > borrowed) {
+            IERC20(JUSD).safeTransfer(JusdBank.insurance(), balance - borrowed);
+        }
         emit HelpToTransfer(from, to, balance);
     }
 }

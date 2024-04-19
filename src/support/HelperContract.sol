@@ -64,85 +64,85 @@ contract HelperContract {
         Types.RiskParams riskParams;
     }
 
-    struct HedgingState {
-        uint256 USDCWalletBalance;
-        int256 USDCPerpBalance;
-        uint256 ethWalletBalance;
-        uint256 ethBankAmount;
-        uint256 JUSDBorrowAmount;
-        uint256 JUSDPerpBalance;
-        int256 PositionPerpAmount;
-        int256 PositionCreditAmount;
-        uint256 earnUSDCRate;
-        uint256 ethToUSDC;
-        uint256 ethDecimal;
-        uint256 earnUSDCTotalSupply;
-        int256 perpNetValue;
-    }
+    // struct HedgingState {
+    //     uint256 USDCWalletBalance;
+    //     int256 USDCPerpBalance;
+    //     uint256 ethWalletBalance;
+    //     uint256 ethBankAmount;
+    //     uint256 JUSDBorrowAmount;
+    //     uint256 JUSDPerpBalance;
+    //     int256 PositionPerpAmount;
+    //     int256 PositionCreditAmount;
+    //     uint256 earnUSDCRate;
+    //     uint256 ethToUSDC;
+    //     uint256 ethDecimal;
+    //     uint256 perpUSDCTotalSupply;
+    //     int256 perpNetValue;
+    // }
 
-    struct AccountHedgingState {
-        uint256 earnUSDCBalance;
-        uint256 jusdOutside;
-    }
+    // struct AccountHedgingState {
+    //     uint256 earnUSDCBalance;
+    //     uint256 jusdOutside;
+    // }
 
     function getWalletBalance(address token, address wallet) public view returns (uint256) {
         return IERC20(token).balanceOf(wallet);
     }
 
-    function getAccountHedgingStates(address[] calldata accounts)
-        public
-        view
-        returns (AccountHedgingState[] memory accountHedgingStates)
-    {
-        accountHedgingStates = new AccountHedgingState[](accounts.length);
-        for (uint256 i = 0; i < accounts.length; i++) {
-            accountHedgingStates[i].earnUSDCBalance = fundingRateArbitrage.earnUSDCBalance(accounts[i]);
-            accountHedgingStates[i].jusdOutside = fundingRateArbitrage.jusdOutside(accounts[i]);
-        }
-    }
+    // function getAccountHedgingStates(address[] calldata accounts)
+    //     public
+    //     view
+    //     returns (AccountHedgingState[] memory accountHedgingStates)
+    // {
+    //     accountHedgingStates = new AccountHedgingState[](accounts.length);
+    //     for (uint256 i = 0; i < accounts.length; i++) {
+    //         accountHedgingStates[i].earnUSDCBalance = fundingRateArbitrage.earnUSDCBalance(accounts[i]);
+    //         accountHedgingStates[i].jusdOutside = fundingRateArbitrage.jusdOutside(accounts[i]);
+    //     }
+    // }
 
-    function getWithdrawRequestList(uint256[] calldata lists)
-        public
-        view
-        returns (FundingRateArbitrage.WithdrawalRequest[] memory withdrawalRequests)
-    {
-        withdrawalRequests = new FundingRateArbitrage.WithdrawalRequest[](lists.length);
-        for (uint256 i = 0; i < lists.length; i++) {
-            (uint256 earnUSDCAmount, address user, bool isExecuted) = fundingRateArbitrage.withdrawalRequests(lists[i]);
-            withdrawalRequests[i].earnUSDCAmount = earnUSDCAmount;
-            withdrawalRequests[i].user = user;
-            withdrawalRequests[i].isExecuted = isExecuted;
-        }
-    }
+    // function getWithdrawRequestList(uint256[] calldata lists)
+    //     public
+    //     view
+    //     returns (FundingRateArbitrage.WithdrawalRequest[] memory withdrawalRequests)
+    // {
+    //     withdrawalRequests = new FundingRateArbitrage.WithdrawalRequest[](lists.length);
+    //     for (uint256 i = 0; i < lists.length; i++) {
+    //         (uint256 perpUSDCAmount, address user, bool isExecuted) = fundingRateArbitrage.withdrawalRequests(lists[i]);
+    //         withdrawalRequests[i].perpUSDCAmount = perpUSDCAmount;
+    //         withdrawalRequests[i].user = user;
+    //         withdrawalRequests[i].isExecuted = isExecuted;
+    //     }
+    // }
 
-    function getHedgingState(address perpetual) public view returns (HedgingState memory hedgingState) {
-        (int256 primaryCredit, uint256 secondaryCredit,,,) =
-            IDealer(jojoDealer).getCreditOf(address(fundingRateArbitrage));
-        hedgingState.USDCPerpBalance = primaryCredit;
-        hedgingState.JUSDPerpBalance = secondaryCredit;
-        (address USDC,,,,,,) = jojoDealer.state();
-        uint256 USDCWalletBalance = IERC20(USDC).balanceOf(address(fundingRateArbitrage));
-        hedgingState.USDCWalletBalance = USDCWalletBalance;
-        uint256 ethWalletBalance = IERC20(fundingRateArbitrage.collateral()).balanceOf(address(fundingRateArbitrage));
-        hedgingState.ethWalletBalance = ethWalletBalance;
-        uint256 ethBankAmount =
-            jusdBank.getDepositBalance(fundingRateArbitrage.collateral(), address(fundingRateArbitrage));
-        hedgingState.ethBankAmount = ethBankAmount;
-        uint256 JUSDBorrowAmount = jusdBank.getBorrowBalance(address(fundingRateArbitrage));
-        hedgingState.JUSDBorrowAmount = JUSDBorrowAmount;
-        (int256 PositionPerpAmount, int256 PositionCreditAmount) =
-            IPerpetual(perpetual).balanceOf(address(fundingRateArbitrage));
-        hedgingState.PositionPerpAmount = PositionPerpAmount;
-        hedgingState.PositionCreditAmount = PositionCreditAmount;
-        uint256 index = fundingRateArbitrage.getIndex();
-        hedgingState.earnUSDCRate = index;
-        uint256 ethToUSDC = IJUSDBank(jusdBank).getCollateralPrice(fundingRateArbitrage.collateral());
-        hedgingState.ethDecimal = ERC20(fundingRateArbitrage.collateral()).decimals();
-        hedgingState.ethToUSDC = ethToUSDC;
-        hedgingState.earnUSDCTotalSupply = fundingRateArbitrage.totalEarnUSDCBalance();
-        (int256 perpNetValue,,,) = jojoDealer.getTraderRisk(address(fundingRateArbitrage));
-        hedgingState.perpNetValue = perpNetValue;
-    }
+    // function getHedgingState(address perpetual) public view returns (HedgingState memory hedgingState) {
+    //     (int256 primaryCredit, uint256 secondaryCredit,,,) =
+    //         IDealer(jojoDealer).getCreditOf(address(fundingRateArbitrage));
+    //     hedgingState.USDCPerpBalance = primaryCredit;
+    //     hedgingState.JUSDPerpBalance = secondaryCredit;
+    //     (address USDC,,,,,,) = jojoDealer.state();
+    //     uint256 USDCWalletBalance = IERC20(USDC).balanceOf(address(fundingRateArbitrage));
+    //     hedgingState.USDCWalletBalance = USDCWalletBalance;
+    //     uint256 ethWalletBalance = IERC20(fundingRateArbitrage.collateral()).balanceOf(address(fundingRateArbitrage));
+    //     hedgingState.ethWalletBalance = ethWalletBalance;
+    //     uint256 ethBankAmount =
+    //         jusdBank.getDepositBalance(fundingRateArbitrage.collateral(), address(fundingRateArbitrage));
+    //     hedgingState.ethBankAmount = ethBankAmount;
+    //     uint256 JUSDBorrowAmount = jusdBank.getBorrowBalance(address(fundingRateArbitrage));
+    //     hedgingState.JUSDBorrowAmount = JUSDBorrowAmount;
+    //     (int256 PositionPerpAmount, int256 PositionCreditAmount) =
+    //         IPerpetual(perpetual).balanceOf(address(fundingRateArbitrage));
+    //     hedgingState.PositionPerpAmount = PositionPerpAmount;
+    //     hedgingState.PositionCreditAmount = PositionCreditAmount;
+    //     uint256 index = fundingRateArbitrage.getIndex();
+    //     hedgingState.earnUSDCRate = index;
+    //     uint256 ethToUSDC = IJUSDBank(jusdBank).getCollateralPrice(fundingRateArbitrage.collateral());
+    //     hedgingState.ethDecimal = ERC20(fundingRateArbitrage.collateral()).decimals();
+    //     hedgingState.ethToUSDC = ethToUSDC;
+    //     hedgingState.perpUSDCTotalSupply = fundingRateArbitrage.totalSupply();
+    //     (int256 perpNetValue,,,) = jojoDealer.getTraderRisk(address(fundingRateArbitrage));
+    //     hedgingState.perpNetValue = perpNetValue;
+    // }
 
     function getAccountsStates(address[] calldata accounts) public view returns (AccountState[] memory accountStates) {
         accountStates = new AccountState[](accounts.length);

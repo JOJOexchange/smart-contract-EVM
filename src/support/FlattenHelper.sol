@@ -28,6 +28,7 @@ import "./TestERC20.sol";
 import "./help/IMessageHandler.sol";
 import "./help/IMessageTransmitter.sol";
 import "./help/ITokenMinter.sol";
+import "./help/ITokenMessenger.sol";
 
 // DO NOT REMOVE
 abstract contract ContractForCodeGeneration {

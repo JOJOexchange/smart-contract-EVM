@@ -170,12 +170,7 @@ Two lending system examples include:
 
 ## Funding Rate Arbitrage
 
-The core contract [FundingRateArbitrage](./src/FundingRateArbitrage.sol) involves offsetting trades in both spot and perpetual markets to capture funding rate income in perpetual trading.
-
-Key functions:
-
-- LPs can deposit USDC into the arbitrage pool via the deposit function, earning interest. Withdrawal requests for both interest and capital can be made by users, executed within 24 hours through permitWithdrawRequests.
-- Upon users depositing USDC into the arbitrage pool, the admin utilizes the USDC to purchase ETH and deposits it into the JUSDBank system via the swapBuyEth function. Subsequently, the admin borrows JUSD using borrow and deposits it into the trading system. Finally, the admin initiates short interest in the trading system to accumulate funding fees.
+Comming soon
 
 ## Other Components
 

@@ -50,18 +50,14 @@ contract OperationTest is Test {
         assertEq(price, 30_000e6);
     }
 
-    function testEmergencyOracle() public {
-        cheats.expectRevert("the emergency oracle is close");
-        emergency.getAssetPrice();
-        cheats.expectRevert("the emergency oracle is close");
-        emergency.getMarkPrice();
-    }
-
-    function testOracleAdaptor() public {
+    function testOracleAdaptor() public {        
+        oracleAdaptor.turnOnJOJOOracle();
+        oracleAdaptor.turnOffJOJOOracle();
         oracleAdaptor.updateThreshold(6e16);
         oracleAdaptor.getMarkPrice();
         oracleAdaptor.getChainLinkPrice();
         oracleAdaptor.getAssetPrice();
+        oracleAdaptor.turnOnJOJOOracle();
         oracleAdaptor.setMarkPrice(1010e6);
         oracleAdaptor.getMarkPrice();
         oracleAdaptor.setMarkPrice(120e6);

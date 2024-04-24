@@ -183,7 +183,6 @@ contract FundingRateArbitrageTest is Test {
         initJUSDBank();
         initFundingRateSetting();
         initSupportSWAP();
-        ETHOracle.turnOnOracle();
         ETHOracle.setMarkPrice(1000e6);
     }
 

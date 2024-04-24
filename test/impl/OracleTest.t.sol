@@ -51,23 +51,17 @@ contract OperationTest is Test {
     }
 
     function testEmergencyOracle() public {
-        emergency.turnOnOracle();
-        emergency.turnOffOracle();
         cheats.expectRevert("the emergency oracle is close");
         emergency.getAssetPrice();
         cheats.expectRevert("the emergency oracle is close");
         emergency.getMarkPrice();
-        assertEq(emergency.turnOn(), false);
     }
 
     function testOracleAdaptor() public {
-        oracleAdaptor.turnOnJOJOOracle();
-        oracleAdaptor.turnOffJOJOOracle();
         oracleAdaptor.updateThreshold(6e16);
         oracleAdaptor.getMarkPrice();
         oracleAdaptor.getChainLinkPrice();
         oracleAdaptor.getAssetPrice();
-        oracleAdaptor.turnOnJOJOOracle();
         oracleAdaptor.setMarkPrice(1010e6);
         oracleAdaptor.getMarkPrice();
         oracleAdaptor.setMarkPrice(120e6);

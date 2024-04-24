@@ -139,8 +139,6 @@ contract JUSDBankInitTest is Test {
             1e17,
             address(ethOracle)
         );
-        ethOracle.turnOnOracle();
-        btcOracle.turnOnOracle();
         ethOracle.setMarkPrice(1000e6);
         btcOracle.setMarkPrice(20_000e16);
         jusd.transfer(address(jusdBank), 200_000e6);

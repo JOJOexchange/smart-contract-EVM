@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 interface MTokenInterface {
-    function exchangeRateStored() external view returns (uint);
+    function exchangeRateStored() external view returns (uint256);
 }
 
 contract MoonwellOracle {
@@ -17,7 +17,7 @@ contract MoonwellOracle {
     address public immutable source;
     string public description;
 
-    constructor(string memory _description, address _source) {
+    constructor(address _source, string memory _description) {
         description = _description;
         source = _source;
     }

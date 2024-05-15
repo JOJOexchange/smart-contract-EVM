@@ -68,8 +68,6 @@ contract HelperContract {
         uint256 USDCWalletBalance;
         int256 USDCPerpBalance;
         uint256 ethWalletBalance;
-        uint256 ethBankAmount;
-        uint256 JUSDBorrowAmount;
         uint256 JUSDPerpBalance;
         int256 PositionPerpAmount;
         int256 PositionCreditAmount;

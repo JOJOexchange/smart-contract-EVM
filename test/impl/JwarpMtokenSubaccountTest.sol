@@ -8,16 +8,16 @@ pragma solidity ^0.8.19;
 import "../init/JUSDBankInit.t.sol";
 import "../mocks/MockController.sol";
 import "../mocks/MockMUSDC.sol";
-import "../../src/token/JwarpMUSDCFactory.sol";
-import "../../src/FlashLoanLiquidateJwarpMUSDC.sol";
+import "../../src/token/JwrapMUSDCFactory.sol";
+import "../../src/FlashLoanLiquidateJwrapMUSDC.sol";
 
-contract JwarpMtokenSubaccountTest is JUSDBankInitTest {
+contract JwrapMtokenSubaccountTest is JUSDBankInitTest {
     MockMUSDC public mUsdc;
     TestERC20 public well;
-    EmergencyOracle public jwarpMusdcOracle;
-    JwarpMUSDCFactory public jwarpMusdc;
+    EmergencyOracle public jwrapMusdcOracle;
+    JwrapMUSDCFactory public jwrapMusdc;
     MockController public mockController;
-    FlashLoanLiquidateJwarpMUSDC public flashLiquidateJwarpMUSDC;
+    FlashLoanLiquidateJwrapMUSDC public flashLiquidateJwrapMUSDC;
 
     function setUpMtokenInfo() public {
         mUsdc = new MockMUSDC("mUsdc", "mUsdc", 8, address(usdc));
@@ -26,23 +26,23 @@ contract JwarpMtokenSubaccountTest is JUSDBankInitTest {
         mockController = new MockController(address(well), address(usdc));
         well.mint(address(mockController), 10e18);
         usdc.mint(address(mockController), 10e6);
-        jwarpMusdc = new JwarpMUSDCFactory(
+        jwrapMusdc = new JwrapMUSDCFactory(
             address(mUsdc),
             address(mockController),
             address(well),
             address(usdc),
             address(jusdBank),
-            "JwarpMusdc",
-            "JwarpMusdc"
+            "JwrapMusdc",
+            "JwrapMusdc"
         );
-        flashLiquidateJwarpMUSDC = new FlashLoanLiquidateJwarpMUSDC(
-            address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance, address(jwarpMusdc)
+        flashLiquidateJwrapMUSDC = new FlashLoanLiquidateJwrapMUSDC(
+            address(jusdBank), address(jusdExchange), address(usdc), address(jusd), insurance, address(jwrapMusdc)
         );
-        jwarpMusdcOracle = new EmergencyOracle("JwarpMusdc oracle");
-        jwarpMusdcOracle.setMarkPrice(2e14);
+        jwrapMusdcOracle = new EmergencyOracle("JwrapMusdc oracle");
+        jwrapMusdcOracle.setMarkPrice(2e14);
         jusdBank.initReserve(
             // token
-            address(jwarpMusdc),
+            address(jwrapMusdc),
             // initialMortgageRate
             9e17,
             // maxDepositAmount
@@ -57,34 +57,50 @@ contract JwarpMtokenSubaccountTest is JUSDBankInitTest {
             2e16,
             // insuranceFeeRate
             3e16,
-            address(jwarpMusdcOracle)
+            address(jwrapMusdcOracle)
         );
     }
 
-    function testDepositJwarpToken() public {
+    function testDepositJwrapToken() public {
         setUpMtokenInfo();
         vm.startPrank(alice);
         mUsdc.mint(alice, 50_000e8);
 
-        mUsdc.approve(address(jwarpMusdc), 50_000e8);
-        jwarpMusdc.warp(50_000e8);
-        assertEq(jwarpMusdc.balanceOf(alice), 50_000e8);
-        jwarpMusdc.approve(address(jusdBank), 50_000e8);
-        jusdBank.deposit(alice, address(jwarpMusdc), 50_000e8, alice);
-        assertEq(jwarpMusdc.mUSDCBalanceOf(alice), 50_000e8);
-        jusdBank.withdraw(address(jwarpMusdc), 50_000e8, alice, false);
-        assertEq(jwarpMusdc.mUSDCBalanceOf(alice), 50_000e8);
-        jwarpMusdc.claimReward();
+        mUsdc.approve(address(jwrapMusdc), 50_000e8);
+        jwrapMusdc.wrap(50_000e8);
+        assertEq(jwrapMusdc.balanceOf(alice), 50_000e8);
+        jwrapMusdc.approve(address(jusdBank), 50_000e8);
+        jusdBank.deposit(alice, address(jwrapMusdc), 50_000e8, alice);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(alice), 50_000e8);
+        jusdBank.withdraw(address(jwrapMusdc), 50_000e8, alice, false);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(alice), 50_000e8);
+        jwrapMusdc.claimReward();
         assertEq(well.balanceOf(alice), 1e18);
         assertEq(usdc.balanceOf(alice), 1e6);
 
-        jwarpMusdc.transfer(bob, 50_000e8);
+        jwrapMusdc.transfer(bob, 50_000e8);
         assertEq(well.balanceOf(alice), 2e18);
         assertEq(usdc.balanceOf(alice), 2e6);
-        assertEq(jwarpMusdc.mUSDCBalanceOf(alice), 0);
-        assertEq(jwarpMusdc.mUSDCBalanceOf(bob), 50_000e8);
-        assertEq(jwarpMusdc.balanceOf(alice), 0);
-        assertEq(jwarpMusdc.balanceOf(bob), 50_000e8);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(alice), 0);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(bob), 50_000e8);
+        assertEq(jwrapMusdc.balanceOf(alice), 0);
+        assertEq(jwrapMusdc.balanceOf(bob), 50_000e8);
+    }
+
+    function testDepositJwrapTokenToBank() public {
+        setUpMtokenInfo();
+        vm.startPrank(alice);
+        mUsdc.mint(alice, 50_000e8);
+
+        mUsdc.approve(address(jwrapMusdc), 50_000e8);
+        jwrapMusdc.depositAndWrap(50_000e8);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(alice), 50_000e8);
+        assertEq(jusdBank.getDepositBalance(address(jwrapMusdc), alice), 50_000e8);
+        jusdBank.withdraw(address(jwrapMusdc), 50_000e8, alice, false);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(alice), 50_000e8);
+        jwrapMusdc.claimReward();
+        assertEq(well.balanceOf(alice), 1e18);
+        assertEq(usdc.balanceOf(alice), 1e6);
     }
 
     function testLiquidateJwrap() public {
@@ -92,24 +108,24 @@ contract JwarpMtokenSubaccountTest is JUSDBankInitTest {
         vm.startPrank(alice);
         mUsdc.mint(alice, 50_000e8);
 
-        mUsdc.approve(address(jwarpMusdc), 50_000e8);
-        jwarpMusdc.warp(50_000e8);
-        assertEq(jwarpMusdc.balanceOf(alice), 50_000e8);
-        jwarpMusdc.approve(address(jusdBank), 50_000e8);
-        jusdBank.deposit(alice, address(jwarpMusdc), 50_000e8, alice);
-        assertEq(jwarpMusdc.mUSDCBalanceOf(alice), 50_000e8);
+        mUsdc.approve(address(jwrapMusdc), 50_000e8);
+        jwrapMusdc.wrap(50_000e8);
+        assertEq(jwrapMusdc.balanceOf(alice), 50_000e8);
+        jwrapMusdc.approve(address(jusdBank), 50_000e8);
+        jusdBank.deposit(alice, address(jwrapMusdc), 50_000e8, alice);
+        assertEq(jwrapMusdc.mUSDCBalanceOf(alice), 50_000e8);
         jusdBank.borrow(900e6, alice, false);
         vm.stopPrank();
 
-        jusdBank.updateReserveParam(address(jwarpMusdc), 5e17, 20_000_000e8, 4_000_000e8, 100_000e6);
-        jusdBank.updateRiskParam(address(jwarpMusdc), 6e17, 2e16, 3e16);
-        jwarpMusdc.setFlashloan(address(flashLiquidateJwarpMUSDC));
+        jusdBank.updateReserveParam(address(jwrapMusdc), 5e17, 20_000_000e8, 4_000_000e8, 100_000e6);
+        jusdBank.updateRiskParam(address(jwrapMusdc), 6e17, 2e16, 3e16);
+        jwrapMusdc.setFlashloan(address(flashLiquidateJwrapMUSDC));
         bool safe = jusdBank.isAccountSafe(alice);
         assertEq(safe, false);
 
         vm.startPrank(bob);
         bytes memory param = abi.encode(bob, 1000e6);
-        bytes memory afterParam = abi.encode(address(flashLiquidateJwarpMUSDC), param);
-        jusdBank.liquidate(alice, address(jwarpMusdc), bob, 50_000e8, afterParam, 2e14);
+        bytes memory afterParam = abi.encode(address(flashLiquidateJwrapMUSDC), param);
+        jusdBank.liquidate(alice, address(jwrapMusdc), bob, 50_000e8, afterParam, 2e14);
     }
 }

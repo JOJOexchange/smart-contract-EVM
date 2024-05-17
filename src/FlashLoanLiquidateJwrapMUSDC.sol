@@ -10,13 +10,13 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IJUSDBank.sol";
 import "./interfaces/IJUSDExchange.sol";
 import "./libraries/SignedDecimalMath.sol";
-import "./token/JwarpMUSDCFactory.sol";
+import "./token/JwrapMUSDCFactory.sol";
 
 interface MTokenInter {
     function redeem(uint256 redeemTokens) external returns (uint256);
 }
 
-contract FlashLoanLiquidateJwarpMUSDC {
+contract FlashLoanLiquidateJwrapMUSDC {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
@@ -25,7 +25,7 @@ contract FlashLoanLiquidateJwarpMUSDC {
     address public jusdBank;
     address public jusdExchange;
     address public insurance;
-    address public jwarpMUSDCFactory;
+    address public jwrapMUSDCFactory;
 
     struct LiquidateData {
         uint256 actualCollateral;
@@ -46,23 +46,23 @@ contract FlashLoanLiquidateJwarpMUSDC {
         address _USDC,
         address _JUSD,
         address _insurance,
-        address _JwarpMUSDCFactory
+        address _JwrapMUSDCFactory
     ) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
         JUSD = _JUSD;
         insurance = _insurance;
-        jwarpMUSDCFactory = _JwarpMUSDCFactory;
+        jwrapMUSDCFactory = _JwrapMUSDCFactory;
     }
 
     function JOJOFlashLoan(address asset, uint256 amount, address liquidated, bytes calldata param) external onlyJusdBank {
         (LiquidateData memory liquidateData, bytes memory originParam) = abi.decode(param, (LiquidateData, bytes));
         (address liquidator, uint256 minReceive) = abi.decode(originParam, (address, uint256));
         // transfer MUSDC from liquidated to this
-        JwarpMUSDCFactory(jwarpMUSDCFactory).transferMUSDCFrom(liquidated, address(this), amount);
-        JwarpMUSDCFactory(asset).burn(amount);
-        MTokenInter(JwarpMUSDCFactory(jwarpMUSDCFactory).mUSDC()).redeem(amount);
+        JwrapMUSDCFactory(jwrapMUSDCFactory).transferMUSDCFrom(liquidated, address(this), amount);
+        JwrapMUSDCFactory(asset).burn(amount);
+        MTokenInter(JwrapMUSDCFactory(jwrapMUSDCFactory).mUSDC()).redeem(amount);
         uint256 USDCAmount = IERC20(USDC).balanceOf(address(this));
         require(USDCAmount >= minReceive, "receive amount is too small");
         IERC20(USDC).approve(jusdExchange, liquidateData.actualLiquidated);

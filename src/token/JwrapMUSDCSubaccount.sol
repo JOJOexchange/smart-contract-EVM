@@ -13,7 +13,7 @@ interface IController {
     function claimReward(address[] memory holders, MToken[] memory mTokens) external;
 }
 
-contract JwarpMUSDCSubaccount {
+contract JwrapMUSDCSubaccount {
     address public owner;
     address public controller;
     address public factory;

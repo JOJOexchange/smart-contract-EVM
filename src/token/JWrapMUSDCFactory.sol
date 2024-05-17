@@ -7,10 +7,10 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./JwarpMUSDCSubaccount.sol";
+import "./JwrapMUSDCSubaccount.sol";
 import "../interfaces/IJUSDBank.sol";
 
-contract JwarpMUSDCFactory is ERC20, Ownable {
+contract JwrapMUSDCFactory is ERC20, Ownable {
     address public immutable template;
     address public immutable mUSDC;
     address public usdc;
@@ -27,7 +27,7 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
         _;
     }
 
-    event NewWarpSubaccount(address indexed master, address subaccountAddress);
+    event NewwrapSubaccount(address indexed master, address subaccountAddress);
 
     constructor(
         address _mUSDC,
@@ -45,8 +45,8 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
         jusdBank = _jusdBank;
         well = _well;
         usdc = _usdc;
-        template = address(new JwarpMUSDCSubaccount());
-        JwarpMUSDCSubaccount(template).init(address(this), address(this), controller, mUSDC, well, usdc);
+        template = address(new JwrapMUSDCSubaccount());
+        JwrapMUSDCSubaccount(template).init(address(this), address(this), controller, mUSDC, well, usdc);
     }
 
     function decimals() public pure override returns (uint8) {
@@ -55,9 +55,9 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
 
     function _newSubaccount(address owner) internal returns (address subaccount) {
         subaccount = Clones.clone(template);
-        JwarpMUSDCSubaccount(subaccount).init(owner, address(this), controller, mUSDC, well, usdc);
+        JwrapMUSDCSubaccount(subaccount).init(owner, address(this), controller, mUSDC, well, usdc);
         subaccountRegistry[owner] = subaccount;
-        emit NewWarpSubaccount(owner, subaccount);
+        emit NewwrapSubaccount(owner, subaccount);
     }
 
     function _transfer(address from, address to, uint256 amount) internal override {
@@ -67,8 +67,8 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
             if (toSubaccount == address(0)) {
                 toSubaccount = _newSubaccount(to);
             }
-            JwarpMUSDCSubaccount(fromSubaccount).claimReward();
-            JwarpMUSDCSubaccount(fromSubaccount).transferMUSDC(toSubaccount, amount);
+            JwrapMUSDCSubaccount(fromSubaccount).claimReward();
+            JwrapMUSDCSubaccount(fromSubaccount).transferMUSDC(toSubaccount, amount);
             super._transfer(from, to, amount);
         } else if (from == jusdBank && to != jusdBank) {
             address toSubaccount = subaccountRegistry[to];
@@ -92,7 +92,7 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
         return IERC20(mUSDC).balanceOf(subaccountRegistry[from]);
     }
 
-    function warp(uint256 amount) external {
+    function wrap(uint256 amount) external {
         address subaccount = subaccountRegistry[msg.sender];
         if (subaccount == address(0)) {
             subaccount = _newSubaccount(msg.sender);
@@ -101,11 +101,22 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
         _mint(msg.sender, amount);
     }
 
-    function unwarp(uint256 amount) external {
+    function unwrap(uint256 amount) external {
         address subaccount = subaccountRegistry[msg.sender];
         _burn(msg.sender, amount);
-        JwarpMUSDCSubaccount(subaccount).claimReward();
-        JwarpMUSDCSubaccount(subaccount).withdraw(amount);
+        JwrapMUSDCSubaccount(subaccount).claimReward();
+        JwrapMUSDCSubaccount(subaccount).withdraw(amount);
+    }
+
+    function depositAndWrap(uint256 amount) external {
+        address subaccount = subaccountRegistry[msg.sender];
+        if (subaccount == address(0)) {
+            subaccount = _newSubaccount(msg.sender);
+        }
+        IERC20(mUSDC).safeTransferFrom(msg.sender, subaccount, amount);
+        _mint(address(this), amount);
+        IERC20(address(this)).approve(jusdBank, amount);
+        IJUSDBank(jusdBank).deposit(address(this), address(this), amount, msg.sender);
     }
 
     function burn(uint256 amount) external {
@@ -114,11 +125,11 @@ contract JwarpMUSDCFactory is ERC20, Ownable {
 
     function claimReward() external {
         address subaccount = subaccountRegistry[msg.sender];
-        JwarpMUSDCSubaccount(subaccount).claimReward();
+        JwrapMUSDCSubaccount(subaccount).claimReward();
     }
 
     function transferMUSDCFrom(address from, address to, uint256 amount) external onlyFlashloan {
         address fromSubaccount = subaccountRegistry[from];
-        JwarpMUSDCSubaccount(fromSubaccount).transferMUSDC(to, amount);
+        JwrapMUSDCSubaccount(fromSubaccount).transferMUSDC(to, amount);
     }
 }

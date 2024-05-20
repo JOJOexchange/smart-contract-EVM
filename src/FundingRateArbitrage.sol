@@ -8,9 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./JOJODealer.sol";
-import "./interfaces/IPerpetual.sol";
-import "./interfaces/IJUSDBank.sol";
 import "./libraries/SignedDecimalMath.sol";
+import "./interfaces/internal/IPriceSource.sol";
 
 pragma solidity ^0.8.19;
 
@@ -27,7 +26,6 @@ contract FundingRateArbitrage is Ownable, ERC20 {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
-    address public immutable collateral;
     address public immutable jojoDealer;
     address public immutable perpMarket;
     address public immutable usdc;
@@ -40,6 +38,12 @@ contract FundingRateArbitrage is Ownable, ERC20 {
     uint256 public defaultUsdcQuota;
     uint256 public minimumWithdraw;
     mapping(address => uint256) public maxUsdcQuota;
+
+    mapping(address => int256) public usdcTotalDepositAmount;
+    mapping(address => int256) public usdcTotalWithdrawAmount;
+    mapping(address => address) public collateralPrice;
+    mapping(address => bool) public collateralWhiteList;
+    address[] public collateralList;
 
     WithdrawalRequest[] public withdrawalRequests;
 
@@ -56,12 +60,15 @@ contract FundingRateArbitrage is Ownable, ERC20 {
         address _collateral,
         address _jojoDealer,
         address _perpMarket,
-        address _Operator
+        address _Operator,
+        address _oracle
     )
-        ERC20("PerpUSDC", "PerpUSDC")
+        ERC20("perpUSDC", "perpUSDC")
         Ownable()
     {
-        collateral = _collateral;
+        collateralList.push(_collateral);
+        collateralWhiteList[_collateral] = true;
+        collateralPrice[_collateral] = _oracle;
         jojoDealer = _jojoDealer;
         perpMarket = _perpMarket;
         (address USDC, address JUSD,,,,,) = JOJODealer(jojoDealer).state();
@@ -77,16 +84,31 @@ contract FundingRateArbitrage is Ownable, ERC20 {
     /// @notice this function is to return the sum of netValue in whole system.
     /// including the netValue in collateral system, trading system and buffer usdc
     function getNetValue() public view returns (uint256) {
-        uint256 collateralAmount = IERC20(collateral).balanceOf(address(this));
+        uint256 collateralValue;
+        for (uint256 i = 0; i < collateralList.length;) {
+            uint256 collateralAmount = IERC20(collateralList[i]).balanceOf(address(this));
+            uint256 price = IPriceSource(collateralPrice[collateralList[i]]).getAssetPrice();
+            collateralValue += collateralAmount.decimalMul(price);
+            unchecked {
+                ++i;
+            }
+        }
         uint256 usdcBuffer = IERC20(usdc).balanceOf(address(this));
-        uint256 collateralPrice = JOJODealer(jojoDealer).getMarkPrice(perpMarket);
         (int256 perpNetValue,,,) = JOJODealer(jojoDealer).getTraderRisk(address(this));
         (, uint256 jusdAmount,,,) = JOJODealer(jojoDealer).getCreditOf(address(this));
-        return SafeCast.toUint256(perpNetValue) + collateralAmount.decimalMul(collateralPrice) + usdcBuffer - jusdAmount;
+        return SafeCast.toUint256(perpNetValue) + collateralValue + usdcBuffer - jusdAmount;
     }
 
     function getIndex() public view returns (uint256) {
         return SignedDecimalMath.decimalDiv(getNetValue() + 1, totalSupply() + 1e12);
+    }
+
+    function getCollateralList() public view returns(address[] memory) {
+        return collateralList;
+    }
+
+    function getCollateralPrice(address token) public view returns(uint256) {
+        return IPriceSource(collateralPrice[token]).getAssetPrice();
     }
 
     function buildSpotSwapData(
@@ -138,30 +160,58 @@ contract FundingRateArbitrage is Ownable, ERC20 {
         minimumWithdraw = _minimumWithdraw;
     }
 
-    /// @notice this function is to swap usdc to eth and deposit to collateral system
-    /// @param minReceivedCollateral is the minimum eth received
-    /// @param spotTradeParam is param to swap usdc to eth, can build by this function: `buildSpotSwapData`
-    function swapBuyEth(uint256 minReceivedCollateral, bytes memory spotTradeParam) public onlyOwner {
-        uint256 receivedCollateral = _swap(spotTradeParam, true);
+    // 1. update oracle
+    // 2. add collateral
+    function addCollateral(address token) public onlyOwner {
+        collateralList.push(token);
+        collateralWhiteList[token] = true;
+    }
+
+    function updateOracle(address token, address oracle) public onlyOwner {
+        collateralPrice[token] = oracle;
+    }
+    // 1. remove，
+    // 2. set oracle = address(0)
+    function removeCollateral(address token) public onlyOwner {
+        collateralWhiteList[token] = false;
+        for (uint256 i = 0; i < collateralList.length;) {
+            if (collateralList[i] == token) {
+                collateralList[i] = collateralList[collateralList.length - 1];
+                collateralList.pop();
+                break;
+            }
+            unchecked {
+                ++i;
+            }
+        }
+    }
+    
+    /// @notice this function is to swap usdc to token and deposit to collateral system
+    /// @param minReceivedCollateral is the minimum token received
+    /// @param spotTradeParam is param to swap usdc to token, can build by this function: `buildSpotSwapData`
+    function swapBuyToken(uint256 minReceivedCollateral, address token, bytes memory spotTradeParam) public onlyOwner {
+        require(collateralWhiteList[token], "collateral is not in the whitelist");
+        uint256 receivedCollateral = _swap(token, spotTradeParam, true);
         require(receivedCollateral >= minReceivedCollateral, "SWAP SLIPPAGE");
     }
 
-    /// @notice this function is to withdraw eth to the pool and swap eth to usdc
+    /// @notice this function is to withdraw token to the pool and swap token to usdc
     /// @param minReceivedUSDC is the minimum usdc received
-    /// @param spotTradeParam is param to swap eth to usdc, can build by this function: `buildSpotSwapData`
-    function swapSellEth(uint256 minReceivedUSDC, bytes memory spotTradeParam) public onlyOwner {
-        uint256 receivedUSDC = _swap(spotTradeParam, false);
+    /// @param spotTradeParam is param to swap token to usdc, can build by this function: `buildSpotSwapData`
+    function swapSellToken(uint256 minReceivedUSDC, address token, bytes memory spotTradeParam) public onlyOwner {
+        require(collateralWhiteList[token], "collateral is not in the whitelist");
+        uint256 receivedUSDC = _swap(token, spotTradeParam, false);
         require(receivedUSDC >= minReceivedUSDC, "SWAP SLIPPAGE");
     }
 
-    function _swap(bytes memory param, bool isBuyingEth) private returns (uint256 receivedAmount) {
+    function _swap(address token, bytes memory param, bool isBuyingToken) private returns (uint256 receivedAmount) {
         address fromToken;
         address toToken;
-        if (isBuyingEth) {
+        if (isBuyingToken) {
             fromToken = usdc;
-            toToken = collateral;
+            toToken = token;
         } else {
-            fromToken = collateral;
+            fromToken = token;
             toToken = usdc;
         }
         uint256 toTokenReserve = IERC20(toToken).balanceOf(address(this));
@@ -220,6 +270,7 @@ contract FundingRateArbitrage is Ownable, ERC20 {
         uint256 perpUSDCAmount = amount.decimalDiv(getIndex());
         IERC20(usdc).safeTransferFrom(msg.sender, address(this), amount);
         _mint(msg.sender, perpUSDCAmount);
+        usdcTotalDepositAmount[msg.sender] += SafeCast.toInt256(amount);
         require(getNetValue() <= maxNetValue, "net value exceed limitation");
         uint256 quota = maxUsdcQuota[msg.sender] == 0 ? defaultUsdcQuota : maxUsdcQuota[msg.sender];
         require(balanceOf(msg.sender).decimalMul(getIndex()) <= quota, "usdc amount bigger than quota");
@@ -250,6 +301,7 @@ contract FundingRateArbitrage is Ownable, ERC20 {
             require(!request.isExecuted, "request has been executed");
             uint256 USDCAmount = request.perpUSDCAmount.decimalMul(index);
             require(USDCAmount >= withdrawSettleFee, "USDCAmount need to bigger than withdrawSettleFee");
+            usdcTotalWithdrawAmount[request.user] += SafeCast.toInt256(USDCAmount);
             uint256 feeAmount = (USDCAmount - withdrawSettleFee).decimalMul(withdrawFeeRate) + withdrawSettleFee;
             if (feeAmount > 0) {
                 IERC20(usdc).safeTransfer(owner(), feeAmount);

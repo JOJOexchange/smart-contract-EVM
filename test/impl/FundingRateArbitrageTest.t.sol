@@ -133,7 +133,8 @@ contract FundingRateArbitrageTest is Test {
             // _perpMarket
             address(perpetual),
             // _Operator
-            operator
+            operator,
+            address(ETHOracle)
         );
 
         fundingRateArbitrage.transferOwnership(Owner);
@@ -437,7 +438,7 @@ contract FundingRateArbitrageTest is Test {
 
         bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
 
-        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
         vm.stopPrank();
 
         vm.startPrank(orderSender);
@@ -469,9 +470,9 @@ contract FundingRateArbitrageTest is Test {
         bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
         minReceivedCollateral = 2e18;
-        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
 
         vm.stopPrank();
 
@@ -495,14 +496,14 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(Owner);
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapSellEth(minReceivedUSDC, spotTradeParam2);
+        fundingRateArbitrage.swapSellToken(minReceivedUSDC, address(eth), spotTradeParam2);
 
         bytes memory spotTradeParam3 = abi.encode(address(swapContract), address(swapContract), 2e18, "swap()");
         cheats.expectRevert();
-        fundingRateArbitrage.swapSellEth(minReceivedUSDC, spotTradeParam3);
+        fundingRateArbitrage.swapSellToken(minReceivedUSDC, address(eth), spotTradeParam3);
 
         minReceivedUSDC = 2000e6;
-        fundingRateArbitrage.swapSellEth(minReceivedUSDC, spotTradeParam2);
+        fundingRateArbitrage.swapSellToken(minReceivedUSDC, address(eth), spotTradeParam2);
 
         vm.stopPrank();
     }

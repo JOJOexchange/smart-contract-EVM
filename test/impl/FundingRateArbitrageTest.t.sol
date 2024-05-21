@@ -240,8 +240,8 @@ contract FundingRateArbitrageTest is Test {
         USDC.approve(address(fundingRateArbitrage), 1000e6);
         fundingRateArbitrage.deposit(1000e6);
 
-        fundingRateArbitrage.approve(address(fundingRateArbitrage), 1999999996000);
-        uint256 index = fundingRateArbitrage.requestWithdraw(1999999996000);
+        fundingRateArbitrage.approve(address(fundingRateArbitrage), 1_999_999_996_000);
+        uint256 index = fundingRateArbitrage.requestWithdraw(1_999_999_996_000);
         vm.stopPrank();
 
         vm.startPrank(Owner);
@@ -270,7 +270,6 @@ contract FundingRateArbitrageTest is Test {
     }
 
     function testWithdrawFromLP1() public {
-
         vm.startPrank(Owner);
         fundingRateArbitrage.setWithdrawSettleFee(2e6);
         fundingRateArbitrage.setMinimumWithdraw(1e6);
@@ -414,6 +413,50 @@ contract FundingRateArbitrageTest is Test {
         return abi.encode(orderList, signatureList, matchPaperAmount);
     }
 
+    function testDepositTwoToken() public {
+        USDC.mint(alice, 3000e6);
+        TestERC20 link = new TestERC20("link", "link", 18);
+        link.mint(address(swapContract), 100e18);
+        vm.startPrank(alice);
+        USDC.approve(address(fundingRateArbitrage), 3000e6);
+        fundingRateArbitrage.deposit(3000e6);
+        vm.stopPrank();
+
+        // open position
+        vm.startPrank(Owner);
+
+        uint256 minReceivedCollateral = 2e18;
+
+        bytes memory swapData = swapContract.getSwapUSDCToOtherData(2400e6, address(eth));
+        bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2400e6, swapData);
+
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
+
+        cheats.expectRevert("collateral is not in the whitelist");
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(link), spotTradeParam);
+        cheats.expectRevert("collateral is not in the whitelist");
+        fundingRateArbitrage.swapSellToken(minReceivedCollateral, address(link), spotTradeParam);
+        vm.stopPrank();
+
+        EmergencyOracle linkOracle = new EmergencyOracle("Link Oracle");
+        linkOracle.setMarkPrice(20e6);
+        swapContract.addTokenPrice(address(link), address(linkOracle));
+        vm.startPrank(Owner);
+        fundingRateArbitrage.updateOracle(address(link), address(linkOracle));
+        fundingRateArbitrage.addCollateral(address(link));
+        address[] memory collateralList = fundingRateArbitrage.getCollateralList();
+        uint256 price = fundingRateArbitrage.getCollateralPrice(address(link));
+        assertEq(collateralList[1], address(link));
+        assertEq(price, 20e6);
+        uint256 minReceivedCollateral2 = 5e18;
+        bytes memory swapData2 = swapContract.getSwapUSDCToOtherData(100e6, address(link));
+        bytes memory spotTradeParam2 = abi.encode(address(swapContract), address(swapContract), 100e6, swapData2);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral2, address(link), spotTradeParam2);
+
+        fundingRateArbitrage.removeCollateral(address(link));
+        fundingRateArbitrage.updateOracle(address(link), address(0));
+    }
+
     function testPoolOpenPosition() public {
         USDC.mint(alice, 2400e6);
         vm.startPrank(alice);
@@ -432,7 +475,7 @@ contract FundingRateArbitrageTest is Test {
 
         uint256 minReceivedCollateral = 2e18;
 
-        bytes memory swapData = swapContract.getSwapToEthData(2400e6, address(eth));
+        bytes memory swapData = swapContract.getSwapUSDCToOtherData(2400e6, address(eth));
         bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2400e6, swapData);
 
         bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
@@ -445,7 +488,7 @@ contract FundingRateArbitrageTest is Test {
 
         (int256 paper, int256 credit) = perpetual.balanceOf(address(fundingRateArbitrage));
         console.logInt(paper);
-        console.logInt(credit); 
+        console.logInt(credit);
     }
 
     function testPoolClosePosition() public {
@@ -463,7 +506,7 @@ contract FundingRateArbitrageTest is Test {
 
         vm.startPrank(Owner);
         uint256 minReceivedCollateral = 3e18;
-        bytes memory swapData = swapContract.getSwapToEthData(2000e6, address(eth));
+        bytes memory swapData = swapContract.getSwapUSDCToOtherData(2000e6, address(eth));
         bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2000e6, swapData);
 
         bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);

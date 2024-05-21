@@ -30,10 +30,10 @@ contract MockSwap {
         tokenPrice[token] = price;
     }
 
-    function swapToEth(uint256 amount, address token) external {
+    function swapUSDCToOther(uint256 amount, address token) external {
         IERC20(USDC).safeTransferFrom(msg.sender, address(this), amount);
         uint256 value = (amount * 1e18) / IPriceSource(tokenPrice[token]).getAssetPrice();
-        IERC20(eth).safeTransfer(msg.sender, value);
+        IERC20(token).safeTransfer(msg.sender, value);
     }
 
     function swapToUSDC(uint256 amount, address token) external {
@@ -42,8 +42,8 @@ contract MockSwap {
         IERC20(USDC).safeTransfer(msg.sender, value);
     }
 
-    function getSwapToEthData(uint256 amount, address token) external pure returns (bytes memory) {
-        return abi.encodeWithSignature("swapToEth(uint256,address)", amount, token);
+    function getSwapUSDCToOtherData(uint256 amount, address token) external pure returns (bytes memory) {
+        return abi.encodeWithSignature("swapUSDCToOther(uint256,address)", amount, token);
     }
 
     function getSwapToUSDCData(uint256 amount, address token) external pure returns (bytes memory) {

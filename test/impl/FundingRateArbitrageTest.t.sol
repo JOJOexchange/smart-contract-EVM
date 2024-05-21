@@ -184,7 +184,6 @@ contract FundingRateArbitrageTest is Test {
         jusd.mint(address(this), 10_010e6);
         jusd.approve(address(jojoDealer), 10_010e6);
         jojoDealer.deposit(0, 10_010e6, address(fundingRateArbitrage));
-        ETHOracle.turnOnOracle();
         ETHOracle.setMarkPrice(1000e6);
     }
 

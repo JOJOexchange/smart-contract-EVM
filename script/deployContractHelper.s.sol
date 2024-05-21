@@ -13,15 +13,15 @@ contract HelperContractScript is Script {
     function test() public { }
 
     function run() public {
-        uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
+        uint256 deployerPrivateKey = vm.envUint("JOJO_BASE_TEST_DEPLOYER_PK");
         vm.startBroadcast(deployerPrivateKey);
         new HelperContract(
             //dealer
-            0xFfD3B82971dAbccb3219d16b6EB2DB134bf55300,
+            0x65bE09345311aCc72d9358Ea7d7B13A91DFF51B6,
             // bank
-            0xb0D9Ce393f3483449be357EF715a3492858f8a5E,
+            0x7F8f65D24a7C4d7f7a8b8F5457c91939712479b9,
             //fundingRateHedging
-            0x0Cc6c0c32C074Df9D9D0b92c9d9323cA74e83bc2
+            0x6beC83cAdf39E4606B82C628423F34C53B8b3109
         );
         console2.log("deploy HelperContract");
         vm.stopBroadcast();

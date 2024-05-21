@@ -18,7 +18,7 @@ pragma solidity ^0.8.19;
 /// to this pool and accumulate interest.
 contract FundingRateArbitrage is Ownable, ERC20 {
     struct WithdrawalRequest {
-        uint256 perpUSDCAmount;
+        uint256 earnUSDCAmount;
         address user;
         bool isExecuted;
     }
@@ -39,8 +39,8 @@ contract FundingRateArbitrage is Ownable, ERC20 {
     uint256 public minimumWithdraw;
     mapping(address => uint256) public maxUsdcQuota;
 
-    mapping(address => int256) public usdcTotalDepositAmount;
-    mapping(address => int256) public usdcTotalWithdrawAmount;
+    mapping(address => uint256) public usdcTotalDepositAmount;
+    mapping(address => uint256) public usdcTotalWithdrawAmount;
     mapping(address => address) public collateralPrice;
     mapping(address => bool) public collateralWhiteList;
     address[] public collateralList;
@@ -48,11 +48,11 @@ contract FundingRateArbitrage is Ownable, ERC20 {
     WithdrawalRequest[] public withdrawalRequests;
 
     // Event
-    event DepositToHedging(address from, uint256 USDCAmount, uint256 feeAmount, uint256 perpUSDCAmount);
+    event DepositToHedging(address from, uint256 USDCAmount, uint256 feeAmount, uint256 earnUSDCAmount);
 
-    event RequestWithdrawFromHedging(address from, uint256 perpUSDCAmount, uint256 index);
+    event RequestWithdrawFromHedging(address from, uint256 earnUSDCAmount, uint256 index);
 
-    event PermitWithdraw(address from, uint256 USDCAmount, uint256 feeAmount, uint256 perpUSDCAmount, uint256 index);
+    event PermitWithdraw(address from, uint256 USDCAmount, uint256 feeAmount, uint256 earnUSDCAmount, uint256 index);
 
     event Swap(address fromToken, address toToken, uint256 payAmount, uint256 receivedAmount);
 
@@ -63,7 +63,7 @@ contract FundingRateArbitrage is Ownable, ERC20 {
         address _Operator,
         address _oracle
     )
-        ERC20("perpUSDC", "perpUSDC")
+        ERC20("earnUSDC", "earnUSDC")
         Ownable()
     {
         collateralList.push(_collateral);
@@ -75,7 +75,6 @@ contract FundingRateArbitrage is Ownable, ERC20 {
         usdc = USDC;
         jusd = JUSD;
         JOJODealer(jojoDealer).setOperator(_Operator, true);
-        IERC20(jusd).approve(jojoDealer, type(uint256).max);
         IERC20(usdc).approve(jojoDealer, type(uint256).max);
     }
 
@@ -263,32 +262,32 @@ contract FundingRateArbitrage is Ownable, ERC20 {
             "The deposit amount is less than the minimum withdrawal amount"
         );
         uint256 feeAmount = amount.decimalMul(depositFeeRate);
+        usdcTotalDepositAmount[msg.sender] += amount;
         if (feeAmount > 0) {
             amount -= feeAmount;
             IERC20(usdc).safeTransferFrom(msg.sender, owner(), feeAmount);
         }
-        uint256 perpUSDCAmount = amount.decimalDiv(getIndex());
+        uint256 earnUSDCAmount = amount.decimalDiv(getIndex());
         IERC20(usdc).safeTransferFrom(msg.sender, address(this), amount);
-        _mint(msg.sender, perpUSDCAmount);
-        usdcTotalDepositAmount[msg.sender] += SafeCast.toInt256(amount);
+        _mint(msg.sender, earnUSDCAmount);
         require(getNetValue() <= maxNetValue, "net value exceed limitation");
         uint256 quota = maxUsdcQuota[msg.sender] == 0 ? defaultUsdcQuota : maxUsdcQuota[msg.sender];
         require(balanceOf(msg.sender).decimalMul(getIndex()) <= quota, "usdc amount bigger than quota");
-        emit DepositToHedging(msg.sender, amount, feeAmount, perpUSDCAmount);
+        emit DepositToHedging(msg.sender, amount, feeAmount, earnUSDCAmount);
     }
 
     /// @notice this function is to submit a withdrawal which wiil permit by our system in 24 hours
     /// The main purpose of this function is to capture the interest and avoid the DOS attacks.
     /// @dev users need to withdraw jusd from trading system firstly or by jusd, then transfer jusd to
     /// the pool and get usdc back
-    function requestWithdraw(uint256 perpUSDCAmount) external returns (uint256) {
-        IERC20(address(this)).safeTransferFrom(msg.sender, address(this), perpUSDCAmount);
+    function requestWithdraw(uint256 earnUSDCAmount) external returns (uint256) {
+        IERC20(address(this)).safeTransferFrom(msg.sender, address(this), earnUSDCAmount);
         uint256 index = getIndex();
-        withdrawalRequests.push(WithdrawalRequest(perpUSDCAmount, msg.sender, false));
-        require(perpUSDCAmount.decimalMul(index) >= minimumWithdraw, "Withdraw amount is smaller than minimumWithdraw");
-        require(perpUSDCAmount.decimalMul(index) >= withdrawSettleFee, "Withdraw amount is smaller than settleFee");
+        withdrawalRequests.push(WithdrawalRequest(earnUSDCAmount, msg.sender, false));
+        require(earnUSDCAmount.decimalMul(index) >= minimumWithdraw, "Withdraw amount is smaller than minimumWithdraw");
+        require(earnUSDCAmount.decimalMul(index) >= withdrawSettleFee, "Withdraw amount is smaller than settleFee");
         uint256 withdrawIndex = withdrawalRequests.length - 1;
-        emit RequestWithdrawFromHedging(msg.sender, perpUSDCAmount, withdrawIndex);
+        emit RequestWithdrawFromHedging(msg.sender, earnUSDCAmount, withdrawIndex);
         return withdrawIndex;
     }
 
@@ -299,17 +298,17 @@ contract FundingRateArbitrage is Ownable, ERC20 {
         for (uint256 i; i < requestIDList.length; i++) {
             WithdrawalRequest storage request = withdrawalRequests[requestIDList[i]];
             require(!request.isExecuted, "request has been executed");
-            uint256 USDCAmount = request.perpUSDCAmount.decimalMul(index);
+            uint256 USDCAmount = request.earnUSDCAmount.decimalMul(index);
             require(USDCAmount >= withdrawSettleFee, "USDCAmount need to bigger than withdrawSettleFee");
-            usdcTotalWithdrawAmount[request.user] += SafeCast.toInt256(USDCAmount);
+            usdcTotalWithdrawAmount[request.user] += USDCAmount;
             uint256 feeAmount = (USDCAmount - withdrawSettleFee).decimalMul(withdrawFeeRate) + withdrawSettleFee;
             if (feeAmount > 0) {
                 IERC20(usdc).safeTransfer(owner(), feeAmount);
             }
             IERC20(usdc).safeTransfer(request.user, USDCAmount - feeAmount);
             request.isExecuted = true;
-            _burn(address(this), request.perpUSDCAmount);
-            emit PermitWithdraw(request.user, USDCAmount, feeAmount, request.perpUSDCAmount, requestIDList[i]);
+            _burn(address(this), request.earnUSDCAmount);
+            emit PermitWithdraw(request.user, USDCAmount, feeAmount, request.earnUSDCAmount, requestIDList[i]);
         }
     }
 }

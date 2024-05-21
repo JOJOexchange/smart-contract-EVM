@@ -76,14 +76,14 @@ contract HelperContract {
         uint256 JUSDPerpBalance;
         int256 PositionPerpAmount;
         int256 PositionCreditAmount;
-        uint256 perpUSDCRate;
-        uint256 perpUSDCTotalSupply;
+        uint256 earnUSDCRate;
+        uint256 earnUSDCTotalSupply;
         int256 perpNetValue;
         HedgingCollateralState[] hedgingCollateralState;
     }
 
     struct AccountHedgingState {
-        uint256 perpUSDCBalance;
+        uint256 earnUSDCBalance;
     }
 
     function getWalletBalance(address token, address wallet) public view returns (uint256) {
@@ -97,7 +97,7 @@ contract HelperContract {
     {
         accountHedgingStates = new AccountHedgingState[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
-            accountHedgingStates[i].perpUSDCBalance = fundingRateArbitrage.balanceOf(accounts[i]);
+            accountHedgingStates[i].earnUSDCBalance = fundingRateArbitrage.balanceOf(accounts[i]);
         }
     }
 
@@ -108,8 +108,8 @@ contract HelperContract {
     {
         withdrawalRequests = new FundingRateArbitrage.WithdrawalRequest[](lists.length);
         for (uint256 i = 0; i < lists.length; i++) {
-            (uint256 perpUSDCAmount, address user, bool isExecuted) = fundingRateArbitrage.withdrawalRequests(lists[i]);
-            withdrawalRequests[i].perpUSDCAmount = perpUSDCAmount;
+            (uint256 earnUSDCAmount, address user, bool isExecuted) = fundingRateArbitrage.withdrawalRequests(lists[i]);
+            withdrawalRequests[i].earnUSDCAmount = earnUSDCAmount;
             withdrawalRequests[i].user = user;
             withdrawalRequests[i].isExecuted = isExecuted;
         }
@@ -128,8 +128,8 @@ contract HelperContract {
         hedgingState.PositionPerpAmount = PositionPerpAmount;
         hedgingState.PositionCreditAmount = PositionCreditAmount;
         uint256 index = fundingRateArbitrage.getIndex();
-        hedgingState.perpUSDCRate = index;
-        hedgingState.perpUSDCTotalSupply = fundingRateArbitrage.totalSupply();
+        hedgingState.earnUSDCRate = index;
+        hedgingState.earnUSDCTotalSupply = fundingRateArbitrage.totalSupply();
         (int256 perpNetValue,,,) = jojoDealer.getTraderRisk(address(fundingRateArbitrage));
         hedgingState.perpNetValue = perpNetValue;
         address[] memory collaterals = fundingRateArbitrage.getCollateralList();

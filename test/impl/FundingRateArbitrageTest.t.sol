@@ -128,19 +128,17 @@ contract FundingRateArbitrageTest is Test {
         fundingRateArbitrage = new FundingRateArbitrage(
             //  _collateral,
             address(eth),
-            // _jusdBank
-            address(jusdBank),
             // _JOJODealer
             address(jojoDealer),
             // _perpMarket
             address(perpetual),
             // _Operator
-            operator
+            operator,
+            address(ETHOracle)
         );
 
         fundingRateArbitrage.transferOwnership(Owner);
         vm.startPrank(Owner);
-        jusd.mint(address(fundingRateArbitrage), 10_010e6);
         fundingRateArbitrage.setOperator(sender1, true);
         fundingRateArbitrage.setMaxNetValue(10_000e6);
         fundingRateArbitrage.setDefaultQuota(10_000e6);
@@ -183,6 +181,10 @@ contract FundingRateArbitrageTest is Test {
         initJUSDBank();
         initFundingRateSetting();
         initSupportSWAP();
+        jusd.mint(address(this), 10_010e6);
+        jusd.approve(address(jojoDealer), 10_010e6);
+        jojoDealer.deposit(0, 10_010e6, address(fundingRateArbitrage));
+        ETHOracle.turnOnOracle();
         ETHOracle.setMarkPrice(1000e6);
     }
 
@@ -194,7 +196,7 @@ contract FundingRateArbitrageTest is Test {
 
     function testDepositFromLP1() public {
         initAlice();
-        cheats.expectRevert("The deposit amount is less than the minimum withdrawal amount");
+        cheats.expectRevert("deposit amount is zero");
         fundingRateArbitrage.deposit(0);
         vm.stopPrank();
 
@@ -214,16 +216,14 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(alice);
         fundingRateArbitrage.deposit(100e6);
         vm.stopPrank();
-        assertEq(fundingRateArbitrage.getIndex(), 1e9);
-        assertEq(fundingRateArbitrage.earnUSDCBalance(alice), 100e15);
+        assertEq(fundingRateArbitrage.getIndex(), 1e6);
 
         USDC.mint(bob, 100e6);
         vm.startPrank(bob);
         USDC.approve(address(fundingRateArbitrage), 100e6);
         fundingRateArbitrage.deposit(100e6);
         vm.stopPrank();
-        assertEq(fundingRateArbitrage.getIndex(), 1e9);
-        assertEq(fundingRateArbitrage.earnUSDCBalance(bob), 100e15);
+        assertEq(fundingRateArbitrage.getIndex(), 1e6);
     }
 
     function testDepositAndDonate() public {
@@ -231,21 +231,18 @@ contract FundingRateArbitrageTest is Test {
 
         fundingRateArbitrage.setMaxNetValue(100_000e6);
         initAlice();
-        USDC.mint(alice, 100e6);
+        USDC.mint(alice, 1000e6);
         fundingRateArbitrage.deposit(1);
-        USDC.transfer(address(fundingRateArbitrage), 100e6);
+        USDC.transfer(address(fundingRateArbitrage), 1000e6);
         vm.stopPrank();
 
-        USDC.mint(bob, 10_000e6);
+        USDC.mint(bob, 1000e6);
         vm.startPrank(bob);
-        USDC.approve(address(fundingRateArbitrage), 10_000e6);
-        fundingRateArbitrage.deposit(10_000e6);
+        USDC.approve(address(fundingRateArbitrage), 1000e6);
+        fundingRateArbitrage.deposit(1000e6);
 
-        jojoDealer.requestWithdraw(bob, 0, 10_000e6);
-        vm.warp(100);
-        jojoDealer.executeWithdraw(bob, bob, false, "");
-        jusd.approve(address(fundingRateArbitrage), 10_000e6);
-        uint256 index = fundingRateArbitrage.requestWithdraw(10_000e6);
+        fundingRateArbitrage.approve(address(fundingRateArbitrage), 1999999996000);
+        uint256 index = fundingRateArbitrage.requestWithdraw(1999999996000);
         vm.stopPrank();
 
         vm.startPrank(Owner);
@@ -257,6 +254,9 @@ contract FundingRateArbitrageTest is Test {
     function testDepositAndToPerp() public {
         vm.startPrank(Owner);
         fundingRateArbitrage.setDepositFeeRate(1e16);
+        jusd.mint(Owner, 1000e6);
+        jusd.approve(address(jojoDealer), 1000e6);
+        jojoDealer.deposit(0, 1000e6, address(fundingRateArbitrage));
         assertEq(fundingRateArbitrage.depositFeeRate(), 1e16);
 
         initAlice();
@@ -266,34 +266,28 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(Owner);
         fundingRateArbitrage.depositUSDCToPerp(50e6);
         fundingRateArbitrage.fastWithdrawUSDCFromPerp(50e6);
+        fundingRateArbitrage.fastWithdrawJUSDFromPerp(1000e6);
         vm.stopPrank();
-    }
-
-    function testView() public {
-        HelperContract helper =
-            new HelperContract(address(jojoDealer), address(jusdBank), address(fundingRateArbitrage));
-
-        helper.getHedgingState(address(perpetual));
     }
 
     function testWithdrawFromLP1() public {
-        jusd.mint(alice, 1000e6);
 
         vm.startPrank(Owner);
         fundingRateArbitrage.setWithdrawSettleFee(2e6);
+        fundingRateArbitrage.setMinimumWithdraw(1e6);
         vm.stopPrank();
 
         initAlice();
+        cheats.expectRevert("deposit amount is zero");
+        fundingRateArbitrage.deposit(0);
         fundingRateArbitrage.deposit(100e6);
-        jojoDealer.requestWithdraw(alice, 0, 100e6);
-        vm.warp(100);
-        jojoDealer.executeWithdraw(alice, alice, false, "");
-        jusd.approve(address(fundingRateArbitrage), 1000e6);
-        cheats.expectRevert("Request Withdraw too big");
-        fundingRateArbitrage.requestWithdraw(1000e6);
+
+        fundingRateArbitrage.approve(address(fundingRateArbitrage), 1000e18);
+        cheats.expectRevert("Withdraw amount is smaller than minimumWithdraw");
+        fundingRateArbitrage.requestWithdraw(5e17);
         cheats.expectRevert("Withdraw amount is smaller than settleFee");
-        fundingRateArbitrage.requestWithdraw(1e6);
-        uint256 index = fundingRateArbitrage.requestWithdraw(100e6);
+        fundingRateArbitrage.requestWithdraw(15e17);
+        uint256 index = fundingRateArbitrage.requestWithdraw(100e18);
         vm.stopPrank();
 
         vm.startPrank(Owner);
@@ -311,11 +305,8 @@ contract FundingRateArbitrageTest is Test {
 
         initAlice();
         fundingRateArbitrage.deposit(100e6);
-        jojoDealer.requestWithdraw(alice, 0, 99e6);
-        vm.warp(100);
-        jojoDealer.executeWithdraw(alice, alice, false, "");
-        jusd.approve(address(fundingRateArbitrage), 99e6);
-        uint256 index = fundingRateArbitrage.requestWithdraw(99e6);
+        fundingRateArbitrage.approve(address(fundingRateArbitrage), 99e18);
+        uint256 index = fundingRateArbitrage.requestWithdraw(99e18);
         vm.stopPrank();
 
         vm.startPrank(Owner);
@@ -441,15 +432,13 @@ contract FundingRateArbitrageTest is Test {
         vm.startPrank(Owner);
 
         uint256 minReceivedCollateral = 2e18;
-        uint256 JUSDRebalanceAmount = 1500e6;
 
         bytes memory swapData = swapContract.getSwapToEthData(2400e6, address(eth));
         bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2400e6, swapData);
 
         bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
 
-        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
-        fundingRateArbitrage.borrow(JUSDRebalanceAmount);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
         vm.stopPrank();
 
         vm.startPrank(orderSender);
@@ -457,7 +446,7 @@ contract FundingRateArbitrageTest is Test {
 
         (int256 paper, int256 credit) = perpetual.balanceOf(address(fundingRateArbitrage));
         console.logInt(paper);
-        console.logInt(credit);
+        console.logInt(credit); 
     }
 
     function testPoolClosePosition() public {
@@ -475,18 +464,16 @@ contract FundingRateArbitrageTest is Test {
 
         vm.startPrank(Owner);
         uint256 minReceivedCollateral = 3e18;
-        uint256 JUSDRebalanceAmount = 1500e6;
         bytes memory swapData = swapContract.getSwapToEthData(2000e6, address(eth));
         bytes memory spotTradeParam = abi.encode(address(swapContract), address(swapContract), 2000e6, swapData);
 
         bytes memory tradeData = constructTradeDataForPool(-1e18, 990e6, 1e18, -1010e6);
 
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
         minReceivedCollateral = 2e18;
-        fundingRateArbitrage.swapBuyEth(minReceivedCollateral, spotTradeParam);
+        fundingRateArbitrage.swapBuyToken(minReceivedCollateral, address(eth), spotTradeParam);
 
-        fundingRateArbitrage.borrow(JUSDRebalanceAmount);
         vm.stopPrank();
 
         vm.startPrank(orderSender);
@@ -498,8 +485,6 @@ contract FundingRateArbitrageTest is Test {
 
         // close position
         uint256 minReceivedUSDC = 2900e6;
-        uint256 JUSDRebalanceAmount2 = 1500e6;
-        uint256 collateralAmount = 2e18;
         bytes memory swapData2 = swapContract.getSwapToUSDCData(2e18, address(eth));
         bytes memory spotTradeParam2 = abi.encode(address(swapContract), address(swapContract), 2e18, swapData2);
 
@@ -510,25 +495,17 @@ contract FundingRateArbitrageTest is Test {
 
         vm.startPrank(Owner);
 
-        fundingRateArbitrage.repay(JUSDRebalanceAmount2);
-
         cheats.expectRevert("SWAP SLIPPAGE");
-        fundingRateArbitrage.swapSellEth(minReceivedUSDC, collateralAmount, spotTradeParam2);
+        fundingRateArbitrage.swapSellToken(minReceivedUSDC, address(eth), spotTradeParam2);
 
         bytes memory spotTradeParam3 = abi.encode(address(swapContract), address(swapContract), 2e18, "swap()");
         cheats.expectRevert();
-        fundingRateArbitrage.swapSellEth(minReceivedUSDC, collateralAmount, spotTradeParam3);
+        fundingRateArbitrage.swapSellToken(minReceivedUSDC, address(eth), spotTradeParam3);
 
         minReceivedUSDC = 2000e6;
-        fundingRateArbitrage.swapSellEth(minReceivedUSDC, collateralAmount, spotTradeParam2);
+        fundingRateArbitrage.swapSellToken(minReceivedUSDC, address(eth), spotTradeParam2);
 
         vm.stopPrank();
-    }
-
-    function testBurnJUSD() public {
-        vm.startPrank(Owner);
-        fundingRateArbitrage.refundJUSD(10_000e6);
-        assertEq(IERC20(jusd).balanceOf(Owner), 10_000e6);
     }
 
     function testBuildOrderParam() public view {

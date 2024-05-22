@@ -65,6 +65,7 @@ contract HelperContract {
     }
 
     struct HedgingCollateralState {
+        address collateral;
         uint256 collateralWalletBalance;
         uint256 collateralPrice;
         uint256 collateralDecimal;
@@ -84,6 +85,8 @@ contract HelperContract {
 
     struct AccountHedgingState {
         uint256 earnUSDCBalance;
+        uint256 usdcTotalDepositAmount;
+        uint256 usdcTotalWithdrawAmount;
     }
 
     function getWalletBalance(address token, address wallet) public view returns (uint256) {
@@ -98,6 +101,8 @@ contract HelperContract {
         accountHedgingStates = new AccountHedgingState[](accounts.length);
         for (uint256 i = 0; i < accounts.length; i++) {
             accountHedgingStates[i].earnUSDCBalance = fundingRateArbitrage.balanceOf(accounts[i]);
+            accountHedgingStates[i].usdcTotalDepositAmount = fundingRateArbitrage.usdcTotalDepositAmount(accounts[i]);
+            accountHedgingStates[i].usdcTotalWithdrawAmount = fundingRateArbitrage.usdcTotalWithdrawAmount(accounts[i]);
         }
     }
 
@@ -135,6 +140,7 @@ contract HelperContract {
         address[] memory collaterals = fundingRateArbitrage.getCollateralList();
         hedgingState.hedgingCollateralState = new HedgingCollateralState[](collaterals.length);
         for (uint256 i = 0; i < collaterals.length; i++) {
+            hedgingState.hedgingCollateralState[i].collateral = collaterals[i];
             hedgingState.hedgingCollateralState[i].collateralDecimal = ERC20(collaterals[i]).decimals();
             hedgingState.hedgingCollateralState[i].collateralPrice =
                 fundingRateArbitrage.getCollateralPrice(collaterals[i]);

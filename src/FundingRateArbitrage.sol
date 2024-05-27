@@ -169,7 +169,7 @@ contract FundingRateArbitrage is Ownable, ERC20 {
     function updateOracle(address token, address oracle) public onlyOwner {
         collateralPrice[token] = oracle;
     }
-    // 1. remove，
+    // 1. remove
     // 2. set oracle = address(0)
     function removeCollateral(address token) public onlyOwner {
         collateralWhiteList[token] = false;

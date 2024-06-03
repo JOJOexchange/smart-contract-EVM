@@ -142,12 +142,13 @@ contract JWrapMUSDC is Ownable, ERC20 {
         emit DepositMUSDC(msg.sender, amount, jWrapMUSDCAmount);
     }
 
-    function withdraw(uint256 jWrapMUSDCAmount) external {
+    function withdraw(uint256 jWrapMUSDCAmount) external returns(uint256) {
         uint256 mUSDCAmount = jWrapMUSDCAmount.decimalMul(getIndex());
         mUSDCUserTotalWithdraw[msg.sender] += mUSDCAmount;
         totalDeposit -= mUSDCAmount;
         _burn(msg.sender, jWrapMUSDCAmount);
         IERC20(mUSDC).safeTransfer(msg.sender, mUSDCAmount);
         emit WithdrawMUSDC(msg.sender, jWrapMUSDCAmount, mUSDCAmount);
+        return mUSDCAmount;
     }
 }

@@ -29,6 +29,11 @@ contract MockMUSDC is ERC20 {
         _mint(to, amount);
     }
 
+    function mint(uint256 amount) external{
+        IERC20(usdc).transferFrom(msg.sender, address(this), amount);
+        _mint(msg.sender, amount * 50 * 1e2);
+    }
+
     function mintBatch(address[] calldata to, uint256[] calldata amount) external {
         for (uint256 i = 0; i < to.length; i++) {
             _mint(to[i], amount[i]);

@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./interfaces/IJUSDBank.sol";
 import "./interfaces/IJUSDExchange.sol";
 import "./libraries/SignedDecimalMath.sol";
-import "./token/JwrapMUSDC.sol";
+import "./token/JWrapMUSDC.sol";
 
 interface MTokenInter {
     function redeem(uint256 redeemTokens) external returns (uint256);

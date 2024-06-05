@@ -23,7 +23,7 @@ contract JWrapMUSDCTest is JUSDBankInitTest {
         mockController = new MockController(address(well), address(usdc));
         well.mint(address(mockController), 10e18);
         usdc.mint(address(mockController), 10e6);
-        jWrapMUSDC = new JWrapMUSDC(address(mUsdc), address(usdc), address(mockController), address(well));
+        jWrapMUSDC = new JWrapMUSDC(address(mUsdc), address(usdc), address(mockController), address(well), address(jusdBank));
     }
 
     function testDepositJwrapToken() public {

@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "../JOJODealer.sol";
 import "../libraries/SignedDecimalMath.sol";
 import "../interfaces/internal/IPriceSource.sol";
+import "../interfaces/IJUSDBank.sol";
 
 pragma solidity ^0.8.19;
 
@@ -30,6 +31,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
     address public immutable well;
     address public immutable controller;
     address public immutable mUSDC;
+    address public immutable jusdBank;
 
     uint256 public rewardAdd;
     uint256 public totalDeposit;
@@ -47,7 +49,8 @@ contract JWrapMUSDC is Ownable, ERC20 {
         address _mUSDC,
         address _usdc,
         address _controller,
-        address _well
+        address _well,
+        address _jusdBank
     )
         Ownable()
         ERC20("jWrapMUSDC", "jWrapMUSDC")
@@ -56,6 +59,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
         usdc = _usdc;
         controller = _controller;
         well = _well;
+        jusdBank = _jusdBank;
     }
 
     // View
@@ -109,6 +113,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
     function swapWellToUSDC(uint256 amount, uint256 minReceivedUSDC, bytes memory param) public onlyOwner {
         (address approveTarget, address swapTarget, bytes memory callData) =
             abi.decode(param, (address, address, bytes));
+        require(swapTarget != mUSDC, "swapTartget is not mUSDC address");
         IERC20(well).safeApprove(approveTarget, 0);
         IERC20(well).safeApprove(approveTarget, amount);
         uint256 usdcReserve = IERC20(usdc).balanceOf(address(this));
@@ -133,12 +138,22 @@ contract JWrapMUSDC is Ownable, ERC20 {
     }
 
     // LP Functions
-    function deposit(uint256 amount) external {
+    function deposit(uint256 amount) public {
         IERC20(mUSDC).safeTransferFrom(msg.sender, address(this), amount);
         uint256 jWrapMUSDCAmount = amount.decimalDiv(getIndex());
         _mint(msg.sender, jWrapMUSDCAmount);
         mUSDCUserTotalDeposit[msg.sender] += amount;
         totalDeposit += amount;
+        emit DepositMUSDC(msg.sender, amount, jWrapMUSDCAmount);
+    }
+
+    function wrapAndDeposit(uint256 amount) external {
+        IERC20(mUSDC).safeTransferFrom(msg.sender, address(this), amount);
+        uint256 jWrapMUSDCAmount = amount.decimalDiv(getIndex());
+        _mint(address(this), jWrapMUSDCAmount);
+        mUSDCUserTotalDeposit[msg.sender] += amount;
+        totalDeposit += amount;
+        IJUSDBank(jusdBank).deposit(address(this), address(this), jWrapMUSDCAmount, msg.sender);
         emit DepositMUSDC(msg.sender, amount, jWrapMUSDCAmount);
     }
 

@@ -16,7 +16,7 @@ import "../interfaces/IJUSDBank.sol";
 pragma solidity ^0.8.19;
 
 interface IMUSDCController {
-    function claimReward(address[] memory holders, MToken[] memory mTokens) external;
+    function claimReward(address holder, MToken[] memory mTokens) external;
 }
 
 interface IMUSDC {
@@ -92,22 +92,10 @@ contract JWrapMUSDC is Ownable, ERC20 {
     } 
 
     function claimReward() public onlyOwner returns(uint256) {
-        address[] memory holders = new address[](1);
-        holders[0] = address(this);
         MToken[] memory mTokens = new MToken[](1);
         mTokens[0] = MToken(mUSDC);
-        IMUSDCController(controller).claimReward(holders, mTokens);
+        IMUSDCController(controller).claimReward(address(this), mTokens);
         return IERC20(well).balanceOf(address(this));
-    }
-
-    function swapUSDCToMUSDC() public onlyOwner {
-        uint256 mUSDCReserve = IERC20(mUSDC).balanceOf(address(this));
-        uint256 usdcAmount = IERC20(usdc).balanceOf(address(this));
-        IERC20(usdc).approve(address(mUSDC), usdcAmount);
-        IMUSDC(mUSDC).mint(usdcAmount);
-        uint256 receivedAmount = IERC20(mUSDC).balanceOf(address(this)) - mUSDCReserve;
-        rewardAdd += receivedAmount;
-        emit SwapToken(usdc, mUSDC, usdcAmount, receivedAmount);
     }
 
     function swapWellToUSDC(uint256 amount, uint256 minReceivedUSDC, bytes memory param) public onlyOwner {
@@ -129,6 +117,16 @@ contract JWrapMUSDC is Ownable, ERC20 {
         uint256 receivedAmount = IERC20(usdc).balanceOf(address(this)) - usdcReserve;
         require(receivedAmount >= minReceivedUSDC, "SWAP SLIPPAGE");
         emit SwapToken(well, usdc, amount, receivedAmount);
+    }
+
+    function swapUSDCToMUSDC() public onlyOwner {
+        uint256 mUSDCReserve = IERC20(mUSDC).balanceOf(address(this));
+        uint256 usdcAmount = IERC20(usdc).balanceOf(address(this));
+        IERC20(usdc).approve(address(mUSDC), usdcAmount);
+        IMUSDC(mUSDC).mint(usdcAmount);
+        uint256 receivedAmount = IERC20(mUSDC).balanceOf(address(this)) - mUSDCReserve;
+        rewardAdd += receivedAmount;
+        emit SwapToken(usdc, mUSDC, usdcAmount, receivedAmount);
     }
 
     function claimRewardAndSwap(uint256 amount, uint256 minReceivedUSDC, bytes memory param) public onlyOwner {
@@ -153,6 +151,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
         _mint(address(this), jWrapMUSDCAmount);
         mUSDCUserTotalDeposit[msg.sender] += amount;
         totalDeposit += amount;
+        IERC20(address(this)).approve(jusdBank, jWrapMUSDCAmount);
         IJUSDBank(jusdBank).deposit(address(this), address(this), jWrapMUSDCAmount, msg.sender);
         emit DepositMUSDC(msg.sender, amount, jWrapMUSDCAmount);
     }

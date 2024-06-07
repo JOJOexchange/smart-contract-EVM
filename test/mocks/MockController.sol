@@ -19,8 +19,7 @@ contract MockController {
     // add this to be excluded from coverage report
     function test() public { }
 
-    function claimReward(address[] memory holders, MToken[] memory) external {
-        address holder = holders[0];
+    function claimReward(address holder, MToken[] memory) external {
         IERC20(well).transfer(holder, 1e18);
         IERC20(usdc).transfer(holder, 1e6);
     }

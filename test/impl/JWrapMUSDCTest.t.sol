@@ -49,6 +49,8 @@ contract JWrapMUSDCTest is JUSDBankInitTest {
         mUsdc.mint(alice, 50_000e8);
         mUsdc.approve(address(jWrapMUSDC), 50_000e8);
         jWrapMUSDC.deposit(50_000e8);
+        assertEq(jWrapMUSDC.totalDeposit(), 50_000e8);
+        assertEq(jWrapMUSDC.balanceOf(alice), 50_000e8);
         vm.stopPrank();
 
         jWrapMUSDC.claimReward();
@@ -57,7 +59,7 @@ contract JWrapMUSDCTest is JUSDBankInitTest {
         jWrapMUSDC.swapWellToUSDC(1e18, 1e6, param);
         jWrapMUSDC.swapUSDCToMUSDC();
         assertEq(jWrapMUSDC.getIndex(), 1002e15);
-        assertEq(jWrapMUSDC.rewardAdd(), 100e8);
+        assertEq(jWrapMUSDC.totalDeposit(), 50_100e8);
 
         vm.startPrank(bob);
         mUsdc.mint(bob, 50_000e8);
@@ -65,26 +67,32 @@ contract JWrapMUSDCTest is JUSDBankInitTest {
         jWrapMUSDC.deposit(50_000e8);
         assertEq(jWrapMUSDC.getIndex(), 1002000000000084284);
         assertEq(jWrapMUSDC.balanceOf(bob), 4990019960079);
+        assertEq(jWrapMUSDC.totalDeposit(), 100_100e8);
         vm.stopPrank();
 
         jWrapMUSDC.claimReward();
         jWrapMUSDC.swapWellToUSDC(1e18, 1e6, param);
         jWrapMUSDC.swapUSDCToMUSDC();
-        assertEq(jWrapMUSDC.rewardAdd(), 200e8);
+        assertEq(jWrapMUSDC.totalDeposit(), 100_200e8);
+        assertEq(jWrapMUSDC.getIndex(), 1003000999001083369);
 
         vm.startPrank(alice);
         jWrapMUSDC.approve(address(jWrapMUSDC), 50000e8);
         jWrapMUSDC.withdraw(50000e8);
-        
+        // 50150.04995005
+        assertEq(jWrapMUSDC.totalDeposit(), 5004995004995);
         assertEq(mUsdc.balanceOf(alice), 5015004995005);
+        assertEq(jWrapMUSDC.getIndex(), 1003000999001166905);
         vm.stopPrank();
 
         jWrapMUSDC.refundMUSDC();
         assertEq(mUsdc.balanceOf(address(this)), 0);
 
-        jWrapMUSDC.claimRewardAndSwap(1e18, 1e6, param);
-        assertEq(jWrapMUSDC.rewardAdd(), 300e8);
-        
+        vm.startPrank(bob);
+        jWrapMUSDC.approve(address(jWrapMUSDC), 4990019960079);
+        jWrapMUSDC.withdraw(4990019960079);
+
+        assertEq(mUsdc.balanceOf(bob), 5004995004994);
 
     }
 }

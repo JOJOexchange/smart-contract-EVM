@@ -67,7 +67,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
         if (totalSupply() == 0) {
             return 1e18;
         } else {
-            return SignedDecimalMath.decimalDiv(totalDeposit + rewardAdd, totalSupply());
+            return SignedDecimalMath.decimalDiv(totalDeposit, totalSupply());
         }
     }
 
@@ -88,7 +88,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
     }
 
     function refundMUSDC() external onlyOwner {
-        IERC20(mUSDC).safeTransfer(owner(), IERC20(mUSDC).balanceOf(address(this)) - totalDeposit - rewardAdd);
+        IERC20(mUSDC).safeTransfer(owner(), IERC20(mUSDC).balanceOf(address(this)) - totalDeposit);
     } 
 
     function claimReward() public onlyOwner returns(uint256) {
@@ -125,6 +125,7 @@ contract JWrapMUSDC is Ownable, ERC20 {
         IERC20(usdc).approve(address(mUSDC), usdcAmount);
         IMUSDC(mUSDC).mint(usdcAmount);
         uint256 receivedAmount = IERC20(mUSDC).balanceOf(address(this)) - mUSDCReserve;
+        totalDeposit += receivedAmount;
         rewardAdd += receivedAmount;
         emit SwapToken(usdc, mUSDC, usdcAmount, receivedAmount);
     }

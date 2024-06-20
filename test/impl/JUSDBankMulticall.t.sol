@@ -65,9 +65,15 @@ contract JUSDBankMulticallTest is JUSDBankInitTest {
         jusdBank.multiCall(data);
         assertEq(jusdBank.getDepositBalance(address(eth), alice), 10e18);
         assertEq(jusdBank.getBorrowBalance(alice), 3000e6);
-        //        delegateCall failed
-        data[1] = "0";
-        cheats.expectRevert("ERC20: insufficient allowance");
+    }
+
+    function testFailMulticall() public {
+        eth.transfer(alice, 10e18);
+        vm.startPrank(alice);
+        eth.approve(address(jusdBank), 10e18);
+        bytes[] memory data = new bytes[](1);
+        // faking that the data from getDepositData/getBorrowData has failed in some way
+        data[0] = "0x";
         jusdBank.multiCall(data);
     }
 

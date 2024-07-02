@@ -5,6 +5,8 @@
 
 pragma solidity ^0.8.9;
 
+import "./JOJODealer.sol";
+import "./libraries/EIP712.sol";
 import "./libraries/Types.sol";
 import "./libraries/Trading.sol";
 import "./libraries/SignedDecimalMath.sol";
@@ -13,13 +15,18 @@ import "./interfaces/IPerpetual.sol";
 import "./interfaces/internal/IPriceSource.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract PriceFollowingOrder is Ownable {
+contract PriceFollowOrder is Ownable {
 
     using SignedDecimalMath for int256;
     
     int256 public maxLeverage;
     address public jojoDealer;
     mapping(address => address) marketPriceSource;
+
+    constructor(address _jojoDealer, int256 _maxLeverage) {
+        jojoDealer = _jojoDealer;
+        maxLeverage = _maxLeverage;
+    }
 
     // Function to encode Order struct into bytes
     function encodeOrder(Types.Order memory order) public pure returns (bytes memory) {
@@ -33,17 +40,25 @@ contract PriceFollowingOrder is Ownable {
         return Types.Order(perp, signer, paperAmount, creditAmount, info);
     }
 
-    function setMaxleverage(int256 _maxLeverage) external {
+    function setMaxleverage(int256 _maxLeverage) external onlyOwner {
         maxLeverage = _maxLeverage;
     }
 
+    function setPrice(address perp, address oracle) external onlyOwner {
+        marketPriceSource[perp] = oracle;
+    }
+
     function withdraw(uint256 primaryAmount, uint256 secondaryAmount, bytes memory param) external onlyOwner {
-        IDealer(jojoDealer).fastWithdraw(address(this), owner(), primaryAmount, secondaryAmount, false, param);
+        JOJODealer(jojoDealer).fastWithdraw(address(this), owner(), primaryAmount, secondaryAmount, false, param);
     }
 
     function isValidSignature(bytes32 hash, bytes calldata data) public view returns (bytes4 magicValue) {
         Types.Order memory order = decodeOrder(data);
-        require(hash == Trading._structHash(order));
+
+        bytes32 domainSeparator = JOJODealer(jojoDealer).domainSeparator();
+        bytes32 orderHash = EIP712._hashTypedDataV4(domainSeparator, Trading._structHash(order));
+
+        require(hash == orderHash, "hash is not the same");
         // check price
         uint256 oraclePrice = IPriceSource(marketPriceSource[order.perp]).getMarkPrice();
         uint256 orderPrice = int256(order.creditAmount * 1e18 / order.paperAmount).abs();

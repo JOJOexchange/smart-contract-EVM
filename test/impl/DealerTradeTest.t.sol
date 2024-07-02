@@ -182,6 +182,60 @@ contract TradeTest is Checkers {
         assertEq(maintenanceMargin1, 1_000_000e6);
     }
 
+
+    function depositandtrade() public {
+        vm.startPrank(traders[0]);
+        jojoDealer.deposit(0, 1_000_000e6, traders[0]);
+        vm.stopPrank();
+
+        vm.startPrank(traders[1]);
+        jojoDealer.deposit(0, 1_000_000e6, address(priceFollow));
+        vm.stopPrank();
+
+        priceFollow.setPrice(address(perpList[0]), address(priceSourceList[0]));
+        priceFollow.setMaxleverage(10e18);
+    }
+
+    function testTradePriceFollowOrder() public {
+        depositandtrade();
+        
+        (Types.Order memory order1, bytes memory signature1) =
+            buildOrder(traders[0], tradersKey[0], 1e18, -30_000e6, address(perpList[0]));
+
+        int64 makerFeeRate = 1e14;
+        int64 takerFeeRate = 5e14;
+        bytes memory infoBytes =
+            abi.encodePacked(makerFeeRate, takerFeeRate, uint64(block.timestamp), uint64(block.timestamp));
+        Types.Order memory order2 = Types.Order({
+            perp: address(perpList[0]),
+            signer: address(priceFollow),
+            paperAmount: -1e18,
+            creditAmount: 30_000e6,
+            info: bytes32(infoBytes)
+        });
+        
+        bytes memory signature2 = priceFollow.encodeOrder(order2);
+        Types.Order[] memory orderList = new Types.Order[](2);
+        orderList[0] = order1;
+        orderList[1] = order2;
+        bytes[] memory signatureList = new bytes[](2);
+        signatureList[0] = signature1;
+        signatureList[1] = signature2;
+        uint256[] memory matchPaperAmount = new uint256[](2);
+        matchPaperAmount[0] = 1e18;
+        matchPaperAmount[1] = 1e18;
+
+        bytes memory tradeData = abi.encode(orderList, signatureList, matchPaperAmount);
+        perpList[0].trade(tradeData);
+
+        (int256 trader0Paper, int256 trader0Credit) = perpList[0].balanceOf(traders[0]);
+        (int256 trader1Paper, int256 trader1Credit) = perpList[0].balanceOf(address(priceFollow));
+        assertEq(trader0Paper, 1e18);
+        assertEq(trader0Credit, -30_015e6);
+        assertEq(trader1Paper, -1e18);
+        assertEq(trader1Credit, 29_997e6);
+    }
+
     function testLiquidtionTradeFailed() public {
         before();
         vm.startPrank(traders[0]);

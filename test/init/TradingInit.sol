@@ -9,8 +9,9 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "forge-std/Test.sol";
 import "../../src/JOJODealer.sol";
 import "../../src/DegenDealer.sol";
-import "../../src/libraries/Types.sol";
 import "../../src/Perpetual.sol";
+import "../../src/PriceFollowOrder.sol";
+import "../../src/libraries/Types.sol";
 import "../../src/support/TestERC20.sol";
 import "../../src/support/TestMarkPriceSource.sol";
 import "../utils/EIP712Test.sol";
@@ -35,6 +36,7 @@ contract TradingInit is Test {
     Perpetual[] internal perpList;
     TestMarkPriceSource[] internal priceSourceList;
     DegenDealer public degenDealer;
+    PriceFollowOrder public priceFollow;
 
     address[] internal traders;
     address public insurance;
@@ -199,5 +201,7 @@ contract TradingInit is Test {
         priceSourceList[0].setMarkPrice(30_000e6);
         priceSourceList[1].setMarkPrice(2000e6);
         initDegenDealer();
+
+        priceFollow = new PriceFollowOrder(address(jojoDealer), 10);
     }
 }

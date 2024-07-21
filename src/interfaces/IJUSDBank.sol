@@ -44,7 +44,7 @@ interface IJUSDBank {
     /// @param liquidatedTrader: is the trader to be liquidated
     /// @param liquidationCollateral: is the liquidated collateral type
     /// @param liquidator: is who liquidate others
-    /// @param liquidationAmount: is the collateral amount liqidator want to take
+    /// @param liquidationAmount: is the collateral amount liquidator want to take
     /// @param param: is the customized param passed by users. During the code of liquidation, system will
     /// call flashloan function so that users can pass any param they want to do more operations.
     /// @param expectPrice: expect liquidate amount

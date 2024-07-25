@@ -3,3 +3,4 @@
 forge-std/=lib/forge-std/src/
 @solmate/=lib/solmate/src/
 @moonwell/=lib/moonwell-contracts-v2/src/
+@brevis/=node_modules/brevis-contracts/contracts/

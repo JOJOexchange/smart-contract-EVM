@@ -10,9 +10,6 @@
 [submodule "lib/moonwell-contracts-v2"]
 	path = lib/moonwell-contracts-v2
 	url = https://github.com/moonwell-fi/moonwell-contracts-v2
-[submodule "lib/contracts"]
-	path = lib/contracts
-	url = https://github.com/aerodrome-finance/contracts
 [submodule "lib/brevis-contracts"]
 	path = lib/brevis-contracts
 	url = https://github.com/brevis-network/brevis-contracts

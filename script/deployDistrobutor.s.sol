@@ -16,9 +16,9 @@ contract MerkleDistributorWithDeadlineScript is Script {
             // token
             0xA42589C591f8AE08B0e2C2C18439d72628a66c3E,
             // root
-            0x57fcb53c74dc2f33032c78952da7594f2ccaf3c58e4ad5fd32ab524234a0bc11,
+            0xdd456584bb08073476d98226fcacbce40633adbf1b7fe4e0ad4cef1f462e98b6,
             // timestamp
-            1_724_500_800
+            1724860800
         );
         vm.stopBroadcast();
     }

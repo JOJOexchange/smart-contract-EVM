@@ -6,8 +6,8 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@brevis/sdk/interface/IBrevisProof.sol";
-import "@brevis/sdk/apps/framework/BrevisApp.sol";
+import "./libraries/brevis/IBrevisProof.sol";
+import "./libraries/brevis/BrevisApp.sol";
 import "./interfaces/internal/IPriceSource.sol";
 import "./interfaces/IDealer.sol";
 import "./interfaces/IPerpetual.sol";

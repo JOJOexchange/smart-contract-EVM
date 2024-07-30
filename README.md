@@ -170,7 +170,7 @@ Two lending system examples include:
 
 ## Funding Rate Arbitrage
 
-Comming soon
+Coming soon
 
 ## Other Components
 

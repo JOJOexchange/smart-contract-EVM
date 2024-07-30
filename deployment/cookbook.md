@@ -1,6 +1,6 @@
 # Initial Deployment Workflow
 
-1. Deploy secondary asset. Secondary asset should have the same decimals with primary asset. Secondary asset is a simple ownable mintable ERC20 token.
+1. Deploy secondary asset. Secondary asset should have the same decimals as primary asset. Secondary asset is a simple ownable mintable ERC20 token.
 
 2. Set up mark price source. Usually a proxy that forwards 3rd party (e.g chainlink) price source. Be aware of decimals!
 

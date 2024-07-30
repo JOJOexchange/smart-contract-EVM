@@ -174,7 +174,7 @@ library Liquidation {
 
     /// @notice Using a fixed discount price model.
     /// Charge fee from liquidated trader.
-    /// Will limit you liquidation request to the position size.
+    /// Will limit your liquidation request to the position size.
     function getLiquidateCreditAmount(
         Types.State storage state,
         address perp,

@@ -5,7 +5,7 @@
 
 pragma solidity ^0.8.19;
 
-/// @notice JUSDExchange is an exchange system that allow users to exchange USDC to JUSD in 1:1
+/// @notice JUSDExchange is an exchange system that allows users to exchange USDC to JUSD in 1:1
 interface IJUSDExchange {
     /// @notice in buyJUSD function, users can buy JUSD using USDC
     /// @param amount: the amount of JUSD the users want to buy

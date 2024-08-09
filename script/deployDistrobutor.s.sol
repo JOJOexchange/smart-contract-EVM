@@ -10,15 +10,15 @@ contract MerkleDistributorWithDeadlineScript is Script {
     function test() public { }
 
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
+        uint256 deployerPrivateKey = vm.envUint("JOJO_BASE_TEST_DEPLOYER_PK");
         vm.startBroadcast(deployerPrivateKey);
         new MerkleDistributorWithDeadline(
             // token
-            0xe98cffA80f32354517948536CDD5947bBe95108F,
+            0xA42589C591f8AE08B0e2C2C18439d72628a66c3E,
             // root
-            0xeb1d63298ea0b23261ab304d07f058c1ce7fd1e2f25530d90f927d931cd4b2f8,
+            0xdd456584bb08073476d98226fcacbce40633adbf1b7fe4e0ad4cef1f462e98b6,
             // timestamp
-            1_705_928_400
+            1724860800
         );
         vm.stopBroadcast();
     }

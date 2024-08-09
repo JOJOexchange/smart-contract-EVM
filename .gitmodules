@@ -13,3 +13,6 @@
 [submodule "lib/chainlink"]
 	path = lib/chainlink
 	url = https://github.com/smartcontractkit/chainlink
+[submodule "lib/brevis-contracts"]
+	path = lib/brevis-contracts
+	url = https://github.com/brevis-network/brevis-contracts

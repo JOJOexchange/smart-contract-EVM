@@ -10,3 +10,6 @@
 [submodule "lib/moonwell-contracts-v2"]
 	path = lib/moonwell-contracts-v2
 	url = https://github.com/moonwell-fi/moonwell-contracts-v2
+[submodule "lib/chainlink"]
+	path = lib/chainlink
+	url = https://github.com/smartcontractkit/chainlink

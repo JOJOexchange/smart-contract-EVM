@@ -4,12 +4,15 @@
 .idea
 .vscode
 
+forge.config
+
+
 artifacts/
 cache/
 node_modules/
 coverage/
 interact/
-joscelynTest/
+script/history.txt
 broadcast/
 # VIM
 *.swo

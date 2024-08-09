@@ -12,7 +12,7 @@ contract PerpetualScript is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
         vm.startBroadcast(deployerPrivateKey);
-        new Perpetual(0xFfD3B82971dAbccb3219d16b6EB2DB134bf55300);
+        new Perpetual(0x2f7c3cF9D9280B165981311B822BecC4E05Fe635);
         vm.stopBroadcast();
     }
 }

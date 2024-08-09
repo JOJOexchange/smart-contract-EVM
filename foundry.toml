@@ -3,6 +3,7 @@ src = "src"
 out = "out"
 libs = ["lib"]
 solc_version = "0.8.19"
+
 [fmt]
   bracket_spacing = true
   int_types = "long"

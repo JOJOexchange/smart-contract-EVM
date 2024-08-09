@@ -14,14 +14,14 @@ contract OracleAdaptorScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         new OracleAdaptor(
             // source
-            0x56a43EB56Da12C0dc1D972ACb089c06a5dEF8e69,
+            0xE70f2D34Fd04046aaEC26a198A35dD8F2dF5cd92,
             // decimalCorrection
             20,
             //heartbeatInterval
             86_400,
             86_400,
             // usdc
-            0x0153002d20B96532C639313c2d54c3dA09109309,
+            0x7e860098F58bBFC8648a4311b374B1D669a2bc6B,
             5e16
         );
         vm.stopBroadcast();

@@ -69,11 +69,9 @@ contract ChainlinkDSPortal is Ownable {
         // Verify the report
         bytes memory verifiedReportData = IVerifierProxy(dsVerifyProxy).verify(
             unverifiedReport,
-            abi.encode(address(this)) // todo need a token address here
+            abi.encode(0x4200000000000000000000000000000000000006) // todo need a token address here
         );
 
-        // Decode verified report data into a Report struct
-        // If your report is a PremiumReport, you should decode it as a PremiumReport
         Report memory verifiedReport = abi.decode(verifiedReportData, (Report));
         return verifiedReport;
     }
@@ -167,7 +165,7 @@ contract ChainlinkDSPortal is Ownable {
         }
         // Get DS report price
         uint256 latestTimestamp;
-        require(DSReport.validFromTimestamp > 0 || feedUpdatedAt > 0);
+        require(DSReport.validFromTimestamp > 0 || feedUpdatedAt > 0, "NO_VALID_DATA");
         if (DSReport.validFromTimestamp > feedUpdatedAt) {
             latestTimestamp = DSReport.validFromTimestamp;
             price =
@@ -193,7 +191,8 @@ contract ChainlinkDSAdaptor {
     address portal;
     bytes32 key;
 
-    constructor(string memory tradingPairName) {
+    constructor(string memory tradingPairName, address _portal) {
+        portal = _portal;
         key = keccak256(abi.encodePacked(tradingPairName));
     }
 

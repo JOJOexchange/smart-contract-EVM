@@ -17,4 +17,14 @@ solc_version = "0.8.19"
 [env]
 dotenv = ".env"
 
+remappings = [
+  "@openzeppelin/=lib/openzeppelin-contracts/",
+  "@pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity",
+  "forge-std/=lib/forge-std/src/",
+  "@solmate/=lib/solmate/src/",
+  "@moonwell/=lib/moonwell-contracts-v2/src/",
+  "@brevis/=node_modules/brevis-contracts/contracts/",
+  "@chainlink/=lib/chainlink/"
+]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

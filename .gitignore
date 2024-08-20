@@ -1,6 +1,8 @@
 .coverage*
 .DS_Store
 .env
+.env.base_mainnet
+.env.base_testnet
 .idea
 .vscode
 

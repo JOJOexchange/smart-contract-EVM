@@ -12,8 +12,7 @@ import "@chainlink/contracts/src/v0.8/llo-feeds/interfaces/IRewardManager.sol";
 import "@chainlink/contracts/src/v0.8/llo-feeds/interfaces/IVerifierFeeManager.sol";
 import "../interfaces/internal/IChainlink.sol";
 
-// https://docs.chain.link/data-streams/tutorials/streams-direct/streams-direct-onchain-verification
-
+//Inherit from https://docs.chain.link/data-streams/tutorials/streams-direct/streams-direct-onchain-verification
 struct Report {
     bytes32 feedId; // The feed ID the report has data for
     uint32 validFromTimestamp; // Earliest timestamp for which price is applicable
@@ -26,7 +25,7 @@ struct Report {
     int192 ask; // Simulated price impact of a sell order up to the X% depth of liquidity utilisation (8 or 18 decimals)
 }
 
-// Custom interfaces for IVerifierProxy and IFeeManager
+//Inherit from https://docs.chain.link/data-streams/tutorials/streams-direct/streams-direct-onchain-verification
 interface IVerifierProxy {
     /**
      * @notice Verifies that the data encoded has been signed.
@@ -59,6 +58,7 @@ interface IVerifierProxy {
     function s_feeManager() external view returns (IVerifierFeeManager);
 }
 
+//Inherit from https://docs.chain.link/data-streams/tutorials/streams-direct/streams-direct-onchain-verification
 interface IFeeManager {
     /**
      * @notice Calculates the fee and reward associated with verifying a report, including discounts for subscribers.
@@ -85,18 +85,33 @@ interface IFeeManager {
     function i_rewardManager() external view returns (address);
 }
 
-// correction decimal
+/**
+ * @title PriceSources
+ * @dev Struct to store information about price sources.
+ * This struct holds various details about a price source, including the Chainlink feed,
+ * decimal corrections, the last data stream report, and heartbeat intervals.
+ * DecimalsCorrection is used to adjust the decimal of Chainlink's price data to the decimal required by JOJO.
+ * This process is achieved through price * 1e18 / DecimalsCorrection.
+ * So, if we want to increase the decimal by 6 places, we should set DecimalsCorrection to 1e12.
+ * If we want to decrease the decimal by 12 places, we should set DecimalsCorrection to 1e30.
+ */
 struct PriceSources {
-    IChainlink chainlinkFeed;
-    uint256 feedDecimalsCorrection;
-    Report lastDSReport;
-    bytes32 DSFeedId;
-    uint256 DSRoundId;
-    uint256 DSDecimalCorrection;
-    uint256 heartBeat;
-    string name;
+    IChainlink chainlinkFeed; // The Chainlink feed interface for fetching price data
+    uint256 feedDecimalsCorrection; // Decimal correction factor for the Chainlink feed price
+    Report lastDSReport; // The last verified data stream report
+    bytes32 DSFeedId; // The feed ID for the data stream
+    uint256 DSRoundId; // The round ID for the data stream
+    uint256 DSDecimalCorrection; // Decimal correction factor for the data stream price
+    uint256 heartBeat; // Heartbeat interval to ensure data freshness
+    string name; // The name of the price source
 }
 
+/**
+ * @title ChainlinkDSPortal
+ * @dev This contract manages the Chainlink Data Stream Portal.
+ * This contract will manage the prices of multiple trading pairs, each with two price sources: chainlink feed and chainlink datastream. When querying prices, it will return the more recent one from these two sources..
+ * Only owner can add new price sources and verify reports.
+ */
 contract ChainlinkDSPortal is Ownable {
     // chainlink datastream proxy
     IVerifierProxy public immutable dsVerifyProxy;
@@ -105,10 +120,18 @@ contract ChainlinkDSPortal is Ownable {
     string[] public registeredNames;
     mapping(bytes32 => PriceSources) public priceSourcesMap;
 
-    // correct it to usdc price in right decimal
+    // The prices from pricesources are all calculated in USD, and the price of USDC needs to be considered as well, using Chainlink's USDC price.
     uint256 public immutable usdcHeartbeat;
     address public immutable usdcSource;
 
+    /**
+     * @dev Emitted when a new report is verified.
+     * @param current The current price.
+     * @param feedID The feed ID.
+     * @param roundId The round ID.
+     * @param updatedAt The timestamp when the answer was updated.
+     * @param name The name of the price source.
+     */
     event AnswerUpdated(
         int256 indexed current,
         bytes32 indexed feedID,
@@ -117,6 +140,12 @@ contract ChainlinkDSPortal is Ownable {
         string name
     );
 
+    /**
+     * @dev Constructor to initialize the contract state.
+     * @param _dsVerifyProxy The address of the Data Stream verification proxy.
+     * @param _usdcHeartbeat The heartbeat interval for USDC.
+     * @param _usdcSource The address of the USDC data source.
+     */
     constructor(
         address _dsVerifyProxy,
         uint256 _usdcHeartbeat,
@@ -127,14 +156,24 @@ contract ChainlinkDSPortal is Ownable {
         usdcSource = _usdcSource;
     }
 
-    function nameToKey(string memory name) public pure returns (bytes32) {
+    /**
+     * @dev Converts a name to a unique key using keccak256 hash.
+     * @param name The name to be converted.
+     * @return key The unique key.
+     */
+    function nameToKey(string memory name) public pure returns (bytes32 key) {
         return keccak256(abi.encodePacked(name));
     }
 
+    /**
+     * @dev Verifies a report.
+     * @param unverifiedReport The raw report to be verified.
+     * @return verifiedReport The verified report.
+     */
     function _verifyReport(
         bytes memory unverifiedReport
-    ) private returns (Report memory) {
-        // Report verification fees
+    ) private returns (Report memory verifiedReport) {
+        // Report verification fees, paid in Native token
         IFeeManager feeManager = IFeeManager(
             address(dsVerifyProxy.s_feeManager())
         );
@@ -163,12 +202,19 @@ contract ChainlinkDSPortal is Ownable {
             abi.encode(feeTokenAddress)
         );
 
-        Report memory verifiedReport = abi.decode(verifiedReportData, (Report));
-        return verifiedReport;
+        verifiedReport = abi.decode(verifiedReportData, (Report));
     }
 
-    function getEmptyReport() private pure returns (Report memory) {
-        Report memory emptyReport = Report({
+    /**
+     * @dev Returns an empty report.
+     * @return emptyReport The empty report.
+     */
+    function _getEmptyReport()
+        private
+        pure
+        returns (Report memory emptyReport)
+    {
+        emptyReport = Report({
             feedId: bytes32(0),
             validFromTimestamp: 0,
             observationsTimestamp: 0,
@@ -179,10 +225,18 @@ contract ChainlinkDSPortal is Ownable {
             bid: 0,
             ask: 0
         });
-        return emptyReport;
     }
 
-    function newPriceSource(
+    /**
+     * @dev Adds a new price source.
+     * @param name The name of the price source.
+     * @param _chainlinkFeed The address of the Chainlink feed.
+     * @param _DSFeedId The Data Stream feed ID.
+     * @param _feedDecimalCorrection The decimal correction for the feed.
+     * @param _DSDecimalCorrection The decimal correction for the Data Stream.
+     * @param _heartBeat The heartbeat interval for the price source.
+     */
+    function newPriceSources(
         string memory name,
         address _chainlinkFeed,
         bytes32 _DSFeedId,
@@ -197,7 +251,7 @@ contract ChainlinkDSPortal is Ownable {
         );
         registeredNames.push(name);
 
-        Report memory emptyReport = getEmptyReport();
+        Report memory emptyReport = _getEmptyReport();
 
         priceSourcesMap[key] = PriceSources({
             chainlinkFeed: IChainlink(_chainlinkFeed),
@@ -211,7 +265,17 @@ contract ChainlinkDSPortal is Ownable {
         });
     }
 
-    function resetPriceSource(
+    /**
+     * @dev Resets an existing price source.
+     * @param name The name of the price source.
+     * @param _chainlinkFeed The address of the Chainlink feed.
+     * @param _DSFeedId The Data Stream feed ID.
+     * @param _feedDecimalCorrection The decimal correction for the feed.
+     * @param _DSDecimalCorrection The decimal correction for the Data Stream.
+     * @param _heartBeat The heartbeat interval for the price source.
+     * @param _resetReport Whether to reset the last report.
+     */
+    function resetPriceSources(
         string memory name,
         address _chainlinkFeed,
         bytes32 _DSFeedId,
@@ -229,10 +293,15 @@ contract ChainlinkDSPortal is Ownable {
         priceSources.DSDecimalCorrection = 10 ** _DSDecimalCorrection;
         priceSources.heartBeat = _heartBeat;
         if (_resetReport) {
-            priceSources.lastDSReport = getEmptyReport();
+            priceSources.lastDSReport = _getEmptyReport();
         }
     }
 
+    /**
+     * @dev Verifies multiple reports.
+     * @param names The names of the price sources.
+     * @param unverifiedReports The reports to be verified.
+     */
     function verifyReports(
         string[] memory names,
         bytes[] memory unverifiedReports
@@ -256,7 +325,7 @@ contract ChainlinkDSPortal is Ownable {
         }
     }
 
-    function getUSDCPrice() public view returns (uint256) {
+    function getRawUSDCPrice() public view returns (uint256) {
         (, int256 usdcPrice, , uint256 usdcUpdatedAt, ) = IChainlink(usdcSource)
             .latestRoundData();
 
@@ -271,8 +340,7 @@ contract ChainlinkDSPortal is Ownable {
     function getPriceByName(
         string memory name
     ) public view returns (uint256 price) {
-        bytes32 key = nameToKey(name);
-        return getPriceByKey(key);
+        return getPriceByKey(nameToKey(name));
     }
 
     function getPriceByKey(bytes32 key) public view returns (uint256 price) {
@@ -310,7 +378,7 @@ contract ChainlinkDSPortal is Ownable {
             "ORACLE_HEARTBEAT_FAILED"
         );
 
-        return (price * 1e8) / getUSDCPrice();
+        return (price * 1e8) / getRawUSDCPrice();
     }
 
     function getAllPrices()
@@ -331,19 +399,32 @@ contract ChainlinkDSPortal is Ownable {
         }
     }
 
-    function getReportByName(string memory name) public view returns (Report memory) {
+    function getReportByName(
+        string memory name
+    ) public view returns (Report memory) {
         bytes32 key = nameToKey(name);
         return priceSourcesMap[key].lastDSReport;
     }
 }
 
+/**
+ * @title ChainlinkDSAdaptor
+ * @dev This contract adapts the Chainlink Data Stream Portal for specific trading pairs.
+ * This contract is directly registered in JOJODealer.
+ */
 contract ChainlinkDSAdaptor {
     address portal;
     bytes32 key;
 
-    constructor(string memory tradingPairName, address _portal) {
+
+    /**
+     * @dev Constructor to initialize the adaptor.
+     * @param _tradingPairName The name of the trading pair.
+     * @param _portal The address of the Chainlink Data Stream Portal.
+     */
+    constructor(string memory _tradingPairName, address _portal) {
         portal = _portal;
-        key = keccak256(abi.encodePacked(tradingPairName));
+        key = keccak256(abi.encodePacked(_tradingPairName));
     }
 
     function getMarkPrice() external view returns (uint256) {

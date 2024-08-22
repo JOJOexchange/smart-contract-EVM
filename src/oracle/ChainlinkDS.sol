@@ -8,7 +8,6 @@ pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "@chainlink/contracts/src/v0.8/llo-feeds/interfaces/IRewardManager.sol";
 import "@chainlink/contracts/src/v0.8/llo-feeds/interfaces/IVerifierFeeManager.sol";
 import "../interfaces/internal/IChainlink.sol";
 
@@ -178,10 +177,6 @@ contract ChainlinkDSPortal is Ownable {
             address(dsVerifyProxy.s_feeManager())
         );
 
-        IRewardManager rewardManager = IRewardManager(
-            address(feeManager.i_rewardManager())
-        );
-
         (, /* bytes32[3] reportContextData */ bytes memory reportData) = abi
             .decode(unverifiedReport, (bytes32[3], bytes));
 
@@ -193,8 +188,8 @@ contract ChainlinkDSPortal is Ownable {
             feeTokenAddress
         );
 
-        // Approve rewardManager to spend this contract's balance in fees
-        IERC20(feeTokenAddress).approve(address(rewardManager), fee.amount);
+        // Approve feeManager to spend this contract's balance in fees
+        IERC20(feeTokenAddress).approve(address(feeManager), fee.amount);
 
         // Verify the report
         bytes memory verifiedReportData = IVerifierProxy(dsVerifyProxy).verify(
@@ -309,11 +304,17 @@ contract ChainlinkDSPortal is Ownable {
         for (uint256 i = 0; i < names.length; i++) {
             bytes32 key = nameToKey(names[i]);
             PriceSources storage priceSources = priceSourcesMap[key];
-            priceSources.lastDSReport = _verifyReport(unverifiedReports[i]);
+            Report memory newReport = _verifyReport(unverifiedReports[i]);
             require(
-                priceSources.lastDSReport.feedId == priceSources.DSFeedId,
+                newReport.validFromTimestamp >
+                    priceSources.lastDSReport.validFromTimestamp,
+                "INVALID_REPORT_TIMESTAMP"
+            );
+            require(
+                newReport.feedId == priceSources.DSFeedId,
                 "DS_FEED_ID_NOT_MATCH"
             );
+            priceSources.lastDSReport = _verifyReport(unverifiedReports[i]);
             priceSources.DSRoundId += 1;
             emit AnswerUpdated(
                 int256(priceSources.lastDSReport.price),
@@ -384,7 +385,7 @@ contract ChainlinkDSPortal is Ownable {
     function getAllPrices()
         public
         view
-        returns (string[] memory names, uint256[] memory prices)
+        returns (string[] memory names, uint256[] memory prices, uint256 rawUSDCPrice)
     {
         names = registeredNames;
         prices = new uint256[](registeredNames.length);
@@ -397,6 +398,7 @@ contract ChainlinkDSPortal is Ownable {
                 prices[i] = 0;
             }
         }
+        rawUSDCPrice = getRawUSDCPrice();
     }
 
     function getReportByName(
@@ -415,7 +417,6 @@ contract ChainlinkDSPortal is Ownable {
 contract ChainlinkDSAdaptor {
     address portal;
     bytes32 key;
-
 
     /**
      * @dev Constructor to initialize the adaptor.

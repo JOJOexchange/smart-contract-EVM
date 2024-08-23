@@ -102,6 +102,7 @@ struct PriceSources {
     uint256 DSRoundId; // The round ID for the data stream
     uint256 DSDecimalCorrection; // Decimal correction factor for the data stream price
     uint256 heartBeat; // Heartbeat interval to ensure data freshness
+    address adaptor; // The address of the ChainlinkDSAdaptor, which is registered in JOJODealer
     string name; // The name of the price source
 }
 
@@ -114,6 +115,7 @@ struct PriceSources {
 contract ChainlinkDSPortal is Ownable {
     // chainlink datastream proxy
     IVerifierProxy public immutable dsVerifyProxy;
+    address public reportSubmitter;
 
     // registered sources
     string[] public registeredNames;
@@ -147,12 +149,25 @@ contract ChainlinkDSPortal is Ownable {
      */
     constructor(
         address _dsVerifyProxy,
+        address _reportSubmitter,
         uint256 _usdcHeartbeat,
         address _usdcSource
     ) {
         dsVerifyProxy = IVerifierProxy(_dsVerifyProxy);
+        reportSubmitter = _reportSubmitter;
         usdcHeartbeat = _usdcHeartbeat;
         usdcSource = _usdcSource;
+    }
+
+    /**
+     * @dev Modifier to restrict access to the owner or the report submitter.
+     */
+    modifier onlyOwnerOrReportSubmitter() {
+        require(
+            msg.sender == owner() || msg.sender == reportSubmitter,
+            "Not authorized"
+        );
+        _;
     }
 
     /**
@@ -162,6 +177,14 @@ contract ChainlinkDSPortal is Ownable {
      */
     function nameToKey(string memory name) public pure returns (bytes32 key) {
         return keccak256(abi.encodePacked(name));
+    }
+
+    /**
+     * @dev Allows the owner to set the report submitter address.
+     * @param _reportSubmitter The address to be set as the report submitter.
+     */
+    function setReportSubmitter(address _reportSubmitter) external onlyOwner {
+        reportSubmitter = _reportSubmitter;
     }
 
     /**
@@ -245,7 +268,7 @@ contract ChainlinkDSPortal is Ownable {
             "NAME_ALREADY_EXIST"
         );
         registeredNames.push(name);
-
+        address adaptor = address(new ChainlinkDSAdaptor(name, address(this)));
         Report memory emptyReport = _getEmptyReport();
 
         priceSourcesMap[key] = PriceSources({
@@ -256,6 +279,7 @@ contract ChainlinkDSPortal is Ownable {
             DSRoundId: 0,
             DSDecimalCorrection: 10 ** _DSDecimalCorrection,
             heartBeat: _heartBeat,
+            adaptor: adaptor,
             name: name
         });
     }
@@ -300,7 +324,7 @@ contract ChainlinkDSPortal is Ownable {
     function verifyReports(
         string[] memory names,
         bytes[] memory unverifiedReports
-    ) public onlyOwner {
+    ) public onlyOwnerOrReportSubmitter {
         for (uint256 i = 0; i < names.length; i++) {
             bytes32 key = nameToKey(names[i]);
             PriceSources storage priceSources = priceSourcesMap[key];
@@ -385,7 +409,11 @@ contract ChainlinkDSPortal is Ownable {
     function getAllPrices()
         public
         view
-        returns (string[] memory names, uint256[] memory prices, uint256 rawUSDCPrice)
+        returns (
+            string[] memory names,
+            uint256[] memory prices,
+            uint256 rawUSDCPrice
+        )
     {
         names = registeredNames;
         prices = new uint256[](registeredNames.length);
@@ -406,6 +434,13 @@ contract ChainlinkDSPortal is Ownable {
     ) public view returns (Report memory) {
         bytes32 key = nameToKey(name);
         return priceSourcesMap[key].lastDSReport;
+    }
+
+    function getPriceSourcesByName(
+        string memory name
+    ) public view returns (PriceSources memory) {
+        bytes32 key = nameToKey(name);
+        return priceSourcesMap[key];
     }
 }
 

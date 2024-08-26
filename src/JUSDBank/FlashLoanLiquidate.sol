@@ -5,17 +5,14 @@
 
 pragma solidity ^0.8.19;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IJUSDBank.sol";
-import "./interfaces/IJUSDExchange.sol";
-import "./libraries/SignedDecimalMath.sol";
+import "../interfaces/IJUSDBank.sol";
+import "../interfaces/IJUSDExchange.sol";
+import "../libraries/SignedDecimalMath.sol";
 
-interface MTokenInterface {
-    function redeem(uint redeemTokens) external returns (uint);
-}
-
-contract FlashLoanLiquidateMtoken {
+contract FlashLoanLiquidate is Ownable {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
@@ -24,6 +21,7 @@ contract FlashLoanLiquidateMtoken {
     address public jusdBank;
     address public jusdExchange;
     address public insurance;
+    mapping(address => bool) public whiteListContract;
 
     struct LiquidateData {
         uint256 actualCollateral;
@@ -41,12 +39,30 @@ contract FlashLoanLiquidateMtoken {
         insurance = _insurance;
     }
 
+    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
+        whiteListContract[targetContract] = isValid;
+    }
+
     function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external {
         (LiquidateData memory liquidateData, bytes memory originParam) = abi.decode(param, (LiquidateData, bytes));
-        (address liquidator, uint256 minReceive) =
-            abi.decode(originParam, (address, uint256));
+        (address approveTarget, address swapTarget, address liquidator, uint256 minReceive, bytes memory data) =
+            abi.decode(originParam, (address, address, address, uint256, bytes));
 
-        MTokenInterface(asset).redeem(amount);
+        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
+        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
+
+        IERC20(asset).safeApprove(approveTarget, 0);
+        IERC20(asset).safeApprove(approveTarget, amount);
+        (bool success,) = swapTarget.call(data);
+        if (success == false) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize()
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
+
         uint256 USDCAmount = IERC20(USDC).balanceOf(address(this));
         require(USDCAmount >= minReceive, "receive amount is too small");
         IERC20(USDC).approve(jusdExchange, liquidateData.actualLiquidated);

@@ -5,7 +5,7 @@
 
 pragma solidity ^0.8.19;
 
-import "./libraries/SignedDecimalMath.sol";
+import "../libraries/SignedDecimalMath.sol";
 import "./JUSDBank.sol";
 
 /// @notice User's multi-step operation on the JUSDBank like: deposit and borrow

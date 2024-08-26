@@ -6,23 +6,23 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./DegenDealer.sol";
+import "../interfaces/IDealer.sol";
 
 interface IWETH {
     function deposit() external payable;
 }
 
-contract DepositStableCoinToDegenDealer is Ownable {
+contract DepositStableCoinToDealer is Ownable {
     using SafeERC20 for IERC20;
 
-    address public immutable degenDealer;
+    address public immutable jojoDealer;
     address public immutable usdc;
     address public immutable weth;
     mapping(address => bool) public whiteListContract;
 
-    constructor(address _degenDealer, address _weth) {
-        degenDealer = _degenDealer;
-        usdc = DegenDealer(degenDealer).primaryAsset();
+    constructor(address _JOJODealer, address _usdc, address _weth) {
+        jojoDealer = _JOJODealer;
+        usdc = _usdc;
         weth = _weth;
     }
 
@@ -63,7 +63,7 @@ contract DepositStableCoinToDegenDealer is Ownable {
 
         uint256 usdcAmount = IERC20(usdc).balanceOf(address(this));
         require(usdcAmount >= minReceive, "receive amount is too small");
-        IERC20(usdc).approve(degenDealer, usdcAmount);
-        DegenDealer(degenDealer).deposit(msg.sender, to, usdcAmount);
+        IERC20(usdc).approve(jojoDealer, usdcAmount);
+        IDealer(jojoDealer).deposit(usdcAmount, 0, to);
     }
 }

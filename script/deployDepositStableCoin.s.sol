@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "../lib/forge-std/src/Script.sol";
-import "../src/DepositStableCoinToDealer.sol";
+import "../src/helpers/DepositStableCoinToDealer.sol";
 
 contract DepositStableCoinToDealerScript is Script {
     // add this to be excluded from coverage report

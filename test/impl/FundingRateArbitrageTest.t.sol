@@ -7,8 +7,8 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "forge-std/Test.sol";
-import "../../src/FundingRateArbitrage.sol";
-import "../../src/JUSDBank.sol";
+import "../../src/fundingRateArbitrage/FundingRateArbitrage.sol";
+import "../../src/JUSDBank/JUSDBank.sol";
 import "../../src/JOJODealer.sol";
 import "../../src/Perpetual.sol";
 import "../../src/libraries/Types.sol";

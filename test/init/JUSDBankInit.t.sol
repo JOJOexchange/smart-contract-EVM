@@ -6,15 +6,15 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Test.sol";
-import "../../src/FlashLoanRepay.sol";
+import "../../src/JUSDBank/FlashLoanRepay.sol";
 import "../../src/JOJODealer.sol";
-import "../../src/JUSDBank.sol";
-import "../../src/JUSDExchange.sol";
-import "../../src/JUSDRepayHelper.sol";
+import "../../src/JUSDBank/JUSDBank.sol";
+import "../../src/JUSDBank/JUSDExchange.sol";
+import "../../src/JUSDBank/JUSDRepayHelper.sol";
 import "../../src/token/JUSD.sol";
 import "../../src/oracle/EmergencyOracle.sol";
 import "../../src/support/MockSwap.sol";
-import "../../src/GeneralRepay.sol";
+import "../../src/JUSDBank/GeneralRepay.sol";
 import "../../src/libraries/Types.sol";
 import "../../src/subaccount/SubaccountFactory.sol";
 import "../../src/support/TestERC20.sol";

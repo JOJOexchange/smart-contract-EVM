@@ -5,14 +5,18 @@
 
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IJUSDBank.sol";
-import "./interfaces/IJUSDExchange.sol";
-import "./libraries/SignedDecimalMath.sol";
+import "../interfaces/IJUSDBank.sol";
+import "../interfaces/IJUSDExchange.sol";
+import "../libraries/SignedDecimalMath.sol";
+import "../token/JWrapMUSDC.sol";
 
-contract FlashLoanLiquidate is Ownable {
+interface MTokenInter {
+    function redeem(uint256 redeemTokens) external returns (uint256);
+}
+
+contract FlashLoanLiquidateJWrapMUSDC {
     using SafeERC20 for IERC20;
     using SignedDecimalMath for uint256;
 
@@ -21,7 +25,7 @@ contract FlashLoanLiquidate is Ownable {
     address public jusdBank;
     address public jusdExchange;
     address public insurance;
-    mapping(address => bool) public whiteListContract;
+    address public jwrapMUSDC;
 
     struct LiquidateData {
         uint256 actualCollateral;
@@ -31,44 +35,41 @@ contract FlashLoanLiquidate is Ownable {
         uint256 liquidatedRemainUSDC;
     }
 
-    constructor(address _jusdBank, address _jusdExchange, address _USDC, address _JUSD, address _insurance) {
+    modifier onlyJusdBank() {
+        require(jusdBank == msg.sender, "Ownable: caller is not the jusdBank");
+        _;
+    }
+
+    constructor(
+        address _jusdBank,
+        address _jusdExchange,
+        address _USDC,
+        address _JUSD,
+        address _insurance,
+        address _jwrapMUSDC
+    ) {
         jusdBank = _jusdBank;
         jusdExchange = _jusdExchange;
         USDC = _USDC;
         JUSD = _JUSD;
         insurance = _insurance;
+        jwrapMUSDC = _jwrapMUSDC;
     }
 
-    function setWhiteListContract(address targetContract, bool isValid) public onlyOwner {
-        whiteListContract[targetContract] = isValid;
-    }
-
-    function JOJOFlashLoan(address asset, uint256 amount, address to, bytes calldata param) external {
+    function JOJOFlashLoan(address asset, uint256 amount, address liquidated, bytes calldata param) external onlyJusdBank {
         (LiquidateData memory liquidateData, bytes memory originParam) = abi.decode(param, (LiquidateData, bytes));
-        (address approveTarget, address swapTarget, address liquidator, uint256 minReceive, bytes memory data) =
-            abi.decode(originParam, (address, address, address, uint256, bytes));
-
-        require(whiteListContract[approveTarget], "approve target is not in the whitelist");
-        require(whiteListContract[swapTarget], "swap target is not in the whitelist");
-
-        IERC20(asset).safeApprove(approveTarget, 0);
-        IERC20(asset).safeApprove(approveTarget, amount);
-        (bool success,) = swapTarget.call(data);
-        if (success == false) {
-            assembly {
-                let ptr := mload(0x40)
-                let size := returndatasize()
-                returndatacopy(ptr, 0, size)
-                revert(ptr, size)
-            }
-        }
+        (address liquidator, uint256 minReceive) =
+            abi.decode(originParam, (address, uint256));
+        
+        uint256 mUSDCAmount = JWrapMUSDC(asset).withdraw(amount);
+        MTokenInter(JWrapMUSDC(asset).mUSDC()).redeem(mUSDCAmount);
 
         uint256 USDCAmount = IERC20(USDC).balanceOf(address(this));
         require(USDCAmount >= minReceive, "receive amount is too small");
         IERC20(USDC).approve(jusdExchange, liquidateData.actualLiquidated);
         IJUSDExchange(jusdExchange).buyJUSD(liquidateData.actualLiquidated, address(this));
         IERC20(JUSD).approve(jusdBank, liquidateData.actualLiquidated);
-        IJUSDBank(jusdBank).repay(liquidateData.actualLiquidated, to);
+        IJUSDBank(jusdBank).repay(liquidateData.actualLiquidated, liquidated);
         IERC20(USDC).safeTransfer(insurance, liquidateData.insuranceFee);
         if (liquidateData.liquidatedRemainUSDC != 0) {
             IERC20(USDC).safeTransfer(address(jusdBank), liquidateData.liquidatedRemainUSDC);

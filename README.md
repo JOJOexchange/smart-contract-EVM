@@ -134,7 +134,7 @@ See `newSubaccount()` in [SubaccountFactory.sol](./src/subaccount/SubaccountFact
 
 ## Lending System
 
-There are only one core smart contracts: [JUSDBank.sol](./src/JUSDBank.sol).
+There are only one core smart contracts: [JUSDBank.sol](./src/JUSDBank/JUSDBank.sol).
 
 - `JUSDBank.sol` is the core accounting sheet of the whole collateral lending system and contains all "external" functions.
 

@@ -5,10 +5,10 @@
 
 pragma solidity ^0.8.19;
 
-import "./interfaces/IJUSDBank.sol";
-import "./interfaces/internal/IPriceSource.sol";
+import "../interfaces/IJUSDBank.sol";
+import "../interfaces/internal/IPriceSource.sol";
+import "../libraries/SignedDecimalMath.sol";
 import "./JUSDBankStorage.sol";
-import "./libraries/SignedDecimalMath.sol";
 
 abstract contract JUSDView is JUSDBankStorage, IJUSDBank {
     using SignedDecimalMath for uint256;

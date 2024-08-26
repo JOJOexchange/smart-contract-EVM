@@ -5,14 +5,14 @@
 
 pragma solidity ^0.8.9;
 
-import "./JOJODealer.sol";
-import "./libraries/EIP712.sol";
-import "./libraries/Types.sol";
-import "./libraries/Trading.sol";
-import "./libraries/SignedDecimalMath.sol";
-import "./interfaces/IDealer.sol";
-import "./interfaces/IPerpetual.sol";
-import "./interfaces/internal/IPriceSource.sol";
+import "../JOJODealer.sol";
+import "../libraries/EIP712.sol";
+import "../libraries/Types.sol";
+import "../libraries/Trading.sol";
+import "../libraries/SignedDecimalMath.sol";
+import "../interfaces/IDealer.sol";
+import "../interfaces/IPerpetual.sol";
+import "../interfaces/internal/IPriceSource.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PriceFollowOrder is Ownable {

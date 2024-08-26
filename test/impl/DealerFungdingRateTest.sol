@@ -7,7 +7,7 @@ pragma solidity ^0.8.19;
 
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
-import "../../src/FundingRateUpdateLimiter.sol";
+import "../../src/fundingRateLimiter/FundingRateUpdateLimiter.sol";
 
 // Check dealer's fundingRate
 contract FundingRateTest is Checkers {

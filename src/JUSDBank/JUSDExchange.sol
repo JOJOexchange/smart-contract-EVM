@@ -7,9 +7,9 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IJUSDExchange.sol";
-import "./interfaces/IDealer.sol";
-import "./libraries/Errors.sol";
+import "../interfaces/IJUSDExchange.sol";
+import "../interfaces/IDealer.sol";
+import "../libraries/Errors.sol";
 
 contract JUSDExchange is IJUSDExchange, Ownable {
     using SafeERC20 for IERC20;

@@ -5,8 +5,8 @@
 
 pragma solidity ^0.8.19;
 
-import "./libraries/Errors.sol";
-import "./libraries/SignedDecimalMath.sol";
+import "../libraries/Errors.sol";
+import "../libraries/SignedDecimalMath.sol";
 import "./JUSDBankStorage.sol";
 
 /// @notice Owner-only functions

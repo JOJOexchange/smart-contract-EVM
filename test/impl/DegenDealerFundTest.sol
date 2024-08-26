@@ -7,7 +7,7 @@ pragma solidity ^0.8.19;
 
 import "../init/TradingInit.sol";
 import "../utils/Checkers.sol";
-import "../../src/DegenDepositHelper.sol";
+import "../../src/degen/DegenDepositHelper.sol";
 
 contract DegenFundTest is Checkers {
     function testDegenDeposit() public {

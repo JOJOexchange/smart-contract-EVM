@@ -4,7 +4,7 @@
 */
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IJUSDExchange.sol";
+import "../interfaces/IJUSDExchange.sol";
 import "./JUSDBank.sol";
 
 pragma solidity ^0.8.19;

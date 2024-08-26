@@ -6,11 +6,11 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/internal/IPriceSource.sol";
-import "./interfaces/IDealer.sol";
-import "./interfaces/IPerpetual.sol";
-import "./libraries/Types.sol";
-import "./libraries/SignedDecimalMath.sol";
+import "../interfaces/internal/IPriceSource.sol";
+import "../interfaces/IDealer.sol";
+import "../interfaces/IPerpetual.sol";
+import "../libraries/Types.sol";
+import "../libraries/SignedDecimalMath.sol";
 
 /// @notice Limiting funding rate change speed
 /// Mainly for preventing JOJO's backend errors

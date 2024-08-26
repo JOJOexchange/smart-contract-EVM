@@ -6,10 +6,10 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./interfaces/IJUSDBank.sol";
-import "./interfaces/IFlashLoanReceive.sol";
-import "./interfaces/IDealer.sol";
-import "./interfaces/internal/IPriceSource.sol";
+import "../interfaces/IJUSDBank.sol";
+import "../interfaces/IFlashLoanReceive.sol";
+import "../interfaces/IDealer.sol";
+import "../interfaces/internal/IPriceSource.sol";
 import "./JUSDOperation.sol";
 import "./JUSDView.sol";
 import "./JUSDBankStorage.sol";

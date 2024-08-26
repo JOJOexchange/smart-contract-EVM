@@ -6,7 +6,7 @@
 pragma solidity ^0.8.19;
 
 
-import "../FundingRateArbitrage.sol";
+import "../fundingRateArbitrage/FundingRateArbitrage.sol";
 
 contract EarnOracle {
 

@@ -6,7 +6,7 @@
 pragma solidity ^0.8.19;
 
 import "../init/JUSDBankInit.t.sol";
-import "../../src/FlashLoanLiquidate.sol";
+import "../../src/JUSDBank/FlashLoanLiquidate.sol";
 
 // Check jusdbank's liquidation
 contract JUSDBankLiquidateCollateralTest is JUSDBankInitTest {

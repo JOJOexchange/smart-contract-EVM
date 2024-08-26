@@ -5,7 +5,7 @@
 
 pragma solidity ^0.8.19;
 
-import "../../src/DepositStableCoinToDealer.sol";
+import "../../src/helpers/DepositStableCoinToDealer.sol";
 import "../init/JUSDBankInit.t.sol";
 
 // Check jusdbank's repay

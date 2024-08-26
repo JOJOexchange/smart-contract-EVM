@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "../lib/forge-std/src/Script.sol";
-import "../src/MerkleDistributorWithDeadline.sol";
+import "../src/token/MerkleDistributorWithDeadline.sol";
 
 contract MerkleDistributorWithDeadlineScript is Script {
     // add this to be excluded from coverage report

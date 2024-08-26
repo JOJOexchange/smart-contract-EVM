@@ -7,9 +7,9 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "./libraries/FlashLoanReentrancyGuard.sol";
-import "./libraries/SignedDecimalMath.sol";
-import "./libraries/Types.sol";
+import "../libraries/FlashLoanReentrancyGuard.sol";
+import "../libraries/SignedDecimalMath.sol";
+import "../libraries/Types.sol";
 
 abstract contract JUSDBankStorage is Ownable, ReentrancyGuard, FlashLoanReentrancyGuard {
     using SignedDecimalMath for uint256;

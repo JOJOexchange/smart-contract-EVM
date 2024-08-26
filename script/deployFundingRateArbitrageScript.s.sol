@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import "../src/FundingRateArbitrage.sol";
+import "../src/fundingRateArbitrage/FundingRateArbitrage.sol";
 
 contract FundingRateArbitrageScript is Script {
     // add this to be excluded from coverage report

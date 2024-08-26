@@ -5,16 +5,16 @@
 
 pragma solidity ^0.8.19;
 
-import "../DegenDepositHelper.sol";
-import "../FlashLoanLiquidate.sol";
-import "../FlashLoanRepay.sol";
-import "../FundingRateUpdateLimiter.sol";
-import "../FundingRateArbitrage.sol";
+import "../degen/DegenDepositHelper.sol";
+import "../JUSDBank/FlashLoanLiquidate.sol";
+import "../JUSDBank/FlashLoanRepay.sol";
+import "../fundingRateLimiter/FundingRateUpdateLimiter.sol";
+import "../fundingRateArbitrage/FundingRateArbitrage.sol";
 import "../JOJODealer.sol";
-import "../DegenDealer.sol";
-import "../JUSDBank.sol";
+import "../degen/DegenDealer.sol";
+import "../JUSDBank/JUSDBank.sol";
 import "../Perpetual.sol";
-import "../MerkleDistributorWithDeadline.sol";
+import "../token/MerkleDistributorWithDeadline.sol";
 import "../oracle/EmergencyOracle.sol";
 import "../oracle/OracleAdaptor.sol";
 import "../subaccount/SubaccountFactory.sol";

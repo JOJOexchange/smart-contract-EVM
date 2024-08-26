@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import "../src/FlashLoanRepay.sol";
+import "../src/JUSDBank/FlashLoanRepay.sol";
 
 contract FlashRepayScript is Script {
     // add this to be excluded from coverage report

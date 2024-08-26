@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import "../src/GeneralRepay.sol";
+import "../src/JUSDBank/GeneralRepay.sol";
 
 contract GeneralRepayScript is Script {
     // add this to be excluded from coverage report

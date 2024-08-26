@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../interfaces/IJUSDBank.sol";
 import "../interfaces/IPerpetual.sol";
 import "../libraries/Types.sol";
-import "../FundingRateArbitrage.sol";
+import "../fundingRateArbitrage/FundingRateArbitrage.sol";
 
 contract HelperContract {
     JOJODealer public jojoDealer;

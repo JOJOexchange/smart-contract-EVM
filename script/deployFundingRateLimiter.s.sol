@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "../lib/forge-std/src/Script.sol";
-import "../src/FundingRateUpdateLimiter.sol";
+import "../src/fundingRateLimiter/FundingRateUpdateLimiter.sol";
 
 contract FundingRateUpdateLimiterScript is Script {
     // add this to be excluded from coverage report

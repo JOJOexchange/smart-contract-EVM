@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
-import "../src/JUSDExchange.sol";
+import "../src/JUSDBank/JUSDExchange.sol";
 
 contract JUSDExchangeScript is Script {
     // add this to be excluded from coverage report

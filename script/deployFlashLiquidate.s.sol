@@ -14,15 +14,15 @@ contract FlashLiquidateScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         new FlashLoanLiquidate(
             // jusdBank
-            0xb0D9Ce393f3483449be357EF715a3492858f8a5E,
+            0x8Eb3E014e1D6aB354dFBd44880eb7E6b403EE3fE,
             // jusdExchange
-            0x33a317a875Bc23af2E083555E5E46e3ac559C40A,
+            0x78307eaa9A30a27639f656Ead99298C065C07b66,
             // _USDC
-            0x834D14F87700e5fFc084e732c7381673133cdbcC,
+            0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913,
             // _JUSD
-            0xDd29a69462a08006Fda068D090b44B045958C5B7,
+            0x0013BbB9F5d913F700B10E316768e7935D1A13d4,
             // _insurance
-            0x81c438F53Aeb554db3310104535Ab60967d78059
+            0x9C9DD45db8045954309078dC5f235024bC75Cb81
         );
         vm.stopBroadcast();
     }

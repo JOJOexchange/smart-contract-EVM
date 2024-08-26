@@ -13,7 +13,7 @@ contract EmergencyOracleScript is Script {
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
         vm.startBroadcast(deployerPrivateKey);
-        new EmergencyOracle("WSTETH/USDC");
+        new EmergencyOracle("WUSDM/USDC");
         vm.stopBroadcast();
     }
 }

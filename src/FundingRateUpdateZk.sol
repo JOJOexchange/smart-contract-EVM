@@ -6,6 +6,7 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./libraries/brevis/IBrevisProof.sol";
 import "./libraries/brevis/BrevisApp.sol";
 import "./interfaces/internal/IPriceSource.sol";
@@ -17,8 +18,11 @@ import "./libraries/SignedDecimalMath.sol";
 /// @notice Limiting funding rate change speed
 /// Mainly for preventing JOJO's backend errors
 /// and to prevent mischief
-contract FundingRateUpdateZk is Ownable, BrevisApp {
+contract FundingRateUpdateLimiterZk is Ownable, BrevisApp {
     using SignedDecimalMath for int256;
+    using SafeCast for uint248;
+    using SafeCast for uint256;
+    using SafeCast for int256;
 
     // dealer
     address immutable dealer;
@@ -30,12 +34,16 @@ contract FundingRateUpdateZk is Ownable, BrevisApp {
     // The timestamp of the last funding rate update
     // used to limit the change rate of fundingRate
     mapping(address => uint256) public fundingRateUpdateTimestamp;
-
-    int248 public btcRateLimit;
-
+    // funding rate by zk proof, aligned with frontend
+    mapping(address => int256) public fundingRateByZK;
+    // for zk proof
     bytes32 public vkHash;
 
-    constructor(address _dealer, uint8 _speedMultiplier, address brevisProof) BrevisApp(IBrevisProof(brevisProof)) {
+    constructor(
+        address _dealer,
+        uint8 _speedMultiplier,
+        address brevisProof
+    ) BrevisApp(IBrevisProof(brevisProof)) {
         dealer = _dealer;
         speedMultiplier = _speedMultiplier;
     }
@@ -45,26 +53,36 @@ contract FundingRateUpdateZk is Ownable, BrevisApp {
     }
 
     // BrevisQuery contract will call our callback once Brevis backend submits the proof.
-    function handleProofResult(bytes32, bytes32 _vkHash, bytes calldata _circuitOutput) internal override {
+    function handleProofResult(
+        bytes32,
+        bytes32 _vkHash,
+        bytes calldata _circuitOutput
+    ) internal override {
         require(vkHash == _vkHash, "invalid vk");
-        (uint64 symbol, uint248 limitRate) = decodeOutput(_circuitOutput);
-        if(symbol == 0){
-            btcRateLimit = int248(limitRate);
-        } else {
-            btcRateLimit = -int248(limitRate);
-        }
+        (address perp, bool isPositve, uint248 limitRate) = decodeOutput(
+            _circuitOutput
+        );
+        fundingRateByZK[perp] = isPositve
+            ? limitRate.toInt256()
+            : -limitRate.toInt256();
     }
 
-    function decodeOutput(bytes calldata output) internal pure returns (uint64, uint248) {
-        uint64 symbol = uint64(bytes8(output[0:8]));
-        uint248 limitRate = uint248(bytes31(output[8:8 + 31]));
-        return (symbol, limitRate);
+    function decodeOutput(
+        bytes calldata output
+    ) internal pure returns (address perp, bool isPositve, uint248 limitRate) {
+        require(output.length == 32 + 1 + 31, "INVALID_OUTPUT_LENGTH");
+        perp = address(bytes20(output[0:20]));
+        isPositve = uint8(output[20]) == 1;
+        limitRate = uint248(bytes31(output[21:21 + 31]));
     }
 
+    function resetFundRateByZK(address perp) external onlyOwner {
+        fundingRateByZK[perp] = 0;
+    }
+
+    // rate is alligned with the one in perp contract
     function updateFundingRate(address perp, int256 rate) external onlyOwner {
-        int256 oldRate = IPerpetual(perp).getFundingRate();
-        uint256 maxChange = getMaxChange(perp);
-        require((rate - oldRate).abs() <= maxChange, "FUNDING_RATE_CHANGE_TOO_MUCH");
+        require(isNewRateValid(perp, rate), "FUNDING_RATE_CHANGE_TOO_MUCH");
         fundingRateUpdateTimestamp[perp] = block.timestamp;
         address[] memory perpList = new address[](1);
         perpList[0] = perp;
@@ -76,12 +94,29 @@ contract FundingRateUpdateZk is Ownable, BrevisApp {
 
     // limit funding rate change speed
     // can not exceed speedMultiplier*liquidationThreshold
-    function getMaxChange(address perp) public view returns (uint256) {
+    function rateBoundry(
+        address perp
+    ) public view returns (int256 lowerBoundary, int256 upperBoundary) {
+        int256 oldRate = IPerpetual(perp).getFundingRate();
         Types.RiskParams memory params = IDealer(dealer).getRiskParams(perp);
         uint256 markPrice = IPriceSource(params.markPriceSource).getMarkPrice();
-        uint256 timeInterval = block.timestamp - fundingRateUpdateTimestamp[perp];
-        uint256 maxChangeRate = (speedMultiplier * timeInterval * params.liquidationThreshold) / (1 days);
-        uint256 maxChange = (maxChangeRate * markPrice) / Types.ONE;
-        return maxChange;
+        uint256 timeInterval = block.timestamp -
+            fundingRateUpdateTimestamp[perp];
+        int256 maxChange = ((((speedMultiplier *
+            timeInterval *
+            params.liquidationThreshold) / (1 days)) * markPrice) / Types.ONE)
+            .toInt256();
+        int256 fundingRateCahngeByZK = ((fundingRateByZK[perp].toUint256() *
+            markPrice) / Types.ONE).toInt256();
+        lowerBoundary = oldRate + fundingRateCahngeByZK - maxChange;
+        upperBoundary = oldRate + fundingRateCahngeByZK + maxChange;
+    }
+
+    function isNewRateValid(
+        address perp,
+        int256 newRate
+    ) public view returns (bool) {
+        (int256 lowerBoundary, int256 upperBoundary) = rateBoundry(perp);
+        return newRate >= lowerBoundary && newRate <= upperBoundary;
     }
 }

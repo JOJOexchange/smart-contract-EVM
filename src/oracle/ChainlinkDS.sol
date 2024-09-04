@@ -16,7 +16,7 @@ struct Report {
     bytes32 feedId; // The feed ID the report has data for
     uint32 validFromTimestamp; // Earliest timestamp for which price is applicable
     uint32 observationsTimestamp; // Latest timestamp for which price is applicable
-    uint192 nativeFee; // Base cost to validate a transaction using the report, denominated in the chain’s native token (WETH/ETH)
+    uint192 nativeFee; // Base cost to validate a transaction using the report, denominated in the chain's native token (WETH/ETH)
     uint192 linkFee; // Base cost to validate a transaction using the report, denominated in LINK
     uint32 expiresAt; // Latest timestamp where the report can be verified onchain
     int192 price; // DON consensus median price (8 or 18 decimals)
@@ -85,7 +85,7 @@ interface IFeeManager {
 }
 
 /**
- * @title PriceSources
+ * @title PriceSourceConfig
  * @dev Struct to store information about price sources.
  * This struct holds various details about a price source, including the Chainlink feed,
  * decimal corrections, the last data stream report, and heartbeat intervals.
@@ -94,7 +94,7 @@ interface IFeeManager {
  * So, if we want to increase the decimal by 6 places, we should set DecimalsCorrection to 1e12.
  * If we want to decrease the decimal by 12 places, we should set DecimalsCorrection to 1e30.
  */
-struct PriceSources {
+struct PriceSourceConfig {
     IChainlink chainlinkFeed; // The Chainlink feed interface for fetching price data
     uint256 feedDecimalsCorrection; // Decimal correction factor for the Chainlink feed price
     Report lastDSReport; // The last verified data stream report
@@ -116,10 +116,11 @@ contract ChainlinkDSPortal is Ownable {
     // chainlink datastream proxy
     IVerifierProxy public immutable dsVerifyProxy;
     address public reportSubmitter;
+    address public immutable feeTokenAddress;
 
     // registered sources
     string[] public registeredNames;
-    mapping(bytes32 => PriceSources) public priceSourcesMap;
+    mapping(bytes32 => PriceSourceConfig) public priceSourceConfigMap;
 
     // The prices from pricesources are all calculated in USD, and the price of USDC needs to be considered as well, using Chainlink's USDC price.
     uint256 public immutable usdcHeartbeat;
@@ -144,19 +145,23 @@ contract ChainlinkDSPortal is Ownable {
     /**
      * @dev Constructor to initialize the contract state.
      * @param _dsVerifyProxy The address of the Data Stream verification proxy.
+     * @param _reportSubmitter The address of the report submitter.
      * @param _usdcHeartbeat The heartbeat interval for USDC.
      * @param _usdcSource The address of the USDC data source.
+     * @param _feeTokenAddress The address of the fee token.
      */
     constructor(
         address _dsVerifyProxy,
         address _reportSubmitter,
         uint256 _usdcHeartbeat,
-        address _usdcSource
+        address _usdcSource,
+        address _feeTokenAddress
     ) {
         dsVerifyProxy = IVerifierProxy(_dsVerifyProxy);
         reportSubmitter = _reportSubmitter;
         usdcHeartbeat = _usdcHeartbeat;
         usdcSource = _usdcSource;
+        feeTokenAddress = _feeTokenAddress;
     }
 
     /**
@@ -185,42 +190,6 @@ contract ChainlinkDSPortal is Ownable {
      */
     function setReportSubmitter(address _reportSubmitter) external onlyOwner {
         reportSubmitter = _reportSubmitter;
-    }
-
-    /**
-     * @dev Verifies a report.
-     * @param unverifiedReport The raw report to be verified.
-     * @return verifiedReport The verified report.
-     */
-    function _verifyReport(
-        bytes memory unverifiedReport
-    ) private returns (Report memory verifiedReport) {
-        // Report verification fees, paid in Native token
-        IFeeManager feeManager = IFeeManager(
-            address(dsVerifyProxy.s_feeManager())
-        );
-
-        (, /* bytes32[3] reportContextData */ bytes memory reportData) = abi
-            .decode(unverifiedReport, (bytes32[3], bytes));
-
-        address feeTokenAddress = feeManager.i_nativeAddress();
-
-        (Common.Asset memory fee, , ) = feeManager.getFeeAndReward(
-            address(this),
-            reportData,
-            feeTokenAddress
-        );
-
-        // Approve feeManager to spend this contract's balance in fees
-        IERC20(feeTokenAddress).approve(address(feeManager), fee.amount);
-
-        // Verify the report
-        bytes memory verifiedReportData = IVerifierProxy(dsVerifyProxy).verify(
-            unverifiedReport,
-            abi.encode(feeTokenAddress)
-        );
-
-        verifiedReport = abi.decode(verifiedReportData, (Report));
     }
 
     /**
@@ -254,7 +223,7 @@ contract ChainlinkDSPortal is Ownable {
      * @param _DSDecimalCorrection The decimal correction for the Data Stream.
      * @param _heartBeat The heartbeat interval for the price source.
      */
-    function newPriceSources(
+    function newPriceSourceConfig(
         string memory name,
         address _chainlinkFeed,
         bytes32 _DSFeedId,
@@ -264,14 +233,14 @@ contract ChainlinkDSPortal is Ownable {
     ) public onlyOwner {
         bytes32 key = nameToKey(name);
         require(
-            bytes(priceSourcesMap[key].name).length == 0,
+            bytes(priceSourceConfigMap[key].name).length == 0,
             "NAME_ALREADY_EXIST"
         );
         registeredNames.push(name);
         address adaptor = address(new ChainlinkDSAdaptor(name, address(this)));
         Report memory emptyReport = _getEmptyReport();
 
-        priceSourcesMap[key] = PriceSources({
+        priceSourceConfigMap[key] = PriceSourceConfig({
             chainlinkFeed: IChainlink(_chainlinkFeed),
             feedDecimalsCorrection: 10 ** _feedDecimalCorrection,
             lastDSReport: emptyReport,
@@ -294,7 +263,7 @@ contract ChainlinkDSPortal is Ownable {
      * @param _heartBeat The heartbeat interval for the price source.
      * @param _resetReport Whether to reset the last report.
      */
-    function resetPriceSources(
+    function resetPriceSourceConfig(
         string memory name,
         address _chainlinkFeed,
         bytes32 _DSFeedId,
@@ -304,15 +273,15 @@ contract ChainlinkDSPortal is Ownable {
         bool _resetReport
     ) public onlyOwner {
         bytes32 key = nameToKey(name);
-        require(bytes(priceSourcesMap[key].name).length > 0, "NAME_NOT_EXIST");
-        PriceSources storage priceSources = priceSourcesMap[key];
-        priceSources.chainlinkFeed = IChainlink(_chainlinkFeed);
-        priceSources.DSFeedId = _DSFeedId;
-        priceSources.feedDecimalsCorrection = 10 ** _feedDecimalCorrection;
-        priceSources.DSDecimalCorrection = 10 ** _DSDecimalCorrection;
-        priceSources.heartBeat = _heartBeat;
+        require(bytes(priceSourceConfigMap[key].name).length > 0, "NAME_NOT_EXIST");
+        PriceSourceConfig storage priceSourceConfig = priceSourceConfigMap[key];
+        priceSourceConfig.chainlinkFeed = IChainlink(_chainlinkFeed);
+        priceSourceConfig.DSFeedId = _DSFeedId;
+        priceSourceConfig.feedDecimalsCorrection = 10 ** _feedDecimalCorrection;
+        priceSourceConfig.DSDecimalCorrection = 10 ** _DSDecimalCorrection;
+        priceSourceConfig.heartBeat = _heartBeat;
         if (_resetReport) {
-            priceSources.lastDSReport = _getEmptyReport();
+            priceSourceConfig.lastDSReport = _getEmptyReport();
         }
     }
 
@@ -325,25 +294,37 @@ contract ChainlinkDSPortal is Ownable {
         string[] memory names,
         bytes[] memory unverifiedReports
     ) public onlyOwnerOrReportSubmitter {
+        require(names.length == unverifiedReports.length, "LENGTH_MISMATCH");
+
+        // Verify reports in bulk
+        bytes[] memory verifiedReports = IVerifierProxy(dsVerifyProxy).verifyBulk(
+            unverifiedReports,
+            abi.encode(feeTokenAddress)
+        );
+
         for (uint256 i = 0; i < names.length; i++) {
             bytes32 key = nameToKey(names[i]);
-            PriceSources storage priceSources = priceSourcesMap[key];
-            Report memory newReport = _verifyReport(unverifiedReports[i]);
+            PriceSourceConfig storage priceSourceConfig = priceSourceConfigMap[key];
+            
+            Report memory newReport = abi.decode(verifiedReports[i], (Report));
+            
             require(
                 newReport.validFromTimestamp >
-                    priceSources.lastDSReport.validFromTimestamp,
+                    priceSourceConfig.lastDSReport.validFromTimestamp,
                 "INVALID_REPORT_TIMESTAMP"
             );
             require(
-                newReport.feedId == priceSources.DSFeedId,
+                newReport.feedId == priceSourceConfig.DSFeedId,
                 "DS_FEED_ID_NOT_MATCH"
             );
-            priceSources.lastDSReport = _verifyReport(unverifiedReports[i]);
-            priceSources.DSRoundId += 1;
+            
+            priceSourceConfig.lastDSReport = newReport;
+            priceSourceConfig.DSRoundId += 1;
+            
             emit AnswerUpdated(
-                int256(priceSources.lastDSReport.price),
-                priceSources.lastDSReport.feedId,
-                priceSources.DSRoundId,
+                int256(priceSourceConfig.lastDSReport.price),
+                priceSourceConfig.lastDSReport.feedId,
+                priceSourceConfig.DSRoundId,
                 block.timestamp,
                 names[i]
             );
@@ -369,14 +350,14 @@ contract ChainlinkDSPortal is Ownable {
     }
 
     function getPriceByKey(bytes32 key) public view returns (uint256 price) {
-        PriceSources memory priceSources = priceSourcesMap[key];
-        Report memory DSReport = priceSources.lastDSReport;
+        PriceSourceConfig memory priceSourceConfig = priceSourceConfigMap[key];
+        Report memory DSReport = priceSourceConfig.lastDSReport;
 
         // Get original chainlink feed price
         int256 feedPrice;
         uint256 feedUpdatedAt;
-        if (address(priceSources.chainlinkFeed) != address(0)) {
-            (, feedPrice, , feedUpdatedAt, ) = priceSources
+        if (address(priceSourceConfig.chainlinkFeed) != address(0)) {
+            (, feedPrice, , feedUpdatedAt, ) = priceSourceConfig
                 .chainlinkFeed
                 .latestRoundData();
         }
@@ -390,16 +371,16 @@ contract ChainlinkDSPortal is Ownable {
             latestTimestamp = DSReport.validFromTimestamp;
             price =
                 (SafeCast.toUint256(DSReport.price) * 1e18) /
-                priceSources.DSDecimalCorrection;
+                priceSourceConfig.DSDecimalCorrection;
         } else {
             latestTimestamp = feedUpdatedAt;
             price =
                 (SafeCast.toUint256(feedPrice) * 1e18) /
-                priceSources.feedDecimalsCorrection;
+                priceSourceConfig.feedDecimalsCorrection;
         }
         // check heartbeat
         require(
-            block.timestamp - latestTimestamp <= priceSources.heartBeat,
+            block.timestamp - latestTimestamp <= priceSourceConfig.heartBeat,
             "ORACLE_HEARTBEAT_FAILED"
         );
 
@@ -433,14 +414,14 @@ contract ChainlinkDSPortal is Ownable {
         string memory name
     ) public view returns (Report memory) {
         bytes32 key = nameToKey(name);
-        return priceSourcesMap[key].lastDSReport;
+        return priceSourceConfigMap[key].lastDSReport;
     }
 
-    function getPriceSourcesByName(
+    function getPriceSourceConfigByName(
         string memory name
-    ) public view returns (PriceSources memory) {
+    ) public view returns (PriceSourceConfig memory) {
         bytes32 key = nameToKey(name);
-        return priceSourcesMap[key];
+        return priceSourceConfigMap[key];
     }
 }
 

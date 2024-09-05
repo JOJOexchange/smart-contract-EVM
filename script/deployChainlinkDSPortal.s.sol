@@ -43,6 +43,7 @@ contract ChainlinkDSPortalScript is Script {
         inputs[7] = Utils.bytesToStringWithout0x(arguments);
         Utils.logInputs(inputs);
     }
+}
 
 contract ChainlinkDSPortalScriptBaseTestnet is Script {
     // add this to be excluded from coverage report

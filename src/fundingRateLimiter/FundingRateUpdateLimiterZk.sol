@@ -18,7 +18,7 @@ import "../libraries/SignedDecimalMath.sol";
 /// @notice Limiting funding rate change speed
 /// Mainly for preventing JOJO's backend errors
 /// and to prevent mischief
-contract FundingRateUpdateLimiterZk is Ownable, BrevisApp {
+contract FundingRateUpdateLimiterZK is Ownable, BrevisApp {
     using SignedDecimalMath for int256;
     using SafeCast for uint248;
     using SafeCast for uint256;
@@ -70,7 +70,7 @@ contract FundingRateUpdateLimiterZk is Ownable, BrevisApp {
     function decodeOutput(
         bytes calldata output
     ) internal pure returns (address perp, bool isPositve, uint248 limitRate) {
-        require(output.length == 32 + 1 + 31, "INVALID_OUTPUT_LENGTH");
+        require(output.length == 20 + 1 + 31, "INVALID_OUTPUT_LENGTH");
         perp = address(bytes20(output[0:20]));
         isPositve = uint8(output[20]) == 1;
         limitRate = uint248(bytes31(output[21:21 + 31]));
@@ -106,8 +106,8 @@ contract FundingRateUpdateLimiterZk is Ownable, BrevisApp {
             timeInterval *
             params.liquidationThreshold) / (1 days)) * markPrice) / Types.ONE)
             .toInt256();
-        int256 fundingRateCahngeByZK = ((fundingRateByZK[perp].toUint256() *
-            markPrice) / Types.ONE).toInt256();
+        int256 fundingRateCahngeByZK = (fundingRateByZK[perp] *
+            markPrice.toInt256()) / 1e18;
         lowerBoundary = oldRate + fundingRateCahngeByZK - maxChange;
         upperBoundary = oldRate + fundingRateCahngeByZK + maxChange;
     }

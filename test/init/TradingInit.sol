@@ -192,7 +192,7 @@ contract TradingInit is Test {
         Perpetual(perpetual).trade(tradeData);
     }
 
-    function setUp() public {
+    function setUp() public virtual {
         jusd = new TestERC20("JUSD", "JUSD", 6);
         usdc = new TestERC20("USDC", "USDC", 6);
         initUsers();

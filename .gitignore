@@ -7,7 +7,7 @@
 .vscode
 
 forge.config
-
+verification_input.json
 
 artifacts/
 cache/

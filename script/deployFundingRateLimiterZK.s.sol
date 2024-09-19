@@ -6,7 +6,45 @@ import "../lib/forge-std/src/Script.sol";
 import "../src/fundingRateLimiter/FundingRateUpdateLimiterZK.sol";
 import "./utils.s.sol";
 
-contract FundingRateUpdateLimiterZKScript is Script {
+contract FundingRateUpdateLimiterZKMain is Script {
+    // add this to be excluded from coverage report
+    function test() public { }
+
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
+        vm.startBroadcast(deployerPrivateKey);
+        // Testnet
+        address _dealer = 0x2f7c3cF9D9280B165981311B822BecC4E05Fe635;
+        uint8 _speedMultiplier = 3;
+        address _brevisProof = 0x2294E22000dEFe09A307363f7aCD8aAa1fBc1983;
+        address _owner = 0xf7deBaF84774B0E4DA659eDe243c8A84A2aFcD14;
+        bytes32 _vkHash = 0x07a41e74e8ec38b5a7602423a90c508f18bde139a74828c6d10cca61745283f0;
+
+        FundingRateUpdateLimiterZK limiter = new FundingRateUpdateLimiterZK(
+            _dealer,
+            _speedMultiplier,
+            _brevisProof
+        );
+        limiter.setVkHash(_vkHash);
+        limiter.transferOwnership(_owner);
+        vm.stopBroadcast();
+
+        string memory chainId = vm.envString("CHAIN_ID");
+        bytes memory arguments = abi.encode(_dealer,_speedMultiplier,_brevisProof);
+        string[] memory inputs = new string[](8);
+        inputs[0] = "forge";
+        inputs[1] = "verify-contract";
+        inputs[2] = Utils.addressToString(address(limiter));
+        inputs[3] = "src/fundingRateLimiter/FundingRateUpdateLimiterZK.sol:FundingRateUpdateLimiterZK";
+        inputs[4] = "--chain-id";
+        inputs[5] = chainId;
+        inputs[6] = "--constructor-args";
+        inputs[7] = Utils.bytesToStringWithout0x(arguments);
+        Utils.logInputs(inputs);
+    }
+}
+
+contract FundingRateUpdateLimiterZKTest is Script {
     // add this to be excluded from coverage report
     function test() public { }
 

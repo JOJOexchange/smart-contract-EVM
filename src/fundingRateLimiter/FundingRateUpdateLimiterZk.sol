@@ -80,14 +80,27 @@ contract FundingRateUpdateLimiterZK is Ownable, BrevisApp {
         fundingRateByZK[perp] = 0;
     }
 
-    // rate is alligned with the one in perp contract
-    function updateFundingRate(address perp, int256 rate) external onlyOwner {
-        require(isNewRateValid(perp, rate), "FUNDING_RATE_CHANGE_TOO_MUCH");
-        fundingRateUpdateTimestamp[perp] = block.timestamp;
-        address[] memory perpList = new address[](1);
-        perpList[0] = perp;
-        int256[] memory rateList = new int256[](1);
-        rateList[0] = rate;
+    function updateFundingRate(
+        address[] calldata perpList,
+        int256[] calldata rateList
+    ) external onlyOwner {
+        require(perpList.length == rateList.length, "Array lengths mismatch");
+
+        for (uint256 i = 0; i < perpList.length; ) {
+            address perp = perpList[i];
+            int256 newRate = rateList[i];
+
+            require(
+                isNewRateValid(perp, newRate),
+                "FUNDING_RATE_CHANGE_TOO_MUCH"
+            );
+
+            fundingRateUpdateTimestamp[perp] = block.timestamp;
+
+            unchecked {
+                ++i;
+            }
+        }
 
         IDealer(dealer).updateFundingRate(perpList, rateList);
     }

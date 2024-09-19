@@ -18,20 +18,31 @@ contract ChainlinkDSPortalScript is Script {
         address _usdcSource = 0x7e860098F58bBFC8648a4311b374B1D669a2bc6B;
         address _reportSubmitter = 0x58D6e7ACcC617758F890Ba796d34777d2c46210C;
         address _feeTokenAddress = 0x4200000000000000000000000000000000000006;
+        address _feeManager = 0x3dffEd6a5AbbB48686e619e644cE8c3d977Cc4FA;
 
         ChainlinkDSPortal chainlinkDSPortal = new ChainlinkDSPortal(
             _dsVerifyProxy,
             _reportSubmitter,
             _usdcHeartbeat,
             _usdcSource,
-            _feeTokenAddress
+            _feeTokenAddress,
+            _feeManager
+        );
+
+        chainlinkDSPortal.newPriceSourceConfig(
+            "BTCUSDC",
+            0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F,
+            0x00039d9e45394f473ab1f050a1b963e6b05351e52d71e507509ada0c95ed75b8,
+            20,
+            30,
+            86400
         );
         
         vm.stopBroadcast();
 
         // 自动执行验证
         string memory chainId = vm.envString("CHAIN_ID");
-        bytes memory arguments = abi.encode(_dsVerifyProxy,_reportSubmitter,_usdcHeartbeat,_usdcSource,_feeTokenAddress);
+        bytes memory arguments = abi.encode(_dsVerifyProxy,_reportSubmitter,_usdcHeartbeat,_usdcSource,_feeTokenAddress,_feeManager);
         string[] memory inputs = new string[](8);
         inputs[0] = "forge";
         inputs[1] = "verify-contract";
@@ -56,14 +67,16 @@ contract ChainlinkDSPortalScriptBaseTestnet is Script {
         uint256 _usdcHeartbeat = 86400;
         address _usdcSource = 0xd30e2101a97dcbAeBCBC04F14C3f624E67A35165;
         address _reportSubmitter = 0x1cA8dd11fF12Fc22cd2ab83317cFd90df6a73694;
-        address _feeTokenAddress = 0x4200000000000000000000000000000000000006;// address _owner = 0x1cA8dd11fF12Fc22cd2ab83317cFd90df6a73694;
+        address _feeTokenAddress = 0x4200000000000000000000000000000000000006;
+        address _feeManager = 0xDE1A28D87Afd0f546505B28AB50410A5c3a7387a;
 
         ChainlinkDSPortal chainlinkDSPortal = new ChainlinkDSPortal(
             _dsVerifyProxy,
             _reportSubmitter,
             _usdcHeartbeat,
             _usdcSource,
-            _feeTokenAddress
+            _feeTokenAddress,
+            _feeManager
         );
 
         chainlinkDSPortal.newPriceSourceConfig(
@@ -87,7 +100,7 @@ contract ChainlinkDSPortalScriptBaseTestnet is Script {
 
         // 自动执行验证
         string memory chainId = vm.envString("CHAIN_ID");
-        bytes memory arguments = abi.encode(_dsVerifyProxy,_reportSubmitter,_usdcHeartbeat,_usdcSource,_feeTokenAddress);
+        bytes memory arguments = abi.encode(_dsVerifyProxy,_reportSubmitter,_usdcHeartbeat,_usdcSource,_feeTokenAddress,_feeManager);
         string[] memory inputs = new string[](8);
         inputs[0] = "forge";
         inputs[1] = "verify-contract";

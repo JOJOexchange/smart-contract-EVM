@@ -117,6 +117,7 @@ contract ChainlinkDSPortal is Ownable {
     IVerifierProxy public immutable dsVerifyProxy;
     address public reportSubmitter;
     address public immutable feeTokenAddress;
+    IFeeManager public immutable feeManager; // 新增的 feeManager 变量
 
     // registered sources
     string[] public registeredNames;
@@ -149,19 +150,23 @@ contract ChainlinkDSPortal is Ownable {
      * @param _usdcHeartbeat The heartbeat interval for USDC.
      * @param _usdcSource The address of the USDC data source.
      * @param _feeTokenAddress The address of the fee token.
+     * @param _feeManager The address of the fee manager.
      */
     constructor(
         address _dsVerifyProxy,
         address _reportSubmitter,
         uint256 _usdcHeartbeat,
         address _usdcSource,
-        address _feeTokenAddress
+        address _feeTokenAddress,
+        address _feeManager
     ) {
         dsVerifyProxy = IVerifierProxy(_dsVerifyProxy);
         reportSubmitter = _reportSubmitter;
         usdcHeartbeat = _usdcHeartbeat;
         usdcSource = _usdcSource;
         feeTokenAddress = _feeTokenAddress;
+        feeManager = IFeeManager(_feeManager);
+        IERC20(feeTokenAddress).approve(_feeManager, type(uint256).max);
     }
 
     /**

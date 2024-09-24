@@ -93,21 +93,21 @@ contract JOJODynamicLiquidityReserve is
     event ExternalContractUpdated(string contractName, address newAddress);
     event WithdrawDelayUpdated(uint256 newWithdrawDelay);
 
-    /// @notice Contract constructor
-    /// @param _name Name of the ERC20 share token
-    /// @param _symbol Symbol of the ERC20 share token
-    /// @param _jojoDealer Address of the JOJO dealer contract
-    /// @param _primaryAsset Address of the primary asset token (e.g., USDC)
-    /// @param _verifierProxy Address of the verifier proxy contract
-    /// @param _usdcFeed Address of the USDC price feed contract
-    /// @param _usdcHeartbeat USDC heartbeat duration for price updates
-    /// @param _feeTokenAddress Address of the fee token
+    /// @notice Constructor to initialize the JOJODynamicLiquidityReserve
+    /// @param name Name of the ERC20 token
+    /// @param symbol Symbol of the ERC20 token
+    /// @param _jojoDealer Address of the JOJO Dealer contract
+    /// @param _primaryAsset Address of the primary asset (e.g., USDC)
+    /// @param _verifierProxy Address of the Chainlink verifier proxy
+    /// @param _usdcFeed Address of the USDC price feed
+    /// @param _usdcHeartbeat Maximum allowed delay for USDC price updates
+    /// @param _feeTokenAddress Address of the token used for fees
     /// @param _feeManager Address of the fee manager
-    /// @param _initialMaxTotalDeposit Initial maximum total deposit amount
-    /// @param _initialWithdrawDelay Initial withdraw delay
+    /// @param _initialMaxTotalDeposit Initial maximum total deposit allowed
+    /// @param _initialWithdrawDelay Initial withdrawal delay period
     constructor(
-        string memory _name,
-        string memory _symbol,
+        string memory name,
+        string memory symbol,
         address _jojoDealer,
         address _primaryAsset,
         address _verifierProxy,
@@ -117,7 +117,7 @@ contract JOJODynamicLiquidityReserve is
         address _feeManager,
         uint256 _initialMaxTotalDeposit,
         uint256 _initialWithdrawDelay
-    ) ERC20(_name, _symbol) {
+    ) ERC20(name, symbol) {
         jojoDealer = JOJODealer(_jojoDealer);
         primaryAsset = IERC20(_primaryAsset);
         verifierProxy = IVerifierProxy(_verifierProxy);
@@ -127,21 +127,19 @@ contract JOJODynamicLiquidityReserve is
         feeManager = _feeManager;
         maxTotalDeposit = _initialMaxTotalDeposit;
         withdrawDelay = _initialWithdrawDelay;
-
-        IERC20(feeTokenAddress).approve(feeManager, type(uint256).max);
     }
 
     /// @notice Sets the maximum total deposit allowed in the reserve
-    /// @dev Only the contract owner can call this function
-    /// @param _maxTotalDeposit The new maximum total deposit amount
-    function setMaxTotalDeposit(uint256 _maxTotalDeposit) external onlyOwner {
-        maxTotalDeposit = _maxTotalDeposit;
-        emit MaxTotalDepositUpdated(_maxTotalDeposit);
+    /// @dev Only callable by the contract owner
+    /// @param _newMaxTotalDeposit New maximum total deposit value
+    function setMaxTotalDeposit(uint256 _newMaxTotalDeposit) external onlyOwner {
+        maxTotalDeposit = _newMaxTotalDeposit;
+        emit MaxTotalDepositUpdated(_newMaxTotalDeposit);
     }
 
-    /// @notice Allows users to deposit primary asset into the reserve
+    /// @notice Deposits primary asset into the reserve
+    /// @dev Mints share tokens to the depositor
     /// @param amount Amount of primary asset to deposit
-    /// @dev Mints share tokens to represent the user's share of the pool
     function deposit(uint256 amount) external nonReentrant whenNotPaused {
         require(
             getTotalValue() + amount <= maxTotalDeposit,
@@ -329,6 +327,7 @@ contract JOJODynamicLiquidityReserve is
             keccak256(abi.encodePacked("jojoDealer"))
         ) {
             jojoDealer = JOJODealer(newAddress);
+
         } else if (
             keccak256(abi.encodePacked(contractName)) ==
             keccak256(abi.encodePacked("verifierProxy"))

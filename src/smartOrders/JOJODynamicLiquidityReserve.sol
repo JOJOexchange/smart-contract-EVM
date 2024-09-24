@@ -19,7 +19,12 @@ import {Report, IVerifierProxy} from "../oracle/ChainlinkDS.sol";
 /// @title JOJO Dynamic Liquidity Reserve
 /// @notice This contract manages a liquidity pool for the JOJO trading platform
 /// @dev Implements ERC20 for share tokens, includes withdrawal time-lock mechanism
-contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausable {
+contract JOJODynamicLiquidityReserve is
+    ERC20,
+    ReentrancyGuard,
+    Ownable,
+    Pausable
+{
     using SafeERC20 for IERC20;
     using SignedDecimalMath for int256;
     using SignedDecimalMath for uint256;
@@ -50,7 +55,7 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     uint256 public maxLeverage;
     int256 public maxFeeRate;
     uint256 public usdcHeartbeat;
-    uint256 public constant WITHDRAW_DELAY = 1 days;
+    uint256 public withdrawDelay;
     uint256 public totalPendingShares;
 
     IVerifierProxy public verifierProxy;
@@ -66,11 +71,27 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
 
     // Events for important state changes
     event Deposit(address indexed user, uint256 amount, uint256 shares);
-    event WithdrawRequested(address indexed user, uint256 shares, uint256 requestTime);
-    event WithdrawExecuted(address indexed user, uint256 shares, uint256 amount);
-    event MarketParametersSet(address indexed market, bool isSupported, uint256 slippage, uint256 maxExposure, bytes32 feedId, uint256 maxReportDelay);
+    event WithdrawRequested(
+        address indexed user,
+        uint256 shares,
+        uint256 requestTime
+    );
+    event WithdrawExecuted(
+        address indexed user,
+        uint256 shares,
+        uint256 amount
+    );
+    event MarketParametersSet(
+        address indexed market,
+        bool isSupported,
+        uint256 slippage,
+        uint256 maxExposure,
+        bytes32 feedId,
+        uint256 maxReportDelay
+    );
     event GlobalParametersSet(uint256 maxLeverage, int256 maxFeeRate);
     event ExternalContractUpdated(string contractName, address newAddress);
+    event WithdrawDelayUpdated(uint256 newWithdrawDelay);
 
     /// @notice Contract constructor
     /// @param _name Name of the ERC20 share token
@@ -83,6 +104,7 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @param _feeTokenAddress Address of the fee token
     /// @param _feeManager Address of the fee manager
     /// @param _initialMaxTotalDeposit Initial maximum total deposit amount
+    /// @param _initialWithdrawDelay Initial withdraw delay
     constructor(
         string memory _name,
         string memory _symbol,
@@ -93,7 +115,8 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
         uint256 _usdcHeartbeat,
         address _feeTokenAddress,
         address _feeManager,
-        uint256 _initialMaxTotalDeposit
+        uint256 _initialMaxTotalDeposit,
+        uint256 _initialWithdrawDelay
     ) ERC20(_name, _symbol) {
         jojoDealer = JOJODealer(_jojoDealer);
         primaryAsset = IERC20(_primaryAsset);
@@ -103,6 +126,7 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
         feeTokenAddress = _feeTokenAddress;
         feeManager = _feeManager;
         maxTotalDeposit = _initialMaxTotalDeposit;
+        withdrawDelay = _initialWithdrawDelay;
 
         IERC20(feeTokenAddress).approve(feeManager, type(uint256).max);
     }
@@ -119,7 +143,10 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @param amount Amount of primary asset to deposit
     /// @dev Mints share tokens to represent the user's share of the pool
     function deposit(uint256 amount) external nonReentrant whenNotPaused {
-        require(getTotalValue() + amount <= maxTotalDeposit, "Deposit exceeds max total deposit");
+        require(
+            getTotalValue() + amount <= maxTotalDeposit,
+            "Deposit exceeds max total deposit"
+        );
 
         uint256 shares = calculateShares(amount);
         primaryAsset.safeTransferFrom(msg.sender, address(this), amount);
@@ -132,16 +159,23 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @notice Allows users to request a withdrawal of their shares
     /// @param shares Number of shares to withdraw
     /// @dev Initiates a withdrawal request with a time lock
-    function requestWithdraw(uint256 shares) external nonReentrant whenNotPaused {
+    function requestWithdraw(
+        uint256 shares
+    ) external nonReentrant whenNotPaused {
         require(shares <= balanceOf(msg.sender), "Insufficient shares");
-        require(shares <= balanceOf(msg.sender) - lockedShares[msg.sender], "Shares are locked");
-        
-        pendingWithdraws.push(WithdrawRequest({
-            user: msg.sender,
-            shares: shares,
-            requestTime: block.timestamp,
-            isExecuted: false
-        }));
+        require(
+            shares <= balanceOf(msg.sender) - lockedShares[msg.sender],
+            "Shares are locked"
+        );
+
+        pendingWithdraws.push(
+            WithdrawRequest({
+                user: msg.sender,
+                shares: shares,
+                requestTime: block.timestamp,
+                isExecuted: false
+            })
+        );
 
         lockedShares[msg.sender] += shares;
         totalPendingShares += shares;
@@ -151,13 +185,21 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
 
     /// @notice Executes a pending withdrawal request after the time lock period
     /// @param index Index of the withdrawal request in the pendingWithdraws array
-    function executeWithdraw(uint256 index) external nonReentrant whenNotPaused {
-        require(index < pendingWithdraws.length, "Invalid withdraw request index");
+    function executeWithdraw(
+        uint256 index
+    ) external nonReentrant whenNotPaused {
+        require(
+            index < pendingWithdraws.length,
+            "Invalid withdraw request index"
+        );
         WithdrawRequest storage request = pendingWithdraws[index];
         require(!request.isExecuted, "Withdraw already executed");
-        require(msg.sender == request.user || msg.sender == owner(), "Not authorized");
         require(
-            block.timestamp >= request.requestTime + WITHDRAW_DELAY,
+            msg.sender == request.user || msg.sender == owner(),
+            "Not authorized"
+        );
+        require(
+            block.timestamp >= request.requestTime + withdrawDelay,
             "Withdraw delay not met"
         );
 
@@ -171,9 +213,9 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
         totalPendingShares -= request.shares;
 
         jojoDealer.requestWithdraw(address(this), withdrawAmount, 0);
-        
+
         // Direct withdrawal to user's account
-        jojoDealer.executeWithdraw(address(this), request.user, true, "");
+        jojoDealer.executeWithdraw(address(this), request.user, false, "");
 
         _burn(request.user, request.shares);
 
@@ -191,7 +233,9 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @notice Calculates the amount of primary asset to withdraw for a given number of shares
     /// @param shares Number of shares to calculate withdrawal amount for
     /// @return Amount of primary asset to withdraw
-    function calculateWithdrawAmount(uint256 shares) public view returns (uint256) {
+    function calculateWithdrawAmount(
+        uint256 shares
+    ) public view returns (uint256) {
         uint256 totalSupply = totalSupply();
         require(totalSupply > 0, "No shares minted");
         return (shares * getTotalValue()) / totalSupply;
@@ -211,8 +255,12 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @notice Checks if leverage is within limits after a withdrawal
     /// @param withdrawAmount Amount to withdraw
     /// @return Whether leverage is within limits
-    function checkLeverageAfterWithdraw(uint256 withdrawAmount) internal view returns (bool) {
-        (int256 netValue, uint256 exposure, , ) = jojoDealer.getTraderRisk(address(this));
+    function checkLeverageAfterWithdraw(
+        uint256 withdrawAmount
+    ) internal view returns (bool) {
+        (int256 netValue, uint256 exposure, , ) = jojoDealer.getTraderRisk(
+            address(this)
+        );
         int256 remainingValue = netValue - int256(withdrawAmount);
         return uint256(remainingValue) * maxLeverage >= exposure;
     }
@@ -246,7 +294,14 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
             feedId,
             maxReportDelay
         );
-        emit MarketParametersSet(market, isSupported, slippage, maxExposure, feedId, maxReportDelay);
+        emit MarketParametersSet(
+            market,
+            isSupported,
+            slippage,
+            maxExposure,
+            feedId,
+            maxReportDelay
+        );
     }
 
     /// @notice Sets global parameters for the reserve
@@ -265,12 +320,24 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @param contractName Name of the contract to update
     /// @param newAddress New address of the contract
     /// @dev This function allows updating external dependencies without redeploying the main contract
-    function updateExternalContract(string memory contractName, address newAddress) external onlyOwner {
-        if (keccak256(abi.encodePacked(contractName)) == keccak256(abi.encodePacked("jojoDealer"))) {
+    function updateExternalContract(
+        string memory contractName,
+        address newAddress
+    ) external onlyOwner {
+        if (
+            keccak256(abi.encodePacked(contractName)) ==
+            keccak256(abi.encodePacked("jojoDealer"))
+        ) {
             jojoDealer = JOJODealer(newAddress);
-        } else if (keccak256(abi.encodePacked(contractName)) == keccak256(abi.encodePacked("verifierProxy"))) {
+        } else if (
+            keccak256(abi.encodePacked(contractName)) ==
+            keccak256(abi.encodePacked("verifierProxy"))
+        ) {
             verifierProxy = IVerifierProxy(newAddress);
-        } else if (keccak256(abi.encodePacked(contractName)) == keccak256(abi.encodePacked("usdcFeed"))) {
+        } else if (
+            keccak256(abi.encodePacked(contractName)) ==
+            keccak256(abi.encodePacked("usdcFeed"))
+        ) {
             usdcFeed = IChainlink(newAddress);
         } else {
             revert("Invalid contract name");
@@ -357,7 +424,7 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
         IPerpetual perpetual = IPerpetual(order.perp);
         (int256 currentPaper, ) = perpetual.balanceOf(address(this));
         int256 newPaper = currentPaper + int256(order.paperAmount);
-        
+
         // Check if the new exposure is within market limits
         require(
             (newPaper.abs() * markPrice) / 1e18 <= market.maxExposure,
@@ -370,10 +437,10 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
         );
         uint256 exposureAfterTrade = exposure -
             currentPaper.abs().decimalMul(markPrice) +
-            newPaper.abs().decimalMul(markPrice) /
-            1e18;
+            newPaper.abs().decimalMul(markPrice);
+            
         require(
-            netValue.abs().decimalMul(maxLeverage) >= exposureAfterTrade,
+            netValue.abs() * maxLeverage >= exposureAfterTrade,
             "Leverage too high after trade"
         );
 
@@ -406,18 +473,19 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
 
         // Get the current USDC price (assumed to be in 8 decimals)
         uint256 usdcPrice = uint256(getUSDCPrice());
-        
+
         // Calculate max bid and min ask prices with slippage
-        // Note: We're dividing by 1e10 to adjust for the difference between 
+        // Note: We're dividing by 1e10 to adjust for the difference between
         // Chainlink Datastream's 18 decimals and USDC's 8 decimals
+        // And the order price is in 6 decimals as USDC's decimal is 6
         uint256 maxBidPrice = (uint256(uint192(verifiedReport.bid)) *
             (1e18 - market.slippage)) /
             usdcPrice /
-            1e10;
+            1e22;
         uint256 minAskPrice = (uint256(uint192(verifiedReport.ask)) *
             (1e18 + market.slippage)) /
             usdcPrice /
-            1e10;
+            1e22;
 
         // Calculate the order price
         uint256 orderPrice = uint256(
@@ -447,8 +515,6 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
             unverifiedReport,
             abi.encode(feeTokenAddress)
         );
-        
-        // Decode and return the verified report
         return abi.decode(verifiedReportData, (Report));
     }
 
@@ -458,13 +524,13 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     function getUSDCPrice() internal view returns (int256) {
         // Get the latest round data from the USDC price feed
         (, int256 price, , uint256 updatedAt, ) = usdcFeed.latestRoundData();
-        
+
         // Ensure the price is not outdated
         require(
             block.timestamp - updatedAt <= usdcHeartbeat,
             "USDC price outdated"
         );
-        
+
         return price;
     }
 
@@ -473,8 +539,14 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @param recipient Address receiving the tokens
     /// @param amount Amount of tokens to transfer
     /// @return Boolean indicating whether the transfer was successful
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        require(balanceOf(_msgSender()) - lockedShares[_msgSender()] >= amount, "Transfer amount exceeds unlocked balance");
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        require(
+            balanceOf(_msgSender()) - lockedShares[_msgSender()] >= amount,
+            "Transfer amount exceeds unlocked balance"
+        );
         return super.transfer(recipient, amount);
     }
 
@@ -483,8 +555,23 @@ contract JOJODynamicLiquidityReserve is ERC20, ReentrancyGuard, Ownable, Pausabl
     /// @param recipient Address receiving the tokens
     /// @param amount Amount of tokens to transfer
     /// @return Boolean indicating whether the transfer was successful
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
-        require(balanceOf(sender) - lockedShares[sender] >= amount, "Transfer amount exceeds unlocked balance");
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        require(
+            balanceOf(sender) - lockedShares[sender] >= amount,
+            "Transfer amount exceeds unlocked balance"
+        );
         return super.transferFrom(sender, recipient, amount);
+    }
+
+    /// @notice Sets the withdraw delay
+    /// @dev Only the contract owner can call this function
+    /// @param _newWithdrawDelay The new withdraw delay
+    function setWithdrawDelay(uint256 _newWithdrawDelay) external onlyOwner {
+        withdrawDelay = _newWithdrawDelay;
+        emit WithdrawDelayUpdated(_newWithdrawDelay);
     }
 }

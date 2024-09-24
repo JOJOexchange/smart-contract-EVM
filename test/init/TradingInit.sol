@@ -131,7 +131,7 @@ contract TradingInit is Test {
     {
         int64 makerFeeRate = 1e14;
         int64 takerFeeRate = 5e14;
-        bytes memory infoBytes =
+        bytes memory infoBytes = 
             abi.encodePacked(makerFeeRate, takerFeeRate, uint64(block.timestamp), uint64(block.timestamp));
         order = Types.Order({
             perp: perpetual,

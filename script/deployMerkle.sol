@@ -13,9 +13,10 @@ contract DeployMerkleDistributor is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("JOJO_DEPLOYER_PK");
         vm.startBroadcast(deployerPrivateKey);
+        address owner = 0xD0cFCf1899A749bf0398fc885DB7ee0479C05eFC;
         address token = 0x0645bC5cDff2376089323Ac20Df4119e48e4BCc4;
-        bytes32 root = 0x915135dccd7288b4da16541980aa0cb78e5166f48b22029dcf8104dd84c0419a;
-        uint256 endTime = 1727740800;
+        bytes32 root = 0x86a94d64a9d8c155e59669d37e614a788e7d304cb96c943d3b46cfd2cb8a89f7;
+        uint256 endTime = 1734188400;
         MerkleDistributorWithDeadline distributor = new MerkleDistributorWithDeadline(
             // token
             token,
@@ -24,6 +25,7 @@ contract DeployMerkleDistributor is Script {
             // timestamp
             endTime
         );
+        distributor.transferOwnership(owner);
         vm.stopBroadcast();
 
         string memory chainId = vm.envString("CHAIN_ID");

@@ -14,9 +14,9 @@ contract OracleAdaptorScript is Script {
         vm.startBroadcast(deployerPrivateKey);
         new OracleAdaptor(
             // source
-            0xE70f2D34Fd04046aaEC26a198A35dD8F2dF5cd92,
+            0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F,
             // decimalCorrection
-            20,
+            10,
             //heartbeatInterval
             86_400,
             86_400,

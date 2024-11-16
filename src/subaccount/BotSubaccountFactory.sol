@@ -50,6 +50,20 @@ contract BotSubaccountFactory {
         emit NewBotSubaccount(owner, operator, botSubaccountRegistry[owner].length - 1, botSubaccount);
     }
 
+    function batchNewSubaccounts(address owner, address operator, uint256 count) external returns (address[] memory botSubaccounts) {
+        require(count > 0, "Count must be greater than zero");
+        require(count <= 100, "Cannot create more than 100 subaccounts at once"); // Prevent potential gas limit issues
+
+        botSubaccounts = new address[](count);
+        for (uint256 i = 0; i < count; i++) {
+            address botSubaccount = Clones.clone(template);
+            BotSubaccount(botSubaccount).init(owner, operator, dealer, globalOperator);
+            botSubaccountRegistry[owner].push(botSubaccount);
+            botSubaccounts[i] = botSubaccount;
+            emit NewBotSubaccount(owner, operator, botSubaccountRegistry[owner].length - 1, botSubaccount);
+        }
+    }
+
     function getBotSubaccounts(address master) external view returns (address[] memory) {
         return botSubaccountRegistry[master];
     }

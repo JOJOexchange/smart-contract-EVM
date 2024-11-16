@@ -16,20 +16,14 @@ contract veJOJO is ReentrancyGuard, Ownable {
         uint256 amount;
         uint256 end;
         uint256 veJOJOAmount;
-    }
-
-    struct RewardInfo {
-        uint256 lastClaimTime;
         uint256 rewardDebt;
     }
 
     mapping(address => mapping(uint256 => LockInfo)) public userLocks;
     mapping(address => uint256) public userLockCount;
-    mapping(address => RewardInfo) public userRewards;
 
     uint256 public totalSupply;
     uint256 public accRewardPerShare;
-    uint256 public lastRewardTime;
     uint256 public constant REWARD_PERIOD = 7 days;
 
     uint256 private constant MAX_LOCK_TIME = 4 * 365 days;
@@ -42,14 +36,11 @@ contract veJOJO is ReentrancyGuard, Ownable {
     constructor(address _JOJO, address _USDC) Ownable() {
         JOJO = IERC20(_JOJO);
         USDC = IERC20(_USDC);
-        lastRewardTime = block.timestamp;
     }
 
     function deposit(uint256 _amount, uint256 _lockTime) external nonReentrant {
         require(_amount > 0, "Amount must be greater than 0");
         require(_lockTime >= 7 days && _lockTime <= MAX_LOCK_TIME, "Lock time must be between 1 week and 4 years");
-
-        updateReward(msg.sender);
 
         JOJO.safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -59,7 +50,8 @@ contract veJOJO is ReentrancyGuard, Ownable {
         userLocks[msg.sender][lockId] = LockInfo({
             amount: _amount,
             end: block.timestamp + _lockTime,
-            veJOJOAmount: veJOJOAmount
+            veJOJOAmount: veJOJOAmount,
+            rewardDebt: (veJOJOAmount * accRewardPerShare) / 1e18
         });
         userLockCount[msg.sender]++;
 
@@ -74,8 +66,6 @@ contract veJOJO is ReentrancyGuard, Ownable {
         require(block.timestamp >= userLock.end, "Lock period not ended");
         require(userLock.amount > 0, "No locked JOJO");
 
-        updateReward(msg.sender);
-
         uint256 amount = userLock.amount;
         uint256 veJOJOAmount = userLock.veJOJOAmount;
         userLock.amount = 0;
@@ -87,43 +77,51 @@ contract veJOJO is ReentrancyGuard, Ownable {
         totalSupply -= veJOJOAmount;
 
         emit Withdraw(msg.sender, _lockId, amount);
-    }
 
-    function claimReward() external nonReentrant {
-        updateReward(msg.sender);
-        uint256 reward = pendingReward(msg.sender);
-        if (reward > 0) {
-            userRewards[msg.sender].rewardDebt += reward;
-            USDC.safeTransfer(msg.sender, reward);
-            emit RewardClaimed(msg.sender, reward);
+        uint256 pending = (userLock.veJOJOAmount * accRewardPerShare / 1e18) - userLock.rewardDebt;
+        if (pending > 0) {
+            USDC.safeTransfer(msg.sender, pending);
+            emit RewardClaimed(msg.sender, pending);
         }
     }
 
     function addReward(uint256 _amount) external onlyOwner {
-        updateReward(address(0));
+        require(totalSupply > 0, "No veJOJO holders");
         USDC.safeTransferFrom(msg.sender, address(this), _amount);
+        
+        accRewardPerShare += (_amount * 1e18) / totalSupply;
+        
         emit RewardAdded(_amount);
     }
 
-    function updateReward(address _user) public {
-        if (block.timestamp > lastRewardTime) {
-            uint256 usdcReward = USDC.balanceOf(address(this));
-            if (totalSupply > 0 && usdcReward > 0) {
-                accRewardPerShare += (usdcReward * 1e18) / totalSupply;
+    function claimReward() external nonReentrant {
+        uint256 totalReward = pendingReward(msg.sender);
+        require(totalReward > 0, "No rewards to claim");
+        
+        // 更新所有有效锁定的 rewardDebt
+        for (uint256 i = 0; i < userLockCount[msg.sender]; i++) {
+            LockInfo storage userLock = userLocks[msg.sender][i];
+            if (block.timestamp < userLock.end) {
+                userLock.rewardDebt = (userLock.veJOJOAmount * accRewardPerShare) / 1e18;
             }
-            lastRewardTime = block.timestamp;
         }
-        if (_user != address(0)) {
-            RewardInfo storage userReward = userRewards[_user];
-            userReward.rewardDebt = pendingReward(_user);
-            userReward.lastClaimTime = block.timestamp;
-        }
+        
+        USDC.safeTransfer(msg.sender, totalReward);
+        emit RewardClaimed(msg.sender, totalReward);
     }
 
     function pendingReward(address _user) public view returns (uint256) {
-        RewardInfo memory userReward = userRewards[_user];
-        uint256 pending = (balanceOf(_user) * accRewardPerShare / 1e18) - userReward.rewardDebt;
-        return pending;
+        uint256 totalPending = 0;
+        
+        for (uint256 i = 0; i < userLockCount[_user]; i++) {
+            LockInfo memory userLock = userLocks[_user][i];
+            if (block.timestamp < userLock.end) {
+                uint256 pending = (userLock.veJOJOAmount * accRewardPerShare / 1e18) - userLock.rewardDebt;
+                totalPending += pending;
+            }
+        }
+        
+        return totalPending;
     }
 
     function balanceOf(address _user) public view returns (uint256) {

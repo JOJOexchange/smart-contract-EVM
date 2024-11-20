@@ -40,7 +40,7 @@ contract veJOJO is ReentrancyGuard, Ownable {
 
     function deposit(uint256 _amount, uint256 _lockTime) external nonReentrant {
         require(_amount > 0, "Amount must be greater than 0");
-        require(_lockTime >= 7 days && _lockTime <= MAX_LOCK_TIME, "Lock time must be between 1 week and 4 years");
+        require(_lockTime >= REWARD_PERIOD && _lockTime <= MAX_LOCK_TIME, "Lock time must be between 1 week and 4 years");
 
         JOJO.safeTransferFrom(msg.sender, address(this), _amount);
 
@@ -78,7 +78,8 @@ contract veJOJO is ReentrancyGuard, Ownable {
 
         emit Withdraw(msg.sender, _lockId, amount);
 
-        uint256 pending = (userLock.veJOJOAmount * accRewardPerShare / 1e18) - userLock.rewardDebt;
+        uint256 reward = (veJOJOAmount * accRewardPerShare) / 1e18;
+        uint256 pending = reward > userLock.rewardDebt ? reward - userLock.rewardDebt : 0;
         if (pending > 0) {
             USDC.safeTransfer(msg.sender, pending);
             emit RewardClaimed(msg.sender, pending);
@@ -98,7 +99,6 @@ contract veJOJO is ReentrancyGuard, Ownable {
         uint256 totalReward = pendingReward(msg.sender);
         require(totalReward > 0, "No rewards to claim");
         
-        // 更新所有有效锁定的 rewardDebt
         for (uint256 i = 0; i < userLockCount[msg.sender]; i++) {
             LockInfo storage userLock = userLocks[msg.sender][i];
             if (block.timestamp < userLock.end) {
@@ -138,6 +138,4 @@ contract veJOJO is ReentrancyGuard, Ownable {
     function calculateVeJOJO(uint256 _amount, uint256 _lockTime) public pure returns (uint256) {
         return (_amount * _lockTime) / MAX_LOCK_TIME;
     }
-
-    // ... 其他函数 ...
 }

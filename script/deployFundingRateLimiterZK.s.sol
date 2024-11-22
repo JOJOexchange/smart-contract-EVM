@@ -3,7 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "../lib/forge-std/src/Script.sol";
-import "../src/fundingRateLimiter/FundingRateUpdateLimiterZK.sol";
+import "../src/fundingRateLimiter/FundingRateUpdateLimiterZk.sol";
 import "./utils.s.sol";
 
 contract FundingRateUpdateLimiterZKMain is Script {

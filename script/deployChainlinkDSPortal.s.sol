@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
 import "../src/oracle/ChainlinkDS.sol";
-import "./Utils.s.sol";
+import "./utils.s.sol";
 
 contract ChainlinkDSPortalScript is Script {
     // add this to be excluded from coverage report

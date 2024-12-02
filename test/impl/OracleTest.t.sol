@@ -32,17 +32,17 @@ contract OperationTest is Test {
     OracleAdaptor oracleAdaptor3 =
         new OracleAdaptor(address(mockToken1ChainLink), 20, 86_400, 0, address(usdcPrice), 5e16);
     JOJOOracleAdaptorWstETH jojoOracleAdaptorWstETH = new JOJOOracleAdaptorWstETH(
-        address(mockToken1ChainLink), 20, 86_400, address(usdcPrice), 86_400, address(mockToken1ChainLink), 86_400
+        address(mockToken1ChainLink), 86_400, address(usdcPrice), 86_400, address(mockToken1ChainLink), 86_400
     );
 
     JOJOOracleAdaptorWstETH jojoOracleAdaptorWstETH2 = new JOJOOracleAdaptorWstETH(
-        address(mockToken1ChainLink), 20, 0, address(usdcPrice), 0, address(mockToken1ChainLink), 0
+        address(mockToken1ChainLink), 0, address(usdcPrice), 0, address(mockToken1ChainLink), 0
     );
     JOJOOracleAdaptorWstETH jojoOracleAdaptorWstETH3 = new JOJOOracleAdaptorWstETH(
-        address(mockToken1ChainLink), 20, 86_400, address(usdcPrice), 0, address(mockToken1ChainLink), 0
+        address(mockToken1ChainLink), 86_400, address(usdcPrice), 0, address(mockToken1ChainLink), 0
     );
     JOJOOracleAdaptorWstETH jojoOracleAdaptorWstETH4 = new JOJOOracleAdaptorWstETH(
-        address(mockToken1ChainLink), 20, 86_400, address(usdcPrice), 86_400, address(mockToken1ChainLink), 0
+        address(mockToken1ChainLink), 86_400, address(usdcPrice), 86_400, address(mockToken1ChainLink), 0
     );
 
     function testConstOracle() public {

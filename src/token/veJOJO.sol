@@ -17,6 +17,7 @@ contract veJOJO is ReentrancyGuard, Ownable {
         uint256 end;
         uint256 veJOJOAmount;
         uint256 rewardDebt;
+        address delegate;
     }
 
     mapping(address => mapping(uint256 => LockInfo)) public userLocks;
@@ -28,10 +29,14 @@ contract veJOJO is ReentrancyGuard, Ownable {
 
     uint256 private constant MAX_LOCK_TIME = 4 * 365 days;
 
+    mapping(address => uint256) public delegatedVotes;
+
     event Deposit(address indexed user, uint256 lockId, uint256 amount, uint256 lockTime, uint256 veJOJOAmount);
     event Withdraw(address indexed user, uint256 lockId, uint256 amount);
     event RewardClaimed(address indexed user, uint256 amount);
     event RewardAdded(uint256 amount);
+    event DelegateChanged(address indexed delegator, uint256 indexed lockId, address indexed fromDelegate, address toDelegate);
+    event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
     constructor(address _JOJO, address _USDC) Ownable() {
         JOJO = IERC20(_JOJO);
@@ -51,11 +56,14 @@ contract veJOJO is ReentrancyGuard, Ownable {
             amount: _amount,
             end: block.timestamp + _lockTime,
             veJOJOAmount: veJOJOAmount,
-            rewardDebt: (veJOJOAmount * accRewardPerShare) / 1e18
+            rewardDebt: (veJOJOAmount * accRewardPerShare) / 1e18,
+            delegate: msg.sender
         });
         userLockCount[msg.sender]++;
 
         totalSupply += veJOJOAmount;
+        delegatedVotes[msg.sender] += veJOJOAmount;
+        emit DelegateVotesChanged(msg.sender, delegatedVotes[msg.sender] - veJOJOAmount, delegatedVotes[msg.sender]);
 
         emit Deposit(msg.sender, lockId, _amount, _lockTime, veJOJOAmount);
     }
@@ -68,9 +76,15 @@ contract veJOJO is ReentrancyGuard, Ownable {
 
         uint256 amount = userLock.amount;
         uint256 veJOJOAmount = userLock.veJOJOAmount;
+
+        address currentDelegate = userLock.delegate;
+        delegatedVotes[currentDelegate] -= veJOJOAmount;
+        emit DelegateVotesChanged(currentDelegate, delegatedVotes[currentDelegate] + veJOJOAmount, delegatedVotes[currentDelegate]);
+
         userLock.amount = 0;
         userLock.end = 0;
         userLock.veJOJOAmount = 0;
+        userLock.delegate = address(0);
 
         JOJO.safeTransfer(msg.sender, amount);
 
@@ -137,5 +151,30 @@ contract veJOJO is ReentrancyGuard, Ownable {
 
     function calculateVeJOJO(uint256 _amount, uint256 _lockTime) public pure returns (uint256) {
         return (_amount * _lockTime) / MAX_LOCK_TIME;
+    }
+
+    function delegate(uint256 _lockId, address _delegatee) external {
+        require(_lockId < userLockCount[msg.sender], "Invalid lock ID");
+        require(_delegatee != address(0), "Cannot delegate to zero address");
+        
+        LockInfo storage userLock = userLocks[msg.sender][_lockId];
+        require(userLock.amount > 0, "No locked JOJO");
+        require(block.timestamp < userLock.end, "Lock expired");
+        
+        address oldDelegate = userLock.delegate;
+        require(oldDelegate != _delegatee, "Already delegated to this address");
+
+        delegatedVotes[oldDelegate] -= userLock.veJOJOAmount;
+        emit DelegateVotesChanged(oldDelegate, delegatedVotes[oldDelegate] + userLock.veJOJOAmount, delegatedVotes[oldDelegate]);
+
+        userLock.delegate = _delegatee;
+        delegatedVotes[_delegatee] += userLock.veJOJOAmount;
+
+        emit DelegateChanged(msg.sender, _lockId, oldDelegate, _delegatee);
+        emit DelegateVotesChanged(_delegatee, delegatedVotes[_delegatee] - userLock.veJOJOAmount, delegatedVotes[_delegatee]);
+    }
+
+    function getVotes(address _account) public view returns (uint256) {
+        return delegatedVotes[_account];
     }
 }

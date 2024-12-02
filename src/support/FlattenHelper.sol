@@ -32,5 +32,5 @@ import "./help/ITokenMessenger.sol";
 
 // DO NOT REMOVE
 abstract contract ContractForCodeGeneration {
-    function order() external view returns (Types.Order memory order) {}
+    function getorder() external view returns (Types.Order memory order) {}
 }

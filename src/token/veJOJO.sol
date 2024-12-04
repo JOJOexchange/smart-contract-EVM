@@ -12,6 +12,8 @@ contract veJOJO is ReentrancyGuard, Ownable {
     IERC20 public immutable JOJO;
     IERC20 public immutable USDC;
     
+    uint8 public constant decimals = 18;
+
     struct LockInfo {
         uint256 amount;
         uint256 end;
@@ -98,6 +100,7 @@ contract veJOJO is ReentrancyGuard, Ownable {
             USDC.safeTransfer(msg.sender, pending);
             emit RewardClaimed(msg.sender, pending);
         }
+        userLock.rewardDebt = 0;
     }
 
     function addReward(uint256 _amount) external onlyOwner {
@@ -115,7 +118,7 @@ contract veJOJO is ReentrancyGuard, Ownable {
         
         for (uint256 i = 0; i < userLockCount[msg.sender]; i++) {
             LockInfo storage userLock = userLocks[msg.sender][i];
-            if (block.timestamp < userLock.end) {
+            if (userLock.amount > 0) {
                 userLock.rewardDebt = (userLock.veJOJOAmount * accRewardPerShare) / 1e18;
             }
         }
@@ -129,7 +132,7 @@ contract veJOJO is ReentrancyGuard, Ownable {
         
         for (uint256 i = 0; i < userLockCount[_user]; i++) {
             LockInfo memory userLock = userLocks[_user][i];
-            if (block.timestamp < userLock.end) {
+            if (userLock.amount > 0) {
                 uint256 pending = (userLock.veJOJOAmount * accRewardPerShare / 1e18) - userLock.rewardDebt;
                 totalPending += pending;
             }
@@ -142,7 +145,7 @@ contract veJOJO is ReentrancyGuard, Ownable {
         uint256 totalBalance = 0;
         for (uint256 i = 0; i < userLockCount[_user]; i++) {
             LockInfo memory userLock = userLocks[_user][i];
-            if (block.timestamp < userLock.end) {
+            if (userLock.amount > 0) {
                 totalBalance += userLock.veJOJOAmount;
             }
         }

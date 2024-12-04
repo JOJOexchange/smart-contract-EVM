@@ -53,7 +53,6 @@ contract VeJOJOTest is Test {
         usdcToken.transfer(owner, 10000e6);
 
         vm.stopPrank();
-
     }
 
     /*********************************
@@ -424,7 +423,7 @@ contract VeJOJOTest is Test {
         vm.expectRevert("Cannot delegate to zero address");
         veJOJOContract.delegate(lockId, address(0));
 
-        // 测试无效�� lockId
+        // 测试无效 lockId
         vm.expectRevert("Invalid lock ID");
         veJOJOContract.delegate(99, address(0x123));
 
@@ -442,7 +441,7 @@ contract VeJOJOTest is Test {
     }
 
     function testSelfDelegateVotes() public {
-        // 用户存入 JOJO，此时投票权应该在自己名下
+        // 用户存入 JOJO，此时投票应该在自己名下
         uint256 depositAmount = 1000e18;
         uint256 lockTime = 365 days;
         vm.startPrank(owner);
@@ -482,5 +481,63 @@ contract VeJOJOTest is Test {
 
         // 验证投票权完全清零
         assertEq(veJOJOContract.getVotes(address(this)), 0, "Votes should be zero after all withdrawals");
+    }
+
+    function testDecimals() public {
+        assertEq(veJOJOContract.decimals(), 18, "veJOJO decimals should be 18");
+    }
+
+    function testExpiredLockRewardAndBalance() public {
+        // Alice 存入 JOJO
+        uint256 depositAmount = 1000e18;
+        uint256 lockTime = 7 days; // 最短锁定期
+        
+        vm.startPrank(alice);
+        jojoToken.approve(address(veJOJOContract), depositAmount);
+        veJOJOContract.deposit(depositAmount, lockTime);
+        vm.stopPrank();
+        
+        uint256 expectedVeJOJOAmount = veJOJOContract.calculateVeJOJO(depositAmount, lockTime);
+        
+        // owner 添加奖励
+        uint256 rewardAmount = 1000e6; // 1000 USDC
+        vm.startPrank(owner);
+        usdcToken.approve(address(veJOJOContract), rewardAmount);
+        veJOJOContract.addReward(rewardAmount);
+        vm.stopPrank();
+        
+        // 等待锁定期结束
+        vm.warp(block.timestamp + lockTime + 1);
+        
+        // 验证锁定到期后仍然可以计算正确的余额
+        assertEq(veJOJOContract.balanceOf(alice), expectedVeJOJOAmount, "Balance should remain until withdrawal");
+        
+        // 验证锁定到期后仍然可以获得奖励
+        uint256 pendingReward = veJOJOContract.pendingReward(alice);
+        assertTrue(pendingReward > 0, "Should have pending reward after lock expiry");
+        
+        // Alice 领取奖励
+        uint256 usdcBalanceBefore = usdcToken.balanceOf(alice);
+        vm.prank(alice);
+        veJOJOContract.claimReward();
+        uint256 usdcBalanceAfter = usdcToken.balanceOf(alice);
+        
+        assertEq(usdcBalanceAfter - usdcBalanceBefore, pendingReward, "Should receive correct reward amount");
+        
+        // 验证领取奖励后，如果没有新的奖励添加，pendingReward 应该为 0
+        assertEq(veJOJOContract.pendingReward(alice), 0, "Pending reward should be 0 after claim");
+        
+        // 等待一段时间，确保即使时间过去，没有新奖励的情况下 pendingReward 仍然为 0
+        vm.warp(block.timestamp + 7 days);
+        assertEq(veJOJOContract.pendingReward(alice), 0, "Pending reward should still be 0 after time passes");
+        
+        // Alice 提取 JOJO
+        vm.prank(alice);
+        veJOJOContract.withdraw(0);
+        (,,,uint256 rewardDebt,) = veJOJOContract.userLocks(alice, 0);
+        assertEq(rewardDebt, 0, "RewardDebt should be zero after withdrawal");
+        
+        // 提取后余额应该为 0
+        assertEq(veJOJOContract.balanceOf(alice), 0, "Balance should be zero after withdrawal");
     }
 }
